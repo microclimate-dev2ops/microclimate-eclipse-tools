@@ -1,0 +1,19 @@
+<plugin>
+  <extension point="org.eclipse.wst.server.core.serverTypes">
+    <serverType
+      id="microclimate.server"
+      name="%serverName"
+      description="%serverDescription"
+      supportsManualCreation="false"
+      hasConfiguration="false"
+      launchModes="run,debug"
+      startTimeout="60000"
+      stopTimeout="15000"
+      initialState="stopped"
+      supportsRemoteHosts="false"
+      launchConfigId="com.ibm.microclimate.core.launchConfigurationType"
+      class="com.ibm.microclimate.core.internal.MicroclimateServer"
+      behaviourClass="com.ibm.microclimate.core.internal.MicroclimateServerBehaviour">
+    </serverType>
+  </extension>
+</plugin>
