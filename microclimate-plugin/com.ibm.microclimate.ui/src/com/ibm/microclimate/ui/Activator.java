@@ -1,6 +1,10 @@
 package com.ibm.microclimate.ui;
 
+import java.net.URL;
+
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -45,6 +49,12 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static Activator getDefault() {
 		return plugin;
+	}
+	
+	public static ImageDescriptor getDefaultIcon() {
+		final Bundle bundle = Activator.getDefault().getBundle();
+		final URL url = bundle.getEntry("icons/microclimate.ico"); 	//$NON-NLS-1$
+		return ImageDescriptor.createFromURL(url);
 	}
 
 }

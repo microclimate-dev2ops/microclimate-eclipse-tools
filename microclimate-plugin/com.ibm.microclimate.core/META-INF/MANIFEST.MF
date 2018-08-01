@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: MicroclimateCore
+Bundle-Name: Microclimate Core Plugin
 Bundle-SymbolicName: com.ibm.microclimate.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.ibm.microclimate.core.Activator
@@ -8,7 +8,11 @@ Bundle-Vendor: IBM
 Require-Bundle: org.eclipse.ui,
   org.eclipse.core.runtime
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Automatic-Module-Name: com.ibm.microclimate.core
+Automatic-Module-Name: com.ibm.microclimate.core;singleton:=true
+Import-Package: org.eclipse.wst.server.core,
+  org.eclipse.wst.server.core.model
 Bundle-ActivationPolicy: lazy
-Import-Package: org.eclipse.wst.server.core.model,
- org.eclipse.wst.server.core
+Export-Package: com.ibm.microclimate.core.internal
+Bundle-ClassPath: .,
+ lib/com.ibm.websphere.javaee.jsonp.1.0.jar,
+ lib/com.ibm.ws.org.glassfish.json.1.0.jar

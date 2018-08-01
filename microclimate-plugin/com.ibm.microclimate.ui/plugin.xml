@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   	<extension point="org.eclipse.ui.popupMenus">
+		<objectContribution
+			adaptable="true"
+			objectClass="org.eclipse.core.resources.IProject"
+			id="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectWizard.id">
+			<menu
+				label="Microclimate"
+				path="additions"
+				id="com.ibm.microclimate.ui.menu.category">
+				<separator
+					name="popupActions">
+				</separator>
+			</menu>
+			<action
+				label="Link to Microclimate Project"
+				class="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectDelegate"
+				menubarPath="com.ibm.microclimate.ui.menu.category/popupActions"
+				icon="icons/microclimate.ico"
+				id="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectDelegate.action.id">
+			</action>
+		</objectContribution>
+	</extension>
+	
+   <extension
+         point="org.eclipse.ui.preferencePages">
+         
+         <page id="MicroclimateParentPage"
+         	name="Microclimate"
+         	class="com.ibm.microclimate.ui.prefs.MicroclimatePrefsParentPage">
+         </page>
+         
+         <page id="MicroclimateConnectionsPage"
+         	name="Connections"
+         	category="MicroclimateParentPage"
+         	class="com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage">
+         </page>
+         
+         
+   </extension>
+	
+	<!--extension
+         point="org.eclipse.wst.command.env.dynamicWizard">
+      <dynamicWizard
+            title="Yer a Wizard Harry"
+            iconbanner="platform:/plugin/com.ibm.microclimate.ui/icons/microclimate.gif"
+            class="com.ibm.etools.swagger.rest.api.ui.wizards.jaxrs.SwaggerCodeGenJaxrsClientBinding"
+            id="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectWizard">
+      </dynamicWizard>
+ 	</extension-->
+
+ 	<!--extension
+		point="org.eclipse.ui.newWizards">
+     	<category
+            name="Microclimate"
+            id="com.ibm.microclimate.ui">
+     	</category>		
+		<wizard
+       		icon="icons/microclimate.ico"
+            id="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"
+            name="Plugin XML Wizard Description">
+            <class class="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"/>
+          	<description>
+            	New Microclimate Connection
+         	</description>
+         	<selection
+            	class="org.eclipse.core.resources.IProject">
+        	</selection>
+      	</wizard>
+   	</extension>
+   
+	<extension
+		point="org.eclipse.ui.newWizards">
+     	<category
+            name="Microclimate"
+            id="com.ibm.microclimate.ui">
+     	</category>		
+		<wizard
+       		icon="icons/microclimate.ico"
+            hasPages="true"
+            id="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"
+            name="Plugin XML Wizard Description">
+            <class class="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"/>
+          	<description>
+            	New Microclimate Project
+         	</description>
+         	<selection
+            	class="org.eclipse.core.resources.IProject">
+        	</selection>
+      	</wizard>
+   </extension-->
+</plugin>
