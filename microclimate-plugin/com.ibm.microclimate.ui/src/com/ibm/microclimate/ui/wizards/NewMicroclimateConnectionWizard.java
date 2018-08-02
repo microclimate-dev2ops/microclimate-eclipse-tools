@@ -6,7 +6,6 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.ui.Activator;
-import com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage;
 
 public class NewMicroclimateConnectionWizard extends Wizard implements INewWizard {
 	
@@ -54,14 +53,12 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 		}
 		
 		if(runLinkProjectWizardOnFinish) {
-			// Not a big fan of this
 			getShell().close();
 			
 			WizardUtil.launchWizard(new LinkMicroclimateProjectWizard(), 
 					selection, workbench, workbench.getActiveWorkbenchWindow().getShell());
 		}
 		
-		MicroclimateConnectionPrefsPage.instance().refreshConnectionsList();
 		return true;
 	}
 	

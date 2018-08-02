@@ -6,8 +6,6 @@ import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -58,7 +56,8 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		hostnameText.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1));
 		hostnameText.setText("localhost");
 		
-		Label emptyLabel = new Label(userAndPassGroup, SWT.NONE);
+		// just for spacing
+		new Label(userAndPassGroup, SWT.NONE);
 			
 		Label portLabel = new Label(userAndPassGroup, SWT.BORDER);
 		portLabel.setText("Port:");
@@ -68,11 +67,13 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		portText.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1));
 		portText.setText("9090");
 		
+		/*
 		// Add a validator so that only integers can be entered into the port field
 		portText.addVerifyListener(new VerifyListener() {
 
 			@Override
 			public void verifyText(VerifyEvent e) {
+				// TODO this doesn't work
 				Text text = (Text) e.getSource();
 				String value = text.getText();
 				boolean accept = true;
@@ -89,8 +90,9 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 				e.doit = accept;
 			}
 		});
+		*/
 		
-		Label emptyLabel2 = new Label(userAndPassGroup, SWT.NONE);
+		new Label(userAndPassGroup, SWT.NONE);
 		
 		Button testConnectionBtn = new Button(userAndPassGroup, SWT.NONE);
 		testConnectionBtn.setText("Test Connection");

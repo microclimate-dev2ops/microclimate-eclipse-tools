@@ -25,14 +25,18 @@ public class MicroclimateConnection {
 	private String baseUrl;
 	
 	MicroclimateConnection (String host, int port) throws ConnectException {
-		if(!test(host, port)) {
+		this(buildUrl(host, port));
+	}
+	
+	MicroclimateConnection (String baseUrl) throws ConnectException {
+		if(!test(baseUrl)) {
 			throw new ConnectException(
-					String.format("Connecting to Microclimate at %s:%d failed", host, port)); 	// $NON-NLS-1$
+					String.format("Connecting to Microclimate instance at \"%s\" failed", baseUrl));
 		}
 		
 		//this.host = host;
 		//this.port = port;
-		this.baseUrl = buildUrl(host, port);
+		this.baseUrl = baseUrl;
 	}
 	
 	@Override
@@ -43,6 +47,21 @@ public class MicroclimateConnection {
 		
 		MicroclimateConnection otherMcc = (MicroclimateConnection) other;
 		return otherMcc.baseUrl.equals(baseUrl);
+	}
+	
+	// Note that toString and fromString are used to save and load connections from the preferences store
+	// in MicroclimateConnectionManager
+	
+	private static final String BASE_URL_KEY = "baseUrl";
+	
+	@Override
+	public String toString() {
+		return String.format("MicroclimateConnection %s=%s", BASE_URL_KEY, baseUrl);
+	}
+	
+	public static MicroclimateConnection fromString(String str) throws ConnectException {
+		// Extract the baseUrl "baseUrl=xyz"	
+		return new MicroclimateConnection(str.substring(str.indexOf(BASE_URL_KEY) + BASE_URL_KEY.length() + 1));
 	}
 	
 	public List<MicroclimateApplication> apps() {
@@ -76,9 +95,8 @@ public class MicroclimateConnection {
 		
 	}
 	
-	private static boolean test(String host, int port) {
-		String url = buildUrl(host, port);
-		String getResult = sendGet(url);
+	private static boolean test(String baseUrl) {
+		String getResult = sendGet(baseUrl);
 		
 		//System.out.println("From " + url + " got:");
 		//System.out.println(getResult);

@@ -37,20 +37,8 @@
          	name="Connections"
          	category="MicroclimateParentPage"
          	class="com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage">
-         </page>
-         
-         
+         </page>    
    </extension>
-	
-	<!--extension
-         point="org.eclipse.wst.command.env.dynamicWizard">
-      <dynamicWizard
-            title="Yer a Wizard Harry"
-            iconbanner="platform:/plugin/com.ibm.microclimate.ui/icons/microclimate.gif"
-            class="com.ibm.etools.swagger.rest.api.ui.wizards.jaxrs.SwaggerCodeGenJaxrsClientBinding"
-            id="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectWizard">
-      </dynamicWizard>
- 	</extension-->
 
  	<!--extension
 		point="org.eclipse.ui.newWizards">

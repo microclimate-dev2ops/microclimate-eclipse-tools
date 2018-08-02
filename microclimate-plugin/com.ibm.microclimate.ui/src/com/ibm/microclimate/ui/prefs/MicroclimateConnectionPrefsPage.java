@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -28,25 +30,31 @@ import com.ibm.microclimate.ui.wizards.WizardUtil;
 
 public class MicroclimateConnectionPrefsPage extends PreferencePage implements IWorkbenchPreferencePage {
 	
-	public static final String MC_CONNECTIONS_PREFSKEY = "com.ibm.microclimate.ui.prefs.connections";
+	public static final String 
+			MC_CONNECTIONS_PREFSKEY = "com.ibm.microclimate.ui.prefs.connections",
+			PAGE_ID = "MicroclimateConnectionsPage";		// must match the value in plugin.xml
 
-	private static MicroclimateConnectionPrefsPage instance;
+	//private static MicroclimateConnectionPrefsPage instance;
 	
 	private Table connectionsTable;
 	
 	private List<MicroclimateConnection> connections;
 	
+	/*
 	public MicroclimateConnectionPrefsPage() {
 		if(instance != null) {
 			// TODO figure out if this class can be used as a singleton or not
 			System.err.println("ERROR: Multiple instances of supposed singleton");
 		}
 		instance = this;
+		
+		//preferenceStore = com.ibm.microclimate.ui.Activator.getDefault().getPreferenceStore();
 	}
 	
 	public static MicroclimateConnectionPrefsPage instance() {
 		return instance;
 	}
+	*/
 
 	@Override
 	public void init(IWorkbench arg0) {
@@ -126,14 +134,23 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		enabled.setText("Any other info?");
 		enabled.setWidth(tableGridData.widthHint - addresses.getWidth());		
 		
+		refreshConnectionsList();
+		
+		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+			.addPropertyChangeListener(new IPropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent event) {
+                    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
+                    	System.out.println("Reloading preferences in MCCPP");
+                        refreshConnectionsList();
+                    }
+                }
+            });
+		
 		return parent;
 	}
 	
-	/**
-	 * Rather than having other classes call this, it would be better if there was a way to run this refresh 
-	 * whenever the prefs window regained focus - 
-	 * or of course just add a Refresh button, but that would be annoying for a user.
-	 */
+
 	public void refreshConnectionsList() {
 		// Update the cached connections when we update the table, so that they always match
 		connections = MicroclimateConnectionManager.connections();

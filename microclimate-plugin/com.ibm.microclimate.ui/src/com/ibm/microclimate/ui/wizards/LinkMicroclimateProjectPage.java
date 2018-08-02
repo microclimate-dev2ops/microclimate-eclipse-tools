@@ -2,7 +2,7 @@ package com.ibm.microclimate.ui.wizards;
 
 import java.util.List;
 
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -16,10 +16,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage;
 
 public class LinkMicroclimateProjectPage extends WizardPage {
 	
@@ -79,12 +81,14 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
-				MessageDialog.openInformation(getShell(), "Manage Connections", 
-						"Manage Connections Preferences Page goes here");
+				PreferenceDialog prefsDialog = PreferencesUtil
+						.createPreferenceDialogOn(getShell(), MicroclimateConnectionPrefsPage.PAGE_ID, null, null);
+				prefsDialog.open();
 			}
 		});
 		
-		Label spacer = new Label(shell, SWT.NONE);
+		// just for spacing
+		new Label(shell, SWT.NONE);
 		
 		projectsTable = new Table(shell, SWT.BORDER | SWT.SINGLE);
 		GridData tableLayout = new GridData(GridData.BEGINNING, GridData.CENTER, true, true, 2, 1);
@@ -111,7 +115,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		// Since we called buildConnectionsCombo already, mcConnection must be set
 		populateProjectsTable();
 		
-		Label spacer2 = new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
 		
 		shell.pack();
 		setControl(shell);

@@ -12,7 +12,8 @@ Automatic-Module-Name: com.ibm.microclimate.core;singleton:=true
 Import-Package: org.eclipse.wst.server.core,
   org.eclipse.wst.server.core.model
 Bundle-ActivationPolicy: lazy
-Export-Package: com.ibm.microclimate.core.internal
+Export-Package: com.ibm.microclimate.core,
+ com.ibm.microclimate.core.internal
 Bundle-ClassPath: .,
  lib/com.ibm.websphere.javaee.jsonp.1.0.jar,
  lib/com.ibm.ws.org.glassfish.json.1.0.jar
