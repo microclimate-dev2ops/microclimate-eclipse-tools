@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.jface.preference.PreferencePage;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -25,36 +23,28 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.ui.Activator;
 import com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard;
 import com.ibm.microclimate.ui.wizards.WizardUtil;
 
 public class MicroclimateConnectionPrefsPage extends PreferencePage implements IWorkbenchPreferencePage {
-	
-	public static final String 
+
+	public static final String
 			MC_CONNECTIONS_PREFSKEY = "com.ibm.microclimate.ui.prefs.connections",
 			PAGE_ID = "MicroclimateConnectionsPage";		// must match the value in plugin.xml
 
 	//private static MicroclimateConnectionPrefsPage instance;
-	
+
 	private Table connectionsTable;
-	
+
 	private List<MicroclimateConnection> connections;
-	
-	/*
+
+	// TODO how to know when to refresh the page?
+	private boolean needsRefreshConnections = false;
+
 	public MicroclimateConnectionPrefsPage() {
-		if(instance != null) {
-			// TODO figure out if this class can be used as a singleton or not
-			System.err.println("ERROR: Multiple instances of supposed singleton");
-		}
-		instance = this;
-		
-		//preferenceStore = com.ibm.microclimate.ui.Activator.getDefault().getPreferenceStore();
+		super("Microclimate Connections", Activator.getDefaultIcon());
 	}
-	
-	public static MicroclimateConnectionPrefsPage instance() {
-		return instance;
-	}
-	*/
 
 	@Override
 	public void init(IWorkbench arg0) {
@@ -64,12 +54,12 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 	@Override
 	protected Control createContents(Composite parent) {
-		
+
 		parent.setLayout(new GridLayout(1, true));
-		
+
 		Composite top = new Composite(parent, SWT.LEFT);
 		top.setLayout(new GridLayout(3, false));
-		
+
 		Button addNewBtn = new Button(top, SWT.BORDER);
 		addNewBtn.setText("Add New Connection");
 		addNewBtn.addSelectionListener(new SelectionAdapter() {
@@ -79,17 +69,17 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				WizardUtil.launchWizardWithoutSelection(wizard);
 			}
 		});
-		
+
 		/*
 		Button disableSelectedBtn = new Button(top, SWT.BORDER);
 		disableSelectedBtn.setText("Disable Selected");
 		*/
-		
+
 		Label spacer = new Label(top, SWT.NONE);
 		GridData spacerData = new GridData();
 		spacerData.widthHint = 160;
-		spacer.setLayoutData(spacerData);		
-		
+		spacer.setLayoutData(spacerData);
+
 		Button removeSelectedBtn = new Button(top, SWT.BORDER);
 		removeSelectedBtn.setText("Remove Selected");
 		removeSelectedBtn.addSelectionListener(new SelectionAdapter() {
@@ -101,65 +91,66 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 						System.err.println("Connection with index " + i + " was already removed");
 					}
 				}
-				
+
 				refreshConnectionsList();
 			}
 		});
-		
+
 		Composite bottom = new Composite(parent, SWT.CENTER);
 		bottom.setLayout(new GridLayout(1, false));
 		bottom.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, true));
-		
+
 		Label existingConnections = new Label(bottom, SWT.NONE);
 		existingConnections.setText("Connections:");
-		
+
 		connectionsTable = new Table(bottom, SWT.BORDER | SWT.MULTI);
 		GridData tableGridData = new GridData(GridData.FILL_BOTH, GridData.FILL_BOTH);
 		tableGridData.widthHint = 450;
 		tableGridData.heightHint = 300;
 		connectionsTable.setLayoutData(tableGridData);
 		connectionsTable.setHeaderVisible(true);
-		
+
 		TableColumn addresses = new TableColumn(connectionsTable, SWT.BORDER);
 		addresses.setText("Address");
 		addresses.setWidth(tableGridData.widthHint / 2);
-		
+
 		/*
 		TableColumn lastUsed = new TableColumn(connectionsTable, SWT.BORDER);
 		lastUsed.setText("Last Used");
 		lastUsed.setWidth(tableGridData.widthHint / 3);
 		*/
-		
+
 		TableColumn enabled = new TableColumn(connectionsTable, SWT.BORDER);
 		enabled.setText("Any other info?");
-		enabled.setWidth(tableGridData.widthHint - addresses.getWidth());		
-		
+		enabled.setWidth(tableGridData.widthHint - addresses.getWidth());
+
 		refreshConnectionsList();
-		
+
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-			.addPropertyChangeListener(new IPropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent event) {
-                    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-                    	System.out.println("Reloading preferences in MCCPP");
-                        refreshConnectionsList();
-                    }
-                }
-            });
-		
+			.addPropertyChangeListener(event -> {
+			    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
+			    	System.out.println("Reloading preferences in MCCPP");
+			    	// calling refreshConnectionsList here results in WidgetDisposed exception if
+			    	// the window is not in focus
+			        needsRefreshConnections = true;
+			    }
+			});
+
 		return parent;
 	}
-	
 
-	public void refreshConnectionsList() {
+
+	private void refreshConnectionsList() {
 		// Update the cached connections when we update the table, so that they always match
 		connections = MicroclimateConnectionManager.connections();
-		
+
 		connectionsTable.removeAll();
-		
+
 		for(MicroclimateConnection mcc : connections) {
 			TableItem ti = new TableItem(connectionsTable, SWT.NONE);
 			ti.setText(new String[] { mcc.baseUrl(), "???" });
 		}
+
+		needsRefreshConnections = false;
 	}
 }

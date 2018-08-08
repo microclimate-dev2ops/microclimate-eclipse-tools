@@ -27,12 +27,7 @@ public class Activator extends AbstractUIPlugin {
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-		if(plugin != null) {
-			System.err.println("ERROR: Multiple instances of plugin: " + Activator.class.getCanonicalName());
-		}
 		plugin = this;
-		System.out.println("PREFS: " + getPreferenceStore() != null);
-		System.out.println("PREFS2: " + getDefault().getPreferenceStore() != null);
 	}
 
 	/*

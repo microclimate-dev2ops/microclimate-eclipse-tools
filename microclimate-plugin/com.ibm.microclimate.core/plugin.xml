@@ -9,8 +9,9 @@
       launchModes="run,debug"
       startTimeout="60000"
       stopTimeout="15000"
-      initialState="stopped"
+      initialState="started"
       supportsRemoteHosts="false"
+      runtime="false"
       launchConfigId="com.ibm.microclimate.core.launchConfigurationType"
       class="com.ibm.microclimate.core.internal.MicroclimateServer"
       behaviourClass="com.ibm.microclimate.core.internal.MicroclimateServerBehaviour">

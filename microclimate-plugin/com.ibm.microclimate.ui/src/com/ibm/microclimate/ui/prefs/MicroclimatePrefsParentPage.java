@@ -7,7 +7,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 public class MicroclimatePrefsParentPage extends PreferencePage implements IWorkbenchPreferencePage {
-	
+
 	@Override
 	public void init(IWorkbench arg0) {
 		setDescription("Microclimate is really great and good");
