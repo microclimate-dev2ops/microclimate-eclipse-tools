@@ -21,11 +21,12 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
+import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.Activator;
 import com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard;
-import com.ibm.microclimate.ui.wizards.WizardUtil;
+import com.ibm.microclimate.ui.wizards.WizardLauncher;
 
 public class MicroclimateConnectionPrefsPage extends PreferencePage implements IWorkbenchPreferencePage {
 
@@ -66,7 +67,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 				Wizard wizard = new NewMicroclimateConnectionWizard(false);
-				WizardUtil.launchWizardWithoutSelection(wizard);
+				WizardLauncher.launchWizardWithoutSelection(wizard);
 			}
 		});
 
@@ -88,7 +89,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				int[] selected = connectionsTable.getSelectionIndices();
 				for(int i : selected) {
 					if(!MicroclimateConnectionManager.remove(connections.get(i))) {
-						System.err.println("Connection with index " + i + " was already removed");
+						MCLogger.logError("Connection with index " + i + " was already removed");
 					}
 				}
 
@@ -129,7 +130,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
 			.addPropertyChangeListener(event -> {
 			    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-			    	System.out.println("Reloading preferences in MCCPP");
+			    	MCLogger.log("Reloading preferences in MCCPP");
 			    	// calling refreshConnectionsList here results in WidgetDisposed exception if
 			    	// the window is not in focus
 			        needsRefreshConnections = true;

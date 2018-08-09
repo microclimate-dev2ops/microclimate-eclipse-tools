@@ -14,6 +14,7 @@ import org.eclipse.wst.server.core.model.IURLProvider;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
 import com.ibm.microclimate.core.Activator;
+import com.ibm.microclimate.core.MCLogger;
 
 public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
@@ -25,13 +26,13 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 			ATTR_ROOT_URL  	= "rootUrl",
 			ATTR_PROJ_ID   	= "projectID";
 
-	private ServerPort httpPort;
+	//private MicroclimateServerBehaviour behaviour;
 
 	@Override
 	public void initialize() {
-		System.out.println("Initialize MicroclimateServer");
+		MCLogger.log("Initialize MicroclimateServer");
 
-		// TODO get and set initial server/project state
+		//behaviour = (MicroclimateServerBehaviour) getServer().loadAdapter(MicroclimateServerBehaviour.class, null);
 	}
 
 	@Override
@@ -40,23 +41,25 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 			return new ServerPort[0];
 		}
 
+		// TODO cache this, TODO add debug port
+		ServerPort[] serverPorts = new ServerPort[1];
+
 		int httpPortNum = getServer().getAttribute(ATTR_HTTP_PORT, -1);
 		if (httpPortNum == -1) {
-			System.err.println("No httpPort attribute");
-			return new ServerPort[0];
+			MCLogger.logError("No httpPort attribute");
+		}
+		else {
+			serverPorts[0] = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
 		}
 
-		// TODO cache this, and refresh when/if needed
-		httpPort = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
-
-		return new ServerPort[] { httpPort };
+		return serverPorts;
 	}
 
 	@Override
 	public URL getModuleRootURL(IModule arg0) {
 		String rootUrl = getServer().getAttribute(ATTR_ROOT_URL, "");
 		if(rootUrl.isEmpty()) {
-			System.err.println("No rootUrl attribute");
+			MCLogger.logError("No rootUrl attribute");
 			return null;
 		}
 
@@ -64,7 +67,7 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 		try {
 			url = new URL(rootUrl);
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			MCLogger.logError(e);
 		}
 
 		return url;

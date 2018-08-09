@@ -14,6 +14,8 @@ import javax.json.JsonReader;
 
 import org.eclipse.core.runtime.IPath;
 
+import com.ibm.microclimate.core.MCLogger;
+
 public class MicroclimateApplication {
 
 	private final MicroclimateConnection mcConnection;
@@ -23,42 +25,31 @@ public class MicroclimateApplication {
 	public final URL rootUrl;
 
 	public static List<MicroclimateApplication> buildFromProjectsJson(MicroclimateConnection conn,
-			String projectsJson) {
+			String projectsJson) throws JsonException, NumberFormatException, MalformedURLException {
 
 		List<MicroclimateApplication> result = new ArrayList<>();
 
-		// TODO improve error handling - failures here need to be passed up to the calling UI so we can display a msg
-		try {
-			JsonReader jsReader = Json.createReader(new StringReader(projectsJson));
-			JsonArray appArray = jsReader.readArray();
+		JsonReader jsReader = Json.createReader(new StringReader(projectsJson));
+		JsonArray appArray = jsReader.readArray();
 
-			for(int i = 0; i < appArray.size(); i++) {
-				JsonObject app = appArray.getJsonObject(i);
-				System.out.println("app: " + app.toString());
-				String id 	= app.getString("projectID");
-				String name = app.getString("name");
-				String lang = app.getString("language");
-				String loc 	= app.getString("locOnDisk");
-				String exposedPort = app.getJsonObject("ports").getString("exposedPort");
+		for(int i = 0; i < appArray.size(); i++) {
+			JsonObject app = appArray.getJsonObject(i);
+			MCLogger.log("app: " + app.toString());
+			String id 	= app.getString("projectID");
+			String name = app.getString("name");
+			String lang = app.getString("language");
+			String loc 	= app.getString("locOnDisk");
+			String exposedPort = app.getJsonObject("ports").getString("exposedPort");
 
-				try {
-					int port = Integer.parseInt(exposedPort);
+			int port = Integer.parseInt(exposedPort);
 
-					final String contextRootKey = "contextroot";
-					String contextRoot = null;
-					if(app.containsKey(contextRootKey)) {
-						contextRoot = app.getString(contextRootKey);
-					}
-
-					result.add(new MicroclimateApplication(conn, id, name, lang, loc, port, contextRoot));
-				}
-				catch(NumberFormatException | MalformedURLException e) {
-					e.printStackTrace();
-				}
+			final String contextRootKey = "contextroot";
+			String contextRoot = null;
+			if(app.containsKey(contextRootKey)) {
+				contextRoot = app.getString(contextRootKey);
 			}
-		}
-		catch(JsonException e) {
-			e.printStackTrace();
+
+			result.add(new MicroclimateApplication(conn, id, name, lang, loc, port, contextRoot));
 		}
 
 		return result;
@@ -85,8 +76,8 @@ public class MicroclimateApplication {
 
 		this.rootUrl = rootUrl;
 
-		//System.out.println("Created mcApp:");
-		//System.out.println(toString());
+		//MCLogger.log("Created mcApp:");
+		//MCLogger.log(toString());
 	}
 
 	/*

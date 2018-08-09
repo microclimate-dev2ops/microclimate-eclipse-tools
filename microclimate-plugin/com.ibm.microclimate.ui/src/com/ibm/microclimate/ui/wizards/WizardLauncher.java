@@ -9,7 +9,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
-public class WizardUtil {
+public class WizardLauncher {
 
 	/**
 	 * Useful when the wizard to be launched does not care about the workbench or selection.

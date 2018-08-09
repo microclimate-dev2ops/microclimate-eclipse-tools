@@ -15,6 +15,7 @@ import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
 
+import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateServer;
 import com.ibm.microclimate.ui.Activator;
@@ -37,7 +38,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	private static IProject getProjectFromSelection(IStructuredSelection selection) {
 		if (selection == null) {
-			System.err.println("Null selection passed to getProjectFromSelection");
+			MCLogger.logError("Null selection passed to getProjectFromSelection");
 			return null;
 		}
 
@@ -77,7 +78,8 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		String eclipseProjPath = selectedProject.getLocation().toOSString();
 
 		boolean isSamePath = mcAppPath.equals(eclipseProjPath);
-		System.out.printf("Link %s to %s - same? %b\n", mcAppPath, eclipseProjPath, isSamePath);
+
+		MCLogger.log(String.format("Link %s to %s - same? %b\n", mcAppPath, eclipseProjPath, isSamePath));
 
 		if (!isSamePath) {
 			String failedMsg = "The project paths do not match:\n"
@@ -93,12 +95,9 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 		try {
 			doLink(appToLink);
-
-			MessageDialog.openInformation(getShell(), "Linking Complete",
-					"Linked project " + selectedProject.getName() + " with MC project " + appToLink.name);
 		}
 		catch(CoreException e) {
-			e.printStackTrace();
+			MCLogger.logError(e);
 			MessageDialog.openError(getShell(), "Error create Microclimate Server/Application", e.getMessage());
 		}
 
@@ -106,6 +105,8 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	}
 
 	private void doLink(MicroclimateApplication appToLink) throws CoreException {
+		String serverName = "Microclimate Application: " + appToLink.name;
+
 		IServerType mcServerType = null;
 
 		for (IServerType type : ServerCore.getServerTypes()) {
@@ -115,17 +116,25 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		}
 
 		if (mcServerType == null) {
-			System.err.println("Didn't find MC Server Type!");
+			MCLogger.logError("Didn't find MC Server Type!");
 			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
 					"Missing Server Type: " + MicroclimateServer.SERVER_ID));
 		}
 
 		IServerWorkingCopy newServer = mcServerType.createServer(null, null, null, null);		// TODO progress mon?
 		newServer.setHost(appToLink.host);
-		newServer.setName("Microclimate Server: " + appToLink.name);
+
+		newServer.setName(serverName);
+
 		newServer.setAttribute(MicroclimateServer.ATTR_HTTP_PORT, appToLink.httpPort);
 		newServer.setAttribute(MicroclimateServer.ATTR_ROOT_URL, appToLink.rootUrl.toString());
 		newServer.setAttribute(MicroclimateServer.ATTR_PROJ_ID, appToLink.id);
 		newServer.saveAll(true, null);
+
+		String successMsg = "Linked project %s with Microclimate application %s.\n"
+				+ "Server \"%s\" is now available in the Servers view.";
+		successMsg = String.format(successMsg, selectedProject.getName(), appToLink.name, serverName);
+
+		MessageDialog.openInformation(getShell(), "Linking Complete", successMsg);
 	}
 }

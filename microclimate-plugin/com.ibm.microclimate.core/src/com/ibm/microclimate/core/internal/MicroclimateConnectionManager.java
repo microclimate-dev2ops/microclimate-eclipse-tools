@@ -9,23 +9,25 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
+import com.ibm.microclimate.core.MCLogger;
+
 public class MicroclimateConnectionManager {
 
 	private static MicroclimateConnectionManager instance;
 
 	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections";
 
-	private List<MicroclimateConnection> connections = new ArrayList<MicroclimateConnection>();
+	private List<MicroclimateConnection> connections = new ArrayList<>();
 
 	private IPreferenceStore preferenceStore;
 
 	private MicroclimateConnectionManager() {
 		if(instance != null) {
-			System.err.println("Multiple singleton instances of MCCM");
+			MCLogger.logError("Multiple singleton instances of MCCM");
 		}
 		instance = this;
 
-		System.out.println("Init microclimateConnectionManager");
+		MCLogger.log("Init microclimateConnectionManager");
 		preferenceStore = com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore();
 		loadFromPreferences();
 
@@ -33,7 +35,7 @@ public class MicroclimateConnectionManager {
 			.addPropertyChangeListener(event -> {
             	// Refresh the list of connections whenever they are modified
                 if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-                	System.out.println("Loading prefs in MCCM");
+                	MCLogger.log("Loading prefs in MCCM");
                     loadFromPreferences();
                 }
             });
@@ -58,11 +60,11 @@ public class MicroclimateConnectionManager {
 	private void add(MicroclimateConnection connection) {
 		if(!connections.contains(connection)) {
 			connections.add(connection);
-			System.out.println("Added a new MCConnection: " + connection.baseUrl());
+			MCLogger.log("Added a new MCConnection: " + connection.baseUrl());
 			writeToPreferences();
 		}
 		else {
-			System.out.println("MCConnection " + connection.baseUrl() + " already exists");
+			MCLogger.log("MCConnection " + connection.baseUrl() + " already exists");
 		}
 	}
 
@@ -70,7 +72,7 @@ public class MicroclimateConnectionManager {
 	 * @return An <b>unmodifiable</b> copy of the list of existing MC connections.
 	 */
 	public static List<MicroclimateConnection> connections() {
-		// System.out.println("Returning " + connections.size() + " connections");
+		// MCLogger.log("Returning " + connections.size() + " connections");
 		// Have to do this every time?
 		// loadFromPreferences();
 		return Collections.unmodifiableList(instance.connections);
@@ -90,14 +92,14 @@ public class MicroclimateConnectionManager {
 	}
 
 	public static boolean remove(MicroclimateConnection connection) {
-		System.out.println("Trying to remove MCConnection: " + connection.baseUrl());
+		MCLogger.log("Trying to remove MCConnection: " + connection.baseUrl());
 		boolean removeResult = instance().connections.remove(connection);
 		instance().writeToPreferences();
 		return removeResult;
 	}
 
 	public static void clear() {
-		System.out.println("Clearing " + instance().connections.size() + " connections");
+		MCLogger.log("Clearing " + instance().connections.size() + " connections");
 		instance().connections.clear();
 		// instance().writeToPreferences();
 	}
@@ -111,7 +113,7 @@ public class MicroclimateConnectionManager {
 			// This is safe so long as there are no newlines in mcc.toString().
 			prefsBuilder.append(mcc.toString()).append('\n');
 		}
-		System.out.println("Writing connections to preferences: " + prefsBuilder.toString());
+		MCLogger.log("Writing connections to preferences: " + prefsBuilder.toString());
 
 		preferenceStore.setValue(CONNECTION_LIST_PREFSKEY, prefsBuilder.toString());
 	}
@@ -120,7 +122,7 @@ public class MicroclimateConnectionManager {
 		clear();
 
 		String storedConnections = preferenceStore.getString(CONNECTION_LIST_PREFSKEY).trim();
-		System.out.println("Reading connections from preferences: \"" + storedConnections + "\"");
+		MCLogger.log("Reading connections from preferences: \"" + storedConnections + "\"");
 
 		for(String line : storedConnections.split("\n")) {
 			if(line.trim().isEmpty()) {
@@ -132,14 +134,14 @@ public class MicroclimateConnectionManager {
 			}
 			catch(ConnectException e) {
 				// Probably we should keep the connection info, but mark it as 'inactive' or similar
-				e.printStackTrace();
+				MCLogger.logError(e);
 				// TODO improve this when there are many connections
 				MessageDialog.openError(Display.getDefault().getActiveShell(),
 						"Failed to connect to Microclimate instance", e.getMessage());
 			}
 			catch(StringIndexOutOfBoundsException | NumberFormatException e) {
-				e.printStackTrace();
-				System.err.println("Stored MCConnection preference line did not match expected format:\n" + line);
+				MCLogger.logError(e);
+				MCLogger.logError("Stored MCConnection preference line did not match expected format:\n" + line);
 			}
 		}
 

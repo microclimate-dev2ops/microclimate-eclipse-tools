@@ -10,26 +10,27 @@ import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 
 // From http://www.eclipse.org/articles/article.php?file=Article-JFaceWizards/index.html
 public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
-	
+
 	private IWorkbenchPart part;
 	private ISelection selection;
-	
+
 	@Override
 	public void run(IAction arg0) {
-		
+
 		INewWizard wizard;
-		
+
 		// If there is not an existing connection, we must create one before a project can be linked
 		if(MicroclimateConnectionManager.connectionsCount() < 1) {
 			wizard = new NewMicroclimateConnectionWizard(true);
 		}
 		else {
+			// TODO check if already linked, in this case there's no point in running the wizard
 			wizard = new LinkMicroclimateProjectWizard();
 		}
-		
-		WizardUtil.launchWizard(wizard, 
+
+		WizardLauncher.launchWizard(wizard,
 				selection,
-				part.getSite().getWorkbenchWindow().getWorkbench(), 
+				part.getSite().getWorkbenchWindow().getWorkbench(),
 				part.getSite().getShell());
 	}
 
@@ -41,5 +42,5 @@ public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart part) {
 		this.part = part;
-	}	
+	}
 }

@@ -19,6 +19,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
+import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
@@ -105,7 +106,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			public void widgetSelected(SelectionEvent se) {
 				// Selecting a project allows the user to proceed in the wizard.
 				getWizard().getContainer().updateButtons();
-				// System.out.println("Now selected project #" + projectsTable.getSelectionIndex());
+				// MCLogger.log("Now selected project #" + projectsTable.getSelectionIndex());
 			}
 		});
 
@@ -167,7 +168,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		MicroclimateConnection connection = MicroclimateConnectionManager.getConnection(selected);
 
 		if(connection == null) {
-			System.err.println("Failed to get MCConnection object from selected URL: " + selected);
+			MCLogger.logError("Failed to get MCConnection object from selected URL: " + selected);
 		}
 		mcConnection = connection;
 	}
@@ -184,7 +185,13 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		}
 
 		// Cache the mcApps here so that we can be sure the contents of mcApps match the contents of the table
-		mcApps = mcConnection.apps();
+		try {
+			mcApps = mcConnection.apps();
+		}
+		catch(Exception e) {
+			MCLogger.logError(e);
+			MessageDialog.openError(getShell(), "Error getting project list", e.getMessage());
+		}
 
 		for(MicroclimateApplication mcApp : mcApps) {
 			TableItem ti = new TableItem(projectsTable, SWT.NONE);

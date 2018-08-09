@@ -6,15 +6,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.json.JsonException;
 import javax.json.JsonObject;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+
+import com.ibm.microclimate.core.MCLogger;
 
 public class MicroclimateConnection {
 
@@ -58,29 +62,30 @@ public class MicroclimateConnection {
 		try {
 			getResult = get(baseUrl);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MCLogger.logError(e);
+			return false;
 		}
 
-		//System.out.println("From " + url + " got:");
-		//System.out.println(getResult);
+		//MCLogger.log("From " + url + " got:");
+		//MCLogger.log(getResult);
 
 		return getResult != null && getResult.contains("Microclimate");
 	}
 
-	public List<MicroclimateApplication> apps() {
+	public List<MicroclimateApplication> apps()
+			throws NumberFormatException, JsonException, MalformedURLException {
+
 		String projectsUrl = baseUrl + "api/v1/projects";
 
 		String projectsResponse = null;
 		try {
 			projectsResponse = get(projectsUrl);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MCLogger.logError(e);
 		}
 
 		if(projectsResponse == null) {
-			System.err.println("Received null response from projects endpoint");
+			MCLogger.logError("Received null response from projects endpoint");
 			return Collections.emptyList();
 		}
 
@@ -88,14 +93,13 @@ public class MicroclimateConnection {
 	}
 
 	// Temporary
-	// TODO replace with socket communication
 	public static String get(String url) throws IOException {
 		HttpURLConnection connection = null;
 		BufferedReader in = null;
 
 		try {
 			connection = (HttpURLConnection) new URL(url).openConnection();
-			System.out.println("GET " + url);
+			// MCLogger.log("GET " + url);
 
 			connection.setRequestMethod("GET");
 			connection.setReadTimeout(2000);
@@ -105,10 +109,10 @@ public class MicroclimateConnection {
 				return readAllFromStream(connection.getInputStream());
 			}
 			else {
-				System.err.println("Received bad response code: " + responseCode);
+				MCLogger.logError("Received bad response code: " + responseCode);
 				InputStream errorStream = connection.getErrorStream();
 				if(errorStream != null) {
-					System.err.println(readAllFromStream(errorStream));
+					MCLogger.logError(readAllFromStream(errorStream));
 				}
 			}
 		} finally {
@@ -116,7 +120,7 @@ public class MicroclimateConnection {
 				try {
 					in.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					MCLogger.logError(e);
 				}
 			}
 			if (connection != null) {
@@ -127,12 +131,11 @@ public class MicroclimateConnection {
 	}
 
 	// Temporary
-	// TODO replace with socket communication
 	public static String post(String url, JsonObject payload) {
 		HttpURLConnection connection = null;
 		BufferedReader in = null;
 
-		System.out.println("POST " + payload.toString() + " TO " + url);
+		MCLogger.log("POST " + payload.toString() + " TO " + url);
 		try {
 			connection = (HttpURLConnection) new URL(url).openConnection();
 
@@ -149,21 +152,21 @@ public class MicroclimateConnection {
 				return readAllFromStream(connection.getInputStream());
 			}
 			else {
-				System.err.println("Received bad response code: " + responseCode);
+				MCLogger.logError("Received bad response code: " + responseCode);
 				InputStream errorStream = connection.getErrorStream();
 				if(errorStream != null) {
 					return readAllFromStream(errorStream);
-					// System.err.println();
+					// MCLogger.logError();
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			MCLogger.logError(e);
 		} finally {
 			if (in != null) {
 				try {
 					in.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					MCLogger.logError(e);
 				}
 			}
 			if (connection != null) {
@@ -206,9 +209,8 @@ public class MicroclimateConnection {
 				HOST_KEY, host, PORT_KEY, port);
 	}
 
-	public static MicroclimateConnection fromString(String str) throws ConnectException {
-
-		// Note that NumberFormat and StringIndexOutOfBounds are handled by caller
+	public static MicroclimateConnection fromString(String str)
+			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException {
 
 		int hostIndex = str.indexOf(HOST_KEY);
 		String afterHostKey = str.substring(hostIndex + HOST_KEY.length() + 1);

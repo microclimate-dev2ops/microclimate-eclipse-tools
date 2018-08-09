@@ -8,14 +8,42 @@ import javax.json.Json;
 import javax.json.JsonObject;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 
 import com.ibm.microclimate.core.Activator;
+import com.ibm.microclimate.core.MCLogger;
 
 public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
+
+	private final String projectID = "abc";
+
+	/*
+	public MicroclimateServerBehaviour() {
+		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
+
+		projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
+		if (projectID.isEmpty()) {
+			MCLogger.logError("No projectID attribute");
+		}
+
+		if (!updateState()) {
+			MCLogger.logError("Failed to contact server when initializing");
+			setServerState(IServer.STATE_STOPPED);
+		}
+	}
+	*/
+
+	@Override
+	public IStatus canStop() {
+		// TODO when FW supports this
+		return new Status(IStatus.INFO, Activator.PLUGIN_ID, 0, "Can stop but nothing will happen", null);
+	}
 
 	@Override
 	public void stop(boolean force) {
@@ -29,19 +57,20 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	@Override
+	public void publish(int kind, java.util.List<IModule[]> modules, IProgressMonitor monitor, IAdaptable info) {
+		// do nothing :)
+	}
+
+
+	@Override
 	public void restart(String launchMode) throws CoreException {
-		System.out.println("Restarting in " + launchMode + " mode");
+		MCLogger.log("Restarting in " + launchMode + " mode");
 
-		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
-		String currentStatus = getAppStatus(projectID);
-		System.out.println("Current status = " + currentStatus);
+		int currentStatus = getAppState();
+		MCLogger.log("Current status = " + convertServerStateToAppStatus(currentStatus));
 
-		if (currentStatus == null) {
-			System.err.println("Error getting app status");
-			return;
-		}
-		else if (IServer.STATE_STARTING == convertAppStatusToServerState(currentStatus)) {
-			waitForStarted(projectID);
+		if (IServer.STATE_STARTING == currentStatus) {
+			waitForStarted();
 		}
 
 		String url = "http://localhost:9091/api/v1/projects/action";
@@ -52,64 +81,72 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				.add("projectID", projectID)
 				.build();
 
-		/*String response =*/ MicroclimateConnection.post(url, restartProjectPayload);
+		/*String response =*/
+		MicroclimateConnection.post(url, restartProjectPayload);
 		// returns an operationID if success - what to do with it?
-		// System.out.println(response);
+		// MCLogger.log(response);
 
 		try {
 			// It takes a moment for the project to update to Stopping state.
-			System.out.println("Waiting for project to receive execution mode change request");
+			MCLogger.log("Waiting for project to receive execution mode change request");
 			Thread.sleep(2000);
 		}
 		catch(InterruptedException e) {
-			e.printStackTrace();
+			MCLogger.logError(e);
 		}
-		System.out.println("Waiting for server to be ready again");
+		MCLogger.log("Waiting for server to be ready again");
 
-		waitForStarted(projectID);
+		waitForStarted();
 	}
 
-	private void waitForStarted(String projectID) {
-		long elapsed = 0;
+	private void waitForStarted() {
+		long startTime = System.currentTimeMillis();
 		int pollRateMs = 500;
 
-		while(elapsed < getServer().getStartTimeout() * 1000) {
+		while((System.currentTimeMillis() - startTime) < (getServer().getStartTimeout() * 1000)) {
 			// TODO how to listen for user canceling?
 
 			try {
 				Thread.sleep(pollRateMs);
-				elapsed += pollRateMs;
 			}
 			catch(InterruptedException e) {
-				e.printStackTrace();
+				MCLogger.logError(e);
 			}
 
-			// System.out.println("Waited " + elapsed + "ms");
-
-			Long startTime = System.currentTimeMillis();
-
-			String status = getAppStatus(projectID);
-			if (status == null) {
-				continue;
-			}
-			System.out.println("Update server status to " + status);
-			setServerState(convertAppStatusToServerState(status));
-
-			elapsed += System.currentTimeMillis() - startTime;
+			// MCLogger.log("Waited " + elapsed + "ms");
+			updateState();
 
 			if (getServer().getServerState() == IServer.STATE_STARTED) {
-				System.out.println("Server is done restarting");
+				MCLogger.log("Server is done restarting");
 				break;
 			}
 		}
 
 		if (getServer().getServerState() != IServer.STATE_STARTED) {
-			System.err.println("Server did not restart in time!");
+			MCLogger.logError("Server did not restart in time!");
 			setServerState(IServer.STATE_UNKNOWN);
 		}
 	}
 
-	private static String getAppStatus(String projectID) {
+	boolean updateState() {
+		int state = getAppState();
+		if (state == -1) {
+			MCLogger.logError("Failed to update app state");
+			return false;
+		}
+		else {
+			MCLogger.log("Update server status to " + state);
+			setServerState(state);
+		}
+		return true;
+	}
+
+	/**
+	 * Get the status of the app with the given projectID
+	 * @param projectID
+	 * @return IServer.STATE constant corresponding to the current status, or -1 if there's an error.
+	 */
+	int getAppState() {
 		String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
 		statusUrl = String.format(statusUrl, projectID);
 
@@ -122,12 +159,12 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		catch (IOException e) {
 			if (e instanceof SocketTimeoutException) {
-				System.err.println("Server state update request timed out");
+				MCLogger.logError("Server state update request timed out");
 			}
 			else {
-				e.printStackTrace();
+				MCLogger.logError(e);
 			}
-			return null;
+			return -1;
 		}
 
 		JsonObject appStateJso = Json.createReader(new StringReader(appStatusResponse)).readObject();
@@ -136,10 +173,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		String status = "unknown";
 		if (appStateJso.containsKey(appStatusKey)) {
 			status = appStateJso.getString(appStatusKey);
-			return status;
+			return convertAppStatusToServerState(status);
 		}
 
-		return null;
+		return -1;
 	}
 
 	static int convertAppStatusToServerState(String appStatus) {
@@ -157,6 +194,24 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		else {
 			return IServer.STATE_UNKNOWN;
+		}
+	}
+
+	static String convertServerStateToAppStatus(int serverState) {
+		if (serverState == IServer.STATE_STARTED) {
+			return "started";
+		}
+		else if (serverState == IServer.STATE_STARTING) {
+			return "starting";
+		}
+		else if (serverState == IServer.STATE_STOPPING) {
+			return "stopping";
+		}
+		else if (serverState == IServer.STATE_STOPPED) {
+			return "stopped";
+		}
+		else {
+			return "unknown";
 		}
 	}
 }
