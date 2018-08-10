@@ -1,4 +1,4 @@
-	package com.ibm.microclimate.core.internal;
+	package com.ibm.microclimate.core.internal.server;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,7 +30,9 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public void initialize() {
-		MCLogger.log("Initialize MicroclimateServer");
+		super.initialize();
+
+		MCLogger.log("Initialize MicroclimateServer at " + getModuleRootURL(null));
 
 		//behaviour = (MicroclimateServerBehaviour) getServer().loadAdapter(MicroclimateServerBehaviour.class, null);
 	}

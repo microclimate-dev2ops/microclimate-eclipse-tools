@@ -17,7 +17,7 @@ import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.MicroclimateServer;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.ui.Activator;
 
 public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard {

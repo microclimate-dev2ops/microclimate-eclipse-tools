@@ -39,6 +39,20 @@
          	class="com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage">
          </page>    
    </extension>
+   
+	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+		<launchConfigurationTypeImage
+			id="com.ibm.microclimate.ui.launchConfigurationTypeImage"
+			configTypeID="com.ibm.microclimate.core.launchConfigurationType"
+			icon="icons/microclimate.ico"/>
+	</extension>
+	
+	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+		<launchConfigurationTabGroup
+			id="com.ibm.microclimate.ui.launchConfigurationTabGroup"
+			type="com.ibm.microclimate.core.launchConfigurationType"
+			class="com.ibm.microclimate.ui.MicroclimateLaunchConfigTabGroup"/>
+	</extension>
 
  	<!--extension
 		point="org.eclipse.ui.newWizards">

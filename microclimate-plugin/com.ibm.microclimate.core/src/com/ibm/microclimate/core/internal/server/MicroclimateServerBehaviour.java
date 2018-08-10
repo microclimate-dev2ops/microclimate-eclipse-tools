@@ -1,30 +1,33 @@
-package com.ibm.microclimate.core.internal;
+package com.ibm.microclimate.core.internal.server;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.net.SocketTimeoutException;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 
 import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.HttpUtil;
+import com.sun.jdi.connect.AttachingConnector;
 
 public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
-	private final String projectID = "abc";
+	private String projectID;
 
-	/*
-	public MicroclimateServerBehaviour() {
+	private MicroclimateServerMonitorThread monitorThread;
+
+	@Override
+	public void initialize(IProgressMonitor monitor) {
+        super.initialize(monitor);
+
 		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
 
 		projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
@@ -32,17 +35,21 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCLogger.logError("No projectID attribute");
 		}
 
+		monitorThread = new MicroclimateServerMonitorThread(this);
+		monitorThread.start();
+
+		/*
 		if (!updateState()) {
 			MCLogger.logError("Failed to contact server when initializing");
 			setServerState(IServer.STATE_STOPPED);
 		}
+		*/
 	}
-	*/
 
 	@Override
 	public IStatus canStop() {
 		// TODO when FW supports this
-		return new Status(IStatus.INFO, Activator.PLUGIN_ID, 0, "Can stop but nothing will happen", null);
+		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Not yet supported", null);
 	}
 
 	@Override
@@ -57,33 +64,49 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	@Override
-	public void publish(int kind, java.util.List<IModule[]> modules, IProgressMonitor monitor, IAdaptable info) {
-		// do nothing :)
+	public void dispose() {
+		MCLogger.log("Dispose " + getServer().getName());
+		monitorThread.disable();
 	}
 
+	/**
+	 * Public wrapper for protected setServerState
+	 */
+	public void setServerState_(int serverState) {
+		setServerState(serverState);
+	}
+
+	String getProjectID() {
+		return projectID;
+	}
 
 	@Override
 	public void restart(String launchMode) throws CoreException {
-		MCLogger.log("Restarting in " + launchMode + " mode");
+		MCLogger.log("Restarting " + getServer().getHost() + ":" + getServer().getServerPorts(null)[0].getPort()
+				+ " in " + launchMode + " mode");
 
-		int currentStatus = getAppState();
-		MCLogger.log("Current status = " + convertServerStateToAppStatus(currentStatus));
+		int currentState = monitorThread.getLastKnownState();
+		MCLogger.log("Current status = " + serverStateToAppStatus(currentState));
 
-		if (IServer.STATE_STARTING == currentStatus) {
+		if (IServer.STATE_STARTING == currentState) {
 			waitForStarted();
 		}
 
 		String url = "http://localhost:9091/api/v1/projects/action";
 
 		JsonObject restartProjectPayload = Json.createObjectBuilder()
-				.add("action", "setExecutionMode")
+				.add("action", "restart")
 				.add("mode", launchMode)
 				.add("projectID", projectID)
 				.build();
 
-		/*String response =*/
-		MicroclimateConnection.post(url, restartProjectPayload);
-		// returns an operationID if success - what to do with it?
+		try {
+			// returns an operationID if success - what to do with it?
+			HttpUtil.post(url, restartProjectPayload);
+		} catch (IOException e) {
+			MCLogger.logError("Error POSTing restart request", e);
+			return;
+		}
 		// MCLogger.log(response);
 
 		try {
@@ -96,90 +119,63 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		MCLogger.log("Waiting for server to be ready again");
 
+
+		waitForState(IServer.STATE_STARTING, getStartTimeoutMs());
+		if ("debug".equalsIgnoreCase(launchMode)) {
+			//onStartingInDebug();
+		}
 		waitForStarted();
 	}
 
-	private void waitForStarted() {
-		long startTime = System.currentTimeMillis();
-		int pollRateMs = 500;
+	private void onStartingInDebug() {
+		AttachingConnector connector = LaunchUtilities.getAttachingConnector();
 
-		while((System.currentTimeMillis() - startTime) < (getServer().getStartTimeout() * 1000)) {
+		// TODO obviously
+		// Is this supposed to be the local port (IE any free port) or the port we're connecting to?
+		int debugPort = 32858;
+
+		Map connectorArgs = connector.defaultArguments();
+        connectorArgs = LaunchUtilities.configureConnector(connectorArgs, getServer().getHost(), debugPort);
+	}
+
+
+	private int getStartTimeoutMs() {
+		return getServer().getStartTimeout() * 1000;
+	}
+
+	private void waitForStarted() {
+		waitForState(IServer.STATE_STARTED, getStartTimeoutMs());
+	}
+
+	private void waitForState(int state, int timeoutMs) {
+		long startTime = System.currentTimeMillis();
+		int pollRateMs = 1000;
+
+		while((System.currentTimeMillis() - startTime) < timeoutMs) {
 			// TODO how to listen for user canceling?
 
 			try {
+				MCLogger.log("Waiting for server restart");
 				Thread.sleep(pollRateMs);
 			}
 			catch(InterruptedException e) {
 				MCLogger.logError(e);
 			}
 
-			// MCLogger.log("Waited " + elapsed + "ms");
-			updateState();
-
-			if (getServer().getServerState() == IServer.STATE_STARTED) {
+			// the ServerMonitorThread will update the state
+			if (getServer().getServerState() == state) {
 				MCLogger.log("Server is done restarting");
 				break;
 			}
 		}
 
-		if (getServer().getServerState() != IServer.STATE_STARTED) {
-			MCLogger.logError("Server did not restart in time!");
+		if (getServer().getServerState() != state) {
+			MCLogger.logError("Server did not enter state " + serverStateToAppStatus(state) + " in " + timeoutMs);
 			setServerState(IServer.STATE_UNKNOWN);
 		}
 	}
 
-	boolean updateState() {
-		int state = getAppState();
-		if (state == -1) {
-			MCLogger.logError("Failed to update app state");
-			return false;
-		}
-		else {
-			MCLogger.log("Update server status to " + state);
-			setServerState(state);
-		}
-		return true;
-	}
-
-	/**
-	 * Get the status of the app with the given projectID
-	 * @param projectID
-	 * @return IServer.STATE constant corresponding to the current status, or -1 if there's an error.
-	 */
-	int getAppState() {
-		String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
-		statusUrl = String.format(statusUrl, projectID);
-
-		String appStatusResponse = null;
-
-		try {
-			// Sometimes during restart, FW will be really slow to reply,
-			// and this request will time out.
-			appStatusResponse = MicroclimateConnection.get(statusUrl);
-		}
-		catch (IOException e) {
-			if (e instanceof SocketTimeoutException) {
-				MCLogger.logError("Server state update request timed out");
-			}
-			else {
-				MCLogger.logError(e);
-			}
-			return -1;
-		}
-
-		JsonObject appStateJso = Json.createReader(new StringReader(appStatusResponse)).readObject();
-
-		final String appStatusKey = "appStatus";
-		String status = "unknown";
-		if (appStateJso.containsKey(appStatusKey)) {
-			status = appStateJso.getString(appStatusKey);
-			return convertAppStatusToServerState(status);
-		}
-
-		return -1;
-	}
-
-	static int convertAppStatusToServerState(String appStatus) {
+	static int appStatusToServerState(String appStatus) {
 		if ("started".equals(appStatus)) {
 			return IServer.STATE_STARTED;
 		}
@@ -197,7 +193,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 	}
 
-	static String convertServerStateToAppStatus(int serverState) {
+	static String serverStateToAppStatus(int serverState) {
 		if (serverState == IServer.STATE_STARTED) {
 			return "started";
 		}

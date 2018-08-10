@@ -54,6 +54,8 @@ public class MCLogger {
 		String time = TIME_SDF.format(Calendar.getInstance().getTime());
 
 		final String level = isError ? "ERROR" : "INFO ";
+
+		@SuppressWarnings("resource")
 		final PrintStream stream = isError ? errStream : outStream;
 		String callerInfo = "unknown";
 
@@ -68,7 +70,6 @@ public class MCLogger {
 		String message = String.format("[%s %s %s] %s", level, time, callerInfo, msg);
 
 		stream.println(message);
-		stream.close();
 	}
 
 }

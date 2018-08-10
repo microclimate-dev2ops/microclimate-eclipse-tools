@@ -1,20 +1,33 @@
 <plugin>
-  <extension point="org.eclipse.wst.server.core.serverTypes">
-    <serverType
-      id="microclimate.server"
-      name="%serverName"
-      description="%serverDescription"
-      supportsManualCreation="false"
-      hasConfiguration="false"
-      launchModes="run,debug"
-      startTimeout="60000"
-      stopTimeout="15000"
-      initialState="started"
-      supportsRemoteHosts="false"
-      runtime="false"
-      launchConfigId="com.ibm.microclimate.core.launchConfigurationType"
-      class="com.ibm.microclimate.core.internal.MicroclimateServer"
-      behaviourClass="com.ibm.microclimate.core.internal.MicroclimateServerBehaviour">
-    </serverType>
-  </extension>
+<extension point="org.eclipse.wst.server.core.serverTypes">
+	<serverType
+		id="microclimate.server"
+		name="%serverName"
+		description="%serverDescription"
+		supportsManualCreation="false"
+		hasConfiguration="false"
+		launchModes="run,debug"
+		startTimeout="60000"
+		stopTimeout="15000"
+		initialState="started"
+		supportsRemoteHosts="false"
+		runtime="false"
+		launchConfigId="com.ibm.microclimate.core.launchConfigurationType"
+		class="com.ibm.microclimate.core.internal.server.MicroclimateServer"
+		behaviourClass="com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour">
+	</serverType>
+</extension>
+ 
+<!-- This relies on com.ibm.microclimate.ui org.eclipse.debug.ui.launchConfigurationTabGroups extension -->
+<extension point="org.eclipse.debug.core.launchConfigurationTypes">
+    <launchConfigurationType
+      id="com.ibm.microclimate.core.launchConfigurationType"
+      name="%launchConfigurationType"
+      delegate="com.ibm.microclimate.core.internal.server.MicroclimateServerLaunchConfigDelegate"
+      modes="run, debug"
+      sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+      sourcePathComputerId="com.ibm.microclimate.core.sourcePathComputer"/>
+</extension>
+
+
 </plugin>

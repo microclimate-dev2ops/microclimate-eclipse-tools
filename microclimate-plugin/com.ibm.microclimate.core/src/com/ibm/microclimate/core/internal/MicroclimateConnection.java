@@ -1,19 +1,12 @@
 package com.ibm.microclimate.core.internal;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ConnectException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 import javax.json.JsonException;
-import javax.json.JsonObject;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -60,7 +53,7 @@ public class MicroclimateConnection {
 	private static boolean test(String baseUrl) {
 		String getResult = null;
 		try {
-			getResult = get(baseUrl);
+			getResult = HttpUtil.get(baseUrl).response;
 		} catch (IOException e) {
 			MCLogger.logError(e);
 			return false;
@@ -79,7 +72,7 @@ public class MicroclimateConnection {
 
 		String projectsResponse = null;
 		try {
-			projectsResponse = get(projectsUrl);
+			projectsResponse = HttpUtil.get(projectsUrl).response;
 		} catch (IOException e) {
 			MCLogger.logError(e);
 		}
@@ -90,98 +83,6 @@ public class MicroclimateConnection {
 		}
 
 		return MicroclimateApplication.buildFromProjectsJson(this, projectsResponse);
-	}
-
-	// Temporary
-	public static String get(String url) throws IOException {
-		HttpURLConnection connection = null;
-		BufferedReader in = null;
-
-		try {
-			connection = (HttpURLConnection) new URL(url).openConnection();
-			// MCLogger.log("GET " + url);
-
-			connection.setRequestMethod("GET");
-			connection.setReadTimeout(2000);
-			int responseCode = connection.getResponseCode();
-
-			if (responseCode > 199 && responseCode < 300) {
-				return readAllFromStream(connection.getInputStream());
-			}
-			else {
-				MCLogger.logError("Received bad response code: " + responseCode);
-				InputStream errorStream = connection.getErrorStream();
-				if(errorStream != null) {
-					MCLogger.logError(readAllFromStream(errorStream));
-				}
-			}
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					MCLogger.logError(e);
-				}
-			}
-			if (connection != null) {
-				connection.disconnect();
-			}
-		}
-		return null;
-	}
-
-	// Temporary
-	public static String post(String url, JsonObject payload) {
-		HttpURLConnection connection = null;
-		BufferedReader in = null;
-
-		MCLogger.log("POST " + payload.toString() + " TO " + url);
-		try {
-			connection = (HttpURLConnection) new URL(url).openConnection();
-
-			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setDoOutput(true);
-
-			DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
-			payloadStream.write(payload.toString().getBytes());
-
-			int responseCode = connection.getResponseCode();
-
-			if (responseCode > 199 && responseCode < 300) {
-				return readAllFromStream(connection.getInputStream());
-			}
-			else {
-				MCLogger.logError("Received bad response code: " + responseCode);
-				InputStream errorStream = connection.getErrorStream();
-				if(errorStream != null) {
-					return readAllFromStream(errorStream);
-					// MCLogger.logError();
-				}
-			}
-		} catch (Exception e) {
-			MCLogger.logError(e);
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					MCLogger.logError(e);
-				}
-			}
-			if (connection != null) {
-				connection.disconnect();
-			}
-		}
-		return null;
-	}
-
-	private static String readAllFromStream(InputStream stream) {
-		Scanner s = new Scanner(stream);
-		s.useDelimiter("\\A");
-		String result = s.hasNext() ? s.next() : "";
-		s.close();
-		return result;
 	}
 
 	// Getters

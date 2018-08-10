@@ -56,7 +56,9 @@ public class MicroclimateApplication {
 	}
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, String language, String pathWithinWorkspace, int port, String contextRoot)
+			String id, String name, String language, String pathWithinWorkspace,
+			int httpPort, String contextRoot)
+
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
@@ -64,11 +66,11 @@ public class MicroclimateApplication {
 		this.name = name;
 		this.language = language;
 		this.fullLocalPath = mcConnection.localWorkspacePath().append(pathWithinWorkspace);
-		this.httpPort = port;
+		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.host();
 
-		URL rootUrl = new URL("http", host, port, "");
+		URL rootUrl = new URL("http", host, httpPort, "");
 
 		if (contextRoot != null) {
 			rootUrl = new URL(rootUrl, contextRoot);
