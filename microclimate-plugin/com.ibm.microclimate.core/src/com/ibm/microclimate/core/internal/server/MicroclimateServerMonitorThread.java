@@ -1,13 +1,11 @@
 package com.ibm.microclimate.core.internal.server;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.SocketTimeoutException;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
 import org.eclipse.wst.server.core.IServer;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.HttpUtil;
@@ -132,14 +130,18 @@ public class MicroclimateServerMonitorThread extends Thread {
 			}
 		}
 
-		JsonObject appStateJso = Json.createReader(new StringReader(appStatusResponse)).readObject();
 
 		final String appStatusKey = "appStatus";
-		String status = "unknown";
-		if (appStateJso.containsKey(appStatusKey)) {
-			status = appStateJso.getString(appStatusKey);
-			// MCLogger.log("Update app state to " + status);
-			return MicroclimateServerBehaviour.appStatusToServerState(status);
+		try {
+			JSONObject appStateJso = new JSONObject(appStatusResponse);
+			if (appStateJso.has(appStatusKey)) {
+				String status = appStateJso.getString(appStatusKey);
+
+				// MCLogger.log("Update app state to " + status);
+				return MicroclimateServerBehaviour.appStatusToServerState(status);
+			}
+		} catch (JSONException e) {
+			MCLogger.logError("JSON had app status, but exception occurred anyway", e);
 		}
 
 		return -1;

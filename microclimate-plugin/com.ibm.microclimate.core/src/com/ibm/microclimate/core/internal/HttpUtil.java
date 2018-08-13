@@ -8,7 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
 
-import javax.json.JsonObject;
+import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
 
@@ -78,7 +78,7 @@ public class HttpUtil {
 	}
 
 	// Temporary
-	public static HttpResult post(String url, JsonObject payload) throws IOException {
+	public static HttpResult post(String url, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
 		BufferedReader in = null;
 

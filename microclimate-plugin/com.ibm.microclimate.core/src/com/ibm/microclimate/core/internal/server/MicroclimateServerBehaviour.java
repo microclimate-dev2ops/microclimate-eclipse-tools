@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -27,6 +24,8 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerPort;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
@@ -135,11 +134,16 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	void doRestart(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch, IProgressMonitor monitor) {
         String url = "http://localhost:9091/api/v1/projects/action";
 
-		JsonObject restartProjectPayload = Json.createObjectBuilder()
-				.add("action", "restart")
-				.add("mode", launchMode)
-				.add("projectID", getProjectID())
-				.build();
+		JSONObject restartProjectPayload = new JSONObject();
+		try {
+			restartProjectPayload
+					.put("action", "restart")
+					.put("mode", launchMode)
+					.put("projectID", getProjectID());
+		} catch (JSONException e) {
+			MCLogger.logError(e);
+			return;
+		}
 
 		try {
 			// returns an operationID if success - what to do with it?
@@ -153,11 +157,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		// It takes a moment for the project to update. We don't want to be too quick and
 		// see that the state is 'started', when it actually hasn't 'stopped' yet.
 		// TODO here we should actually wait for the server to projectStatusChanged - new status 'stopped' - event
-		waitForState(IServer.STATE_STOPPED, getStopTimeoutMs(), monitor);
+		waitForState(getStopTimeoutMs(), monitor, IServer.STATE_STOPPED, IServer.STATE_STARTING);
 
 		MCLogger.log("Server should be stopped");
 
-		boolean starting = waitForState(IServer.STATE_STARTING, getStartTimeoutMs(), monitor);
+		boolean starting = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING);
 		if (!starting) {
 			MCLogger.logError("Server did not enter Starting state");
 			return;
@@ -177,23 +181,31 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private boolean waitForStarted(IProgressMonitor monitor) {
-		return waitForState(IServer.STATE_STARTED, getStartTimeoutMs(), monitor);
+		return waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTED);
 	}
 
-	private boolean waitForState(int desiredState, int timeoutMs, IProgressMonitor monitor) {
+	private boolean waitForState(int timeoutMs, IProgressMonitor monitor, int... desiredStates) {
 		long startTime = System.currentTimeMillis();
 		int pollRateMs = 1000;
 
-		String desiredStateStr = serverStateToAppStatus(desiredState);
+		String desiredStatesStr = "";
+		if (desiredStates.length == 0) {
+			MCLogger.logError("No states passed to waitForState");
+			return false;
+		}
+		desiredStatesStr = serverStateToAppStatus(desiredStates[0]);
+		for (int i = 1; i < desiredStates.length; i++) {
+			desiredStatesStr += " or " + serverStateToAppStatus(desiredStates[i]);
+		}
 
 		while((System.currentTimeMillis() - startTime) < timeoutMs) {
 			if (monitor != null && monitor.isCanceled()) {
-				MCLogger.log("User cancelled waiting for server to be " + desiredStateStr);
+				MCLogger.log("User cancelled waiting for server to be " + desiredStatesStr);
 				break;
 			}
 
 			try {
-				MCLogger.log("Waiting for server to be " + desiredStateStr + ", is currently " +
+				MCLogger.log("Waiting for server to be: " + desiredStatesStr + ", is currently " +
 						serverStateToAppStatus(getServer().getServerState()));
 
 				Thread.sleep(pollRateMs);
@@ -203,13 +215,16 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			}
 
 			// the ServerMonitorThread will update the state
-			if (getServer().getServerState() == desiredState) {
-				MCLogger.log("Server is done switching to " + desiredStateStr);
-				return true;
+			for (int desiredState : desiredStates) {
+				if (getServer().getServerState() == desiredState) {
+					MCLogger.log("Server is done switching to " + serverStateToAppStatus(desiredState));
+					return true;
+				}
 			}
+
 		}
 
-		MCLogger.logError("Server did not enter state " + desiredStateStr + " in " + timeoutMs + "ms");
+		MCLogger.logError("Server did not enter state(s): " + desiredStatesStr + " in " + timeoutMs + "ms");
 		setServerState(IServer.STATE_UNKNOWN);
 		return false;
 	}

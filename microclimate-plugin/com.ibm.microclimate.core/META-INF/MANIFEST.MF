@@ -19,5 +19,6 @@ Export-Package: com.ibm.microclimate.core,
  com.ibm.microclimate.core.internal,
  com.ibm.microclimate.core.internal.server
 Bundle-ClassPath: .,
- lib/com.ibm.websphere.javaee.jsonp.1.0.jar,
- lib/com.ibm.ws.org.glassfish.json.1.0.jar
+ lib/engine.io-client-1.0.0.jar,
+ lib/json-20090211.jar,
+ lib/socket.io-client-1.0.0.jar

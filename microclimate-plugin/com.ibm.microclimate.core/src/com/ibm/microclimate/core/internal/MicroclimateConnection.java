@@ -6,10 +6,9 @@ import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
 
-import javax.json.JsonException;
-
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.json.JSONException;
 
 import com.ibm.microclimate.core.MCLogger;
 
@@ -66,7 +65,7 @@ public class MicroclimateConnection {
 	}
 
 	public List<MicroclimateApplication> apps()
-			throws NumberFormatException, JsonException, MalformedURLException {
+			throws NumberFormatException, JSONException, MalformedURLException {
 
 		String projectsUrl = baseUrl + "api/v1/projects";
 

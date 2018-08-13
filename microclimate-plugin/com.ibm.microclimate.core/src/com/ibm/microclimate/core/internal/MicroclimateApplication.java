@@ -1,18 +1,14 @@
 package com.ibm.microclimate.core.internal;
 
-import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-
 import org.eclipse.core.runtime.IPath;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
 
@@ -25,15 +21,14 @@ public class MicroclimateApplication {
 	public final URL rootUrl;
 
 	public static List<MicroclimateApplication> buildFromProjectsJson(MicroclimateConnection conn,
-			String projectsJson) throws JsonException, NumberFormatException, MalformedURLException {
+			String projectsJson) throws JSONException, NumberFormatException, MalformedURLException {
 
 		List<MicroclimateApplication> result = new ArrayList<>();
 
-		JsonReader jsReader = Json.createReader(new StringReader(projectsJson));
-		JsonArray appArray = jsReader.readArray();
+		JSONArray appArray = new JSONArray(projectsJson);
 
-		for(int i = 0; i < appArray.size(); i++) {
-			JsonObject app = appArray.getJsonObject(i);
+		for(int i = 0; i < appArray.length(); i++) {
+			JSONObject app = appArray.getJSONObject(i);
 			MCLogger.log("app: " + app.toString());
 			String id 	= app.getString("projectID");
 			String name = app.getString("name");
@@ -41,8 +36,10 @@ public class MicroclimateApplication {
 			String loc 	= app.getString("locOnDisk");
 
 			String exposedPort = "";
+			exposedPort = app.getJSONObject("ports").getString("exposedPort");
+			/*
 			try {
-				exposedPort = app.getJsonObject("ports").getString("exposedPort");
+
 			}
 			catch(ClassCastException e) {
 				// occurs when the "ports" object is just an empty string instead of an object
@@ -50,13 +47,13 @@ public class MicroclimateApplication {
 				// TODO display a message to the user to wait a few seconds and try again.
 				MCLogger.logError("Skipping portless project " + name);
 				continue;
-			}
+			}*/
 
 			int port = Integer.parseInt(exposedPort);
 
 			final String contextRootKey = "contextroot";
 			String contextRoot = null;
-			if(app.containsKey(contextRootKey)) {
+			if(app.has(contextRootKey)) {
 				contextRoot = app.getString(contextRootKey);
 			}
 
