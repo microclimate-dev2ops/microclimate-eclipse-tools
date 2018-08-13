@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -86,6 +88,8 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		removeSelectedBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
+				// TODO It should be a problem if they remove an MCConnection which has an app active in the workspace.
+
 				int[] selected = connectionsTable.getSelectionIndices();
 				for(int i : selected) {
 					if(!MicroclimateConnectionManager.remove(connections.get(i))) {
@@ -128,13 +132,16 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		refreshConnectionsList();
 
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-			.addPropertyChangeListener(event -> {
-			    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-			    	MCLogger.log("Reloading preferences in MCCPP");
-			    	// calling refreshConnectionsList here results in WidgetDisposed exception if
-			    	// the window is not in focus
-			        needsRefreshConnections = true;
-			    }
+			.addPropertyChangeListener(new IPropertyChangeListener() {
+				@Override
+				public void propertyChange(PropertyChangeEvent event) {
+				    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
+				    	MCLogger.log("Reloading preferences in MCCPP");
+				    	// calling refreshConnectionsList here results in WidgetDisposed exception if
+				    	// the window is not in focus
+				        needsRefreshConnections = true;
+				    }
+				}
 			});
 
 		return parent;

@@ -8,7 +8,7 @@
 		hasConfiguration="false"
 		launchModes="run,debug"
 		startTimeout="60000"
-		stopTimeout="15000"
+		stopTimeout="45000"
 		initialState="started"
 		supportsRemoteHosts="false"
 		runtime="false"

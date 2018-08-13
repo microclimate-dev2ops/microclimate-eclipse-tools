@@ -3,6 +3,7 @@ package com.ibm.microclimate.core.internal;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,7 +21,9 @@ public class MicroclimateConnection {
 	private String baseUrl;
 	private IPath localWorkspacePath;
 
-	MicroclimateConnection (String host, int port) throws ConnectException {
+	private MCSocket socket;
+
+	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException {
 		String baseUrl_ = buildUrl(host, port);
 
 		if(!test(baseUrl_)) {
@@ -33,6 +36,8 @@ public class MicroclimateConnection {
 		this.baseUrl = baseUrl_;
 		// TODO
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
+		// TODO
+		socket = new MCSocket(host, 9091);
 	}
 
 	@Override
@@ -110,7 +115,7 @@ public class MicroclimateConnection {
 	}
 
 	public static MicroclimateConnection fromString(String str)
-			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException {
+			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException, URISyntaxException {
 
 		int hostIndex = str.indexOf(HOST_KEY);
 		String afterHostKey = str.substring(hostIndex + HOST_KEY.length() + 1);

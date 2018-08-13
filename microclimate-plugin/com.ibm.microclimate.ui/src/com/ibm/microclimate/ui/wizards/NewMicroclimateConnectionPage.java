@@ -1,9 +1,11 @@
 package com.ibm.microclimate.ui.wizards;
 
 import java.net.ConnectException;
+import java.net.URISyntaxException;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -58,7 +60,12 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		hostnameText.setLayoutData(hostnamePortTextData);
 		hostnameText.setText("localhost");
 
-		ModifyListener modifyListener = arg0 -> mcConnection = null;
+		ModifyListener modifyListener = new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				mcConnection = null;
+			}
+		};
 
 		hostnameText.addModifyListener(modifyListener);
 
@@ -105,8 +112,8 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 				setMessage("Connecting to " + hostPortAddr + " succeeded");
 			}
 		}
-		catch(ConnectException e) {
-			setErrorMessage("Connecting to " + hostPortAddr + " failed");
+		catch(ConnectException | URISyntaxException e) {
+			setErrorMessage(e.getMessage());
 		}
 		catch(NumberFormatException e) {
 			// Shouldn't happen because we already validated this field

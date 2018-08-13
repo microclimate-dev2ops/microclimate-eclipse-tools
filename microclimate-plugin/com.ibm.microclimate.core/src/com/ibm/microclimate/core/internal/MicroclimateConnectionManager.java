@@ -1,12 +1,15 @@
 package com.ibm.microclimate.core.internal;
 
 import java.net.ConnectException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Display;
 
 import com.ibm.microclimate.core.MCLogger;
@@ -32,13 +35,16 @@ public class MicroclimateConnectionManager {
 		loadFromPreferences();
 
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-			.addPropertyChangeListener(event -> {
-            	// Refresh the list of connections whenever they are modified
-                if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-                	MCLogger.log("Loading prefs in MCCM");
-                    loadFromPreferences();
-                }
-            });
+			.addPropertyChangeListener(new IPropertyChangeListener() {
+				@Override
+				public void propertyChange(PropertyChangeEvent event) {
+					// Refresh the list of connections whenever they are modified
+				    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
+				    	MCLogger.log("Loading prefs in MCCM");
+				        loadFromPreferences();
+				    }
+				}
+			});
 	}
 
 	private static MicroclimateConnectionManager instance() {
@@ -48,7 +54,7 @@ public class MicroclimateConnectionManager {
 		return instance;
 	}
 
-	public static MicroclimateConnection create(String host, int port) throws ConnectException {
+	public static MicroclimateConnection create(String host, int port) throws ConnectException, URISyntaxException {
 		// Will throw an exception if connection fails
 		MicroclimateConnection newConnection = new MicroclimateConnection(host, port);
 		// Connection succeeded
@@ -132,7 +138,7 @@ public class MicroclimateConnectionManager {
 			try {
 				add(MicroclimateConnection.fromString(line));
 			}
-			catch(ConnectException e) {
+			catch(ConnectException | URISyntaxException e) {
 				// Probably we should keep the connection info, but mark it as 'inactive' or similar
 				MCLogger.logError(e);
 				// TODO improve this when there are many connections
