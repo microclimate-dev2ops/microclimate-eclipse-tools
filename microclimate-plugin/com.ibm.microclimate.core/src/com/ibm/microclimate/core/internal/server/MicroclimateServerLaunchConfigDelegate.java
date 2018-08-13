@@ -13,10 +13,10 @@ import com.ibm.microclimate.core.MCLogger;
 public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchConfigurationDelegate {
 
 	@Override
-	public void launch(ILaunchConfiguration config, String mode, ILaunch launch, IProgressMonitor monitor)
+	public void launch(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor)
 			throws CoreException {
 
-		MCLogger.log("Launching!!!!!! mode=" + mode);
+		MCLogger.log("Launching!!!!!! mode=" + launchMode);
 
         final IServer server = ServerUtil.getServer(config);
         if (server == null) {
@@ -24,7 +24,10 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
             return;
         }
 
-        MCLogger.log(server.getName());
+        final MicroclimateServerBehaviour serverBehaviour =
+        		(MicroclimateServerBehaviour) server.loadAdapter(MicroclimateServerBehaviour.class, null);
+
+        serverBehaviour.doRestart(config, launchMode, launch, monitor);
 	}
 
 }

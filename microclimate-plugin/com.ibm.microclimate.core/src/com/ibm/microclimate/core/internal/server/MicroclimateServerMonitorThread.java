@@ -3,10 +3,11 @@ package com.ibm.microclimate.core.internal.server;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
-import java.util.function.Function;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+
+import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.HttpUtil;
@@ -14,7 +15,7 @@ import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
 
 public class MicroclimateServerMonitorThread extends Thread {
 
-	public static final int POLL_RATE_MS = 1000;
+	public static final int POLL_RATE_MS = 2000;
 
 	private volatile boolean run = true;
 
@@ -25,24 +26,19 @@ public class MicroclimateServerMonitorThread extends Thread {
 	private int stateWaitingFor = -1;
 	private int stateWaitingTimeout = -1;
 	private int waitedMs = 0;
-	private Function<?, ?> stateWaitingCallback;
 
 	MicroclimateServerMonitorThread(MicroclimateServerBehaviour serverBehaviour) {
 		this.serverBehaviour = serverBehaviour;
+
+		setPriority(Thread.MIN_PRIORITY + 1);
+		setDaemon(true);
+		setName(serverBehaviour.getServer().getName() + " MonitorThread");
 	}
 
 	@Override
 	public void run() {
 		MCLogger.log("Start MCMonitorThread");
 		while(run && !Thread.currentThread().isInterrupted()) {
-			try {
-				Thread.sleep(POLL_RATE_MS);
-			}
-			catch(InterruptedException e) {
-				MCLogger.logError(e);
-			}
-
-			// MCLogger.log("Waited " + elapsed + "ms");
 			updateState();
 
 			if (isWaitingForState()) {
@@ -55,6 +51,13 @@ public class MicroclimateServerMonitorThread extends Thread {
 				else {
 					waitedMs += POLL_RATE_MS;
 				}
+			}
+
+			try {
+				Thread.sleep(POLL_RATE_MS);
+			}
+			catch(InterruptedException e) {
+				// MCLogger.logError(e);
 			}
 		}
 
@@ -72,7 +75,7 @@ public class MicroclimateServerMonitorThread extends Thread {
 	boolean updateState() {
 		int state = getAppState();
 		if (state == -1) {
-			MCLogger.logError("Failed to update app state");
+			// MCLogger.logError("Failed to update app state");
 			return false;
 		}
 		else {
@@ -99,22 +102,34 @@ public class MicroclimateServerMonitorThread extends Thread {
 			HttpResult result = HttpUtil.get(statusUrl);
 
 			if (!result.isGoodResponse) {
+				MCLogger.logError("Received bad response from server: " + result.responseCode);
 				if (result.error.contains("Unknown project")) {
 					MCLogger.logError("Project " + serverBehaviour.getProjectID()+ " is unknown - deleted or disabled");
 				}
-				return -1;
+				else {
+					MCLogger.logError("Error message: " + result.error);
+				}
+				return IServer.STATE_UNKNOWN;
 			}
 
 			appStatusResponse = result.response;
 		}
 		catch (IOException e) {
 			if (e instanceof SocketTimeoutException) {
+				// This happens in the normal course of application restarts, so we can safely ignore it
 				MCLogger.logError("Server state update request timed out");
+				return -1;
+			}
+			else if (e.getMessage().contains("Connection refused")) {
+				// should display a msg to the user in this case
+				MCLogger.logError("Connection refused; Microclimate is not running at the expected URL " + statusUrl);
+				return IServer.STATE_UNKNOWN;
 			}
 			else {
+				// Unexpected error
 				MCLogger.logError(e);
+				return IServer.STATE_UNKNOWN;
 			}
-			return -1;
 		}
 
 		JsonObject appStateJso = Json.createReader(new StringReader(appStatusResponse)).readObject();
@@ -130,7 +145,7 @@ public class MicroclimateServerMonitorThread extends Thread {
 		return -1;
 	}
 
-	void waitForState(int state, int timeout, Function<?, ?> callback) {
+	void waitForState(int state, int timeout) {
 		stateWaitingFor = state;
 		stateWaitingTimeout = timeout;
 	}
@@ -150,13 +165,8 @@ public class MicroclimateServerMonitorThread extends Thread {
 			MCLogger.logError("Waiting for state " + state + " timed out");
 		}
 
-		if (stateWaitingCallback != null) {
-			stateWaitingCallback.apply(null);
-		}
-
 		stateWaitingFor = -1;
 		stateWaitingTimeout = -1;
 		waitedMs = 0;
-		stateWaitingCallback = null;
 	}
 }

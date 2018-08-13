@@ -30,8 +30,6 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public void initialize() {
-		super.initialize();
-
 		MCLogger.log("Initialize MicroclimateServer at " + getModuleRootURL(null));
 
 		//behaviour = (MicroclimateServerBehaviour) getServer().loadAdapter(MicroclimateServerBehaviour.class, null);
@@ -40,11 +38,12 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 	@Override
 	public ServerPort[] getServerPorts() {
 		if(getServer().getServerState() != IServer.STATE_STARTED) {
+			MCLogger.logError("No ports for a stopped server");
 			return new ServerPort[0];
 		}
 
 		// TODO cache this, TODO add debug port
-		ServerPort[] serverPorts = new ServerPort[1];
+		ServerPort[] serverPorts = new ServerPort[2];
 
 		int httpPortNum = getServer().getAttribute(ATTR_HTTP_PORT, -1);
 		if (httpPortNum == -1) {
@@ -54,8 +53,26 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 			serverPorts[0] = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
 		}
 
+		// TODO
+		int debugPortNum = 34567;	// getServer().getAttribute(ATTR_DEBUG_PORT, -1);
+		if (debugPortNum == -1) {
+			MCLogger.logError("No debugPort attribute");
+		}
+		else {
+			serverPorts[1] = new ServerPort("microclimateServerPort", "debugPort", debugPortNum, "http");
+		}
+
 		return serverPorts;
 	}
+
+	/*
+	public int getHttpPort() {
+		return getServerPorts()[0].getPort();
+	}
+
+	public int getDebugPort() {
+		return getServerPorts()[1].getPort();
+	}*/
 
 	@Override
 	public URL getModuleRootURL(IModule arg0) {

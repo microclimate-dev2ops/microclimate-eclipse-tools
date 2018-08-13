@@ -39,7 +39,18 @@ public class MicroclimateApplication {
 			String name = app.getString("name");
 			String lang = app.getString("language");
 			String loc 	= app.getString("locOnDisk");
-			String exposedPort = app.getJsonObject("ports").getString("exposedPort");
+
+			String exposedPort = "";
+			try {
+				exposedPort = app.getJsonObject("ports").getString("exposedPort");
+			}
+			catch(ClassCastException e) {
+				// occurs when the "ports" object is just an empty string instead of an object
+				// This means this app is not ready yet. The user can just refresh the list to fix this.
+				// TODO display a message to the user to wait a few seconds and try again.
+				MCLogger.logError("Skipping portless project " + name);
+				continue;
+			}
 
 			int port = Integer.parseInt(exposedPort);
 

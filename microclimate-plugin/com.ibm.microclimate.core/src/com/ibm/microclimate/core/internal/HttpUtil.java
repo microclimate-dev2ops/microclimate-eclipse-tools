@@ -25,14 +25,7 @@ public class HttpUtil {
 			responseCode = connection.getResponseCode();
 			isGoodResponse = responseCode > 199 && responseCode < 300;
 
-			InputStream is = connection.getInputStream();
-			if (is != null) {
-				response = readAllFromStream(is);
-			}
-			else {
-				response = null;
-			}
-
+			// Read error first because sometimes if there is an error, connection.getInputStream() throws an exception
 			InputStream eis = connection.getErrorStream();
 			if (eis != null) {
 				error = readAllFromStream(eis);
@@ -43,7 +36,15 @@ public class HttpUtil {
 
 			if (!isGoodResponse) {
 				MCLogger.logError("Received bad response code " + responseCode + " from "
-						+ connection.getURL() + " error:\n" + error);
+						+ connection.getURL() + " - Error:\n" + error);
+			}
+
+			InputStream is = connection.getInputStream();
+			if (is != null) {
+				response = readAllFromStream(is);
+			}
+			else {
+				response = null;
 			}
 		}
 	}
