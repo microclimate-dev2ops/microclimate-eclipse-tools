@@ -7,7 +7,7 @@
 		supportsManualCreation="false"
 		hasConfiguration="false"
 		launchModes="run,debug"
-		startTimeout="60000"
+		startTimeout="90000"
 		stopTimeout="45000"
 		initialState="started"
 		supportsRemoteHosts="false"

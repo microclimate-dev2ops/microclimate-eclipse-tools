@@ -8,23 +8,17 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.IStatusHandler;
 import org.eclipse.debug.core.model.IDebugTarget;
-import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.jdt.debug.core.IJavaDebugTarget;
-import org.eclipse.jdt.debug.core.JDIDebugModel;
-import org.eclipse.jdt.internal.debug.core.JDIDebugPlugin;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.wst.server.core.IServer;
-import org.eclipse.wst.server.core.ServerPort;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,6 +45,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void initialize(IProgressMonitor monitor) {
 		// TODO investigate initialize being called on DISPOSE - then a second (useless) monitor thread is leaked!
+		// TODO investigate monitor thread being set to null when Eclipse is restarted, and how to work around this!
+		// Similarly, need to update server state when Eclipse is restarted
 
 		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
 
@@ -155,9 +151,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void dispose() {
 		MCLogger.log("Dispose " + getServer().getName());
-		monitorThread.disable();
-		monitorThread.interrupt();
-		monitorThread = null;
+		if (monitorThread != null) {
+			monitorThread.disable();
+			monitorThread.interrupt();
+			monitorThread = null;
+		}
 	}
 
 	/**
@@ -192,7 +190,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			return;
 		}
 
-		// TODO progress mon
+		// TODO progress mon ?
 		launchConfig.launch(launchMode, null);
 	}
 
@@ -218,18 +216,14 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		try {
 			// returns an operationID if success - what to do with it?
 			HttpUtil.post(url, restartProjectPayload);
+			// TODO test this
+			app.invalidatePorts();
 		} catch (IOException e) {
 			MCLogger.logError("Error POSTing restart request", e);
 			return;
 		}
-		// MCLogger.log(response);
 
-		// It takes a moment for the project to update. We don't want to be too quick and
-		// see that the state is 'started', when it actually hasn't 'stopped' yet.
-		// TODO here we should actually wait for the server to projectStatusChanged - new status 'stopped' - event
 		waitForState(getStopTimeoutMs(), monitor, IServer.STATE_STOPPED, IServer.STATE_STARTING);
-
-		MCLogger.log("Server should be stopped");
 
 		boolean starting = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING);
 		if (!starting) {
@@ -238,7 +232,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 
 		if (ILaunchManager.DEBUG_MODE.equals(launchMode)) {
-			MCLogger.log("Attaching debugger");
+			MCLogger.log("Preparing for debug mode");
 			try {
 				attachDebugger(launch, monitor);
 			} catch (IllegalConnectorArgumentsException | CoreException | IOException e) {
@@ -299,7 +293,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		return false;
 	}
 
-	private void attachDebugger(ILaunch launch, IProgressMonitor monitor) throws IllegalConnectorArgumentsException, CoreException, IOException {
+	private void attachDebugger(ILaunch launch, IProgressMonitor monitor)
+			throws IllegalConnectorArgumentsException, CoreException, IOException {
+
         IDebugTarget debugTarget;
         debugTarget = connectAndWait(launch,  monitor);
 
@@ -313,18 +309,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
     private IDebugTarget connectAndWait(ILaunch launch, IProgressMonitor monitor)
     		throws IllegalConnectorArgumentsException, CoreException, IOException {
 
-    	/*
-		int port = LaunchUtilities.findFreePort();
-		if (port == -1) {
-			throw new IOException("Couldn't get a free port to connect to the debugger");
-		}*/
-    	int debugPort = -1;
-    	ServerPort[] ports = getServer().getServerPorts(monitor);
-    	for (ServerPort port : ports) {
-    		if (port.getName().toLowerCase().contains("debug")) {
-    			debugPort = port.getPort();
-    		}
-    	}
+    	MCLogger.log("Beginning to try to connect debugger");
+
+		// Here, we have to wait for the projectRestartResult event
+		// since its payload tells us the debug port to use
+		int debugPort = waitForRestartSuccess();
 
     	if (debugPort == -1) {
     		MCLogger.logError("Couldn't get debug port for MC Server, or it was never set");
@@ -376,7 +365,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					}
 				}
 
-
 				if (ex instanceof IllegalConnectorArgumentsException) {
 					throw (IllegalConnectorArgumentsException) ex;
 				}
@@ -391,8 +379,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 				IDebugTarget debugTarget = null;
 				if (vm != null) {
-					setDebugTimeout(vm);
-					debugTarget = createLocalJDTDebugTarget(launch, debugPort, null, vm);
+					LaunchUtilities.setDebugTimeout(vm);
+					String debugName = "Debugging " + getServer().getName();
+					debugTarget = LaunchUtilities.createLocalJDTDebugTarget(launch, debugPort, null, vm, debugName);
 					monitor.worked(1);
 					monitor.done();
 				}
@@ -417,37 +406,26 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		return null;
 	}
 
-    /**
-     * Creates a new debug target for the given virtual machine and system process
-     * that is connected on the specified port for the given launch.
-     *
-     * @param launch launch to add the target to
-     * @param port port the VM is connected to
-     * @param process associated system process
-     * @param vm JDI virtual machine
-     * @return the {@link IDebugTarget}
-     */
-    private IDebugTarget createLocalJDTDebugTarget(ILaunch launch, int port, IProcess process, VirtualMachine vm) {
-        String name = "Debugging " + getServer().getName() + " at " + "localhost:" + port;
+	private int waitForRestartSuccess() {
+		final long startTime = System.currentTimeMillis();
 
-        return JDIDebugModel.newDebugTarget(launch, vm, name, process, true, false, true);
-    }
+		while (System.currentTimeMillis() < (startTime + getStartTimeoutMs())) {
+			MCLogger.log("Waiting for restart success socket event to set debug port");
+			try {
+				Thread.sleep(2500);
+			} catch (InterruptedException e) {
+				MCLogger.logError(e);
+			}
 
-
-    /**
-     * Set the debug request timeout of a vm in ms, if supported by the vm implementation.
-     */
-    private static void setDebugTimeout(VirtualMachine vm) {
-        IEclipsePreferences node = InstanceScope.INSTANCE.getNode(JDIDebugPlugin.getUniqueIdentifier());
-        int timeOut = node.getInt(JDIDebugModel.PREF_REQUEST_TIMEOUT, 0);
-        if (timeOut <= 0) {
-			return;
+			int port = app.getDebugPort();
+			if (port != -1) {
+				MCLogger.log("Debug port was retrieved successfully: " + port);
+				return port;
+			}
 		}
-        if (vm instanceof org.eclipse.jdi.VirtualMachine) {
-            org.eclipse.jdi.VirtualMachine vm2 = (org.eclipse.jdi.VirtualMachine) vm;
-            vm2.setRequestTimeout(timeOut);
-        }
-    }
+		MCLogger.logError("Timed out waiting for restart success");
+		return -1;
+	}
 
 	int getStartTimeoutMs() {
 		return getServer().getStartTimeout() * 1000;

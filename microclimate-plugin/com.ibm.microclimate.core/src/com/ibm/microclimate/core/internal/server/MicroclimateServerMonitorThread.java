@@ -5,7 +5,7 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
 public class MicroclimateServerMonitorThread extends Thread {
 
-	public static final int POLL_RATE_MS = 2000;
+	public static final int POLL_RATE_MS = 2500;
 
 	private volatile boolean run = true;
 

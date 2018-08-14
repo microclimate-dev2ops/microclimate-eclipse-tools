@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IModule;
-import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerPort;
 import org.eclipse.wst.server.core.model.IURLProvider;
 import org.eclipse.wst.server.core.model.ServerDelegate;
@@ -40,10 +39,12 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public ServerPort[] getServerPorts() {
-		if(getServer().getServerState() != IServer.STATE_STARTED) {
+		/*
+		if(getServer().getServerState() == IServer.STATE_STOPPED) {
 			MCLogger.logError("No ports for a stopped server");
 			return new ServerPort[0];
 		}
+		*/
 
 		// TODO cache this ?
 

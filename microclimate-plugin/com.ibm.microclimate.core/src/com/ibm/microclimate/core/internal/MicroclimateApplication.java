@@ -182,11 +182,23 @@ public class MicroclimateApplication {
 	}
 
 	public synchronized void setHttpPort(int httpPort) {
+		MCLogger.log("Set HTTP port for " + rootUrl.toString() + " to " + httpPort);
 		this.httpPort = httpPort;
 	}
 
 	public synchronized void setDebugPort(int debugPort) {
+		MCLogger.log("Set debug port for " + rootUrl.toString() + " to " + debugPort);
 		this.debugPort = debugPort;
+	}
+
+	/**
+	 * Invalidate fields that can change when the application is restarted.
+	 * On restart success, these will be updated by the Socket handler for that event.
+	 */
+	public synchronized void invalidatePorts() {
+		MCLogger.log("Invalidate ports for " + rootUrl.toString());
+		httpPort = -1;
+		debugPort = -1;
 	}
 
 	@Override

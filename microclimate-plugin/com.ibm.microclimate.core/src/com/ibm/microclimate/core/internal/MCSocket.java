@@ -24,24 +24,43 @@ public class MCSocket {
 	public MCSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 		this.mcConnection = mcConnection;
 
-		socket = IO.socket(mcConnection.baseUrl);
+		// TODO hardcoded filewatcher port
+		final String url = "http://" + mcConnection.host + ':' + "9091";
+		socket = IO.socket(url);
 
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log("SocketIO connect success @ " + mcConnection.baseUrl);
+				MCLogger.log("SocketIO connect success @ " + url);
 			}
 		})
 		.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log("SocketIO Connect Failure @ " + mcConnection.baseUrl);
+				MCLogger.logError("SocketIO Connect Failure @ " + url);
+
+				if (arg0[0] instanceof Exception) {
+					Exception e = (Exception) arg0[0];
+					MCLogger.logError("SocketIO Connect Error", e);
+				}
 			}
 		})
 		.on(Socket.EVENT_ERROR, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.logError("SocketIO @ " + mcConnection.baseUrl + " Error: " + arg0[0].toString());
+				MCLogger.logError("SocketIO @ " + url);
+
+				if (arg0[0] instanceof Exception) {
+					Exception e = (Exception) arg0[0];
+					MCLogger.logError("SocketIO Error", e);
+				}
+			}
+		})
+		.on(Socket.EVENT_MESSAGE, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				// Don't think this is ever used
+				MCLogger.log("SocketIO message " + arg0[0].toString());
 			}
 		})
 		.on(EVENT_PROJECT_STATUS_CHANGE, new Emitter.Listener() {
@@ -72,7 +91,7 @@ public class MCSocket {
 		});
 		socket.connect();
 
-		MCLogger.log("Created SocketIO socket at " + mcConnection.baseUrl);
+		MCLogger.log("Created SocketIO socket at " + url);
 	}
 
 	// TODO move these to a 'constants' file ?
@@ -84,6 +103,7 @@ public class MCSocket {
 			KEY_BUILD_STATUS = "buildStatus",
 			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
 
+			KEY_PORTS = "ports",
 			KEY_EXPOSED_HTTP_PORT = "exposedPort",
 			KEY_EXPOSED_DEBUG_PORT = "exposedDebugPort",
 
@@ -121,33 +141,26 @@ public class MCSocket {
 			return;
 		}
 
-		if (event.has(KEY_STATUS)) {
-			String status = event.getString(KEY_STATUS);
-			if (!REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
-				MCLogger.log("Project restart failed on the server: " + event.toString());
-				return;
-			}
-		}
-		else {
-			MCLogger.logError("Received Project Restart event without status: " + event.toString());
+		String status = event.getString(KEY_STATUS);
+		if (!REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
+			MCLogger.log("Project restart failed on the server: " + event.toString());
+			return;
 		}
 
-		// this event should always have an HTTP port
-		if (event.has(KEY_EXPOSED_HTTP_PORT)) {
-			int port = parsePort(event.getString(KEY_EXPOSED_HTTP_PORT));
-			if (port != -1) {
-				app.setHttpPort(port);
-			}
-		}
-		else {
-			MCLogger.logError("Received Project Restart event without http port: " + event.toString());
+		// this event should always have a 'ports' sub-object
+		JSONObject portsObj = event.getJSONObject("ports");
+
+		// ports object should always have an http port
+		int port = parsePort(portsObj.getString(KEY_EXPOSED_HTTP_PORT));
+		if (port != -1) {
+			app.setHttpPort(port);
 		}
 
 		// Debug port will obviously be missing if the restart was into Run mode.
-		if (event.has(KEY_EXPOSED_DEBUG_PORT)) {
-			int port = parsePort(event.getString(KEY_EXPOSED_DEBUG_PORT));
-			if (port != -1) {
-				app.setDebugPort(port);
+		if (portsObj.has(KEY_EXPOSED_DEBUG_PORT)) {
+			int debugPort = parsePort(portsObj.getString(KEY_EXPOSED_DEBUG_PORT));
+			if (debugPort != -1) {
+				app.setDebugPort(debugPort);
 			}
 		}
 	}
