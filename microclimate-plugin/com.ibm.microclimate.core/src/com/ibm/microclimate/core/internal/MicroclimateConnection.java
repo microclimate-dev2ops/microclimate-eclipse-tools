@@ -2,26 +2,28 @@ package com.ibm.microclimate.core.internal;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.json.JSONException;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 
 import com.ibm.microclimate.core.MCLogger;
 
 public class MicroclimateConnection {
 
-	private String host;
-	private int port;
+	public final String host;
+	public final int port;
 
-	private String baseUrl;
-	private IPath localWorkspacePath;
+	public final String baseUrl;
+	public final IPath localWorkspacePath;
 
-	private MCSocket socket;
+	public final MCSocket socket;
+
+	private List<MicroclimateApplication> apps;
 
 	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException {
 		String baseUrl_ = buildUrl(host, port);
@@ -37,7 +39,7 @@ public class MicroclimateConnection {
 		// TODO
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
 		// TODO
-		socket = new MCSocket(host, 9091);
+		socket = new MCSocket(this);
 	}
 
 	@Override
@@ -69,8 +71,7 @@ public class MicroclimateConnection {
 		return getResult != null && getResult.contains("Microclimate");
 	}
 
-	public List<MicroclimateApplication> apps()
-			throws NumberFormatException, JSONException, MalformedURLException {
+	public List<MicroclimateApplication> getApps() {
 
 		String projectsUrl = baseUrl + "api/v1/projects";
 
@@ -83,24 +84,39 @@ public class MicroclimateConnection {
 
 		if(projectsResponse == null) {
 			MCLogger.logError("Received null response from projects endpoint");
+			// TODO display a message that the Microclimate server appears to be down.
 			return Collections.emptyList();
 		}
 
-		return MicroclimateApplication.buildFromProjectsJson(this, projectsResponse);
+		try {
+			apps = MicroclimateApplication.buildFromProjectsJson(this, projectsResponse);
+			return apps;
+		}
+		catch(Exception e) {
+			Display.getDefault().syncExec(new Runnable() {
+				@Override
+				public void run() {
+					MessageDialog.openError(Display.getDefault().getActiveShell(),
+							"Error getting project list", e.getMessage());
+				}
+
+			});
+		}
+		return Collections.emptyList();
 	}
 
-	// Getters
+	public MicroclimateApplication getAppByID(String projectID) {
+		if (apps == null) {
+			getApps();
+		}
 
-	public String host() {
-		return host;
-	}
-
-	public String baseUrl() {
-		return baseUrl;
-	}
-
-	public IPath localWorkspacePath() {
-		return localWorkspacePath;
+		for (MicroclimateApplication app : apps) {
+			if (app.projectID.equals(projectID)) {
+				return app;
+			}
+		}
+		MCLogger.logError("No project found with ID " + projectID);
+		return null;
 	}
 
 	// Note that toString and fromString are used to save and load connections from the preferences store

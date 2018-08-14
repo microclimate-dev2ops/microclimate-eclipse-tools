@@ -21,6 +21,8 @@ import org.eclipse.jdt.debug.core.IJavaDebugTarget;
 import org.eclipse.jdt.debug.core.JDIDebugModel;
 import org.eclipse.jdt.internal.debug.core.JDIDebugPlugin;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerPort;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
@@ -30,38 +32,107 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.HttpUtil;
+import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
+import com.ibm.microclimate.core.internal.MCSocket;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
+import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 
+@SuppressWarnings("restriction")
 public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
-	private String projectID;
-
+	private MicroclimateApplication app;
 	private MicroclimateServerMonitorThread monitorThread;
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
-		// TODO investigate initialize being called on DISPOSE
+		// TODO investigate initialize being called on DISPOSE - then a second (useless) monitor thread is leaked!
 
 		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
 
-		projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
+		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
 		if (projectID.isEmpty()) {
-			MCLogger.logError("No projectID attribute");
+			onInitializeFailure("No " + MicroclimateServer.ATTR_PROJ_ID + " attribute");
+			return;
 		}
 
-		setServerState(IServer.STATE_UNKNOWN);
+		String mcConnectionBaseUrl = getServer().getAttribute(MicroclimateServer.ATTR_MCC_URL, "");
+		if (mcConnectionBaseUrl.isEmpty()) {
+			onInitializeFailure("No " + MicroclimateServer.ATTR_MCC_URL + " attribute");
+			return;
+		}
+		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getConnection(mcConnectionBaseUrl);
+		if (mcConnection == null) {
+			onInitializeFailure("Couldn't get MCConnection with baseUrl " + mcConnectionBaseUrl);
+			return;
+		}
 
+		app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			onInitializeFailure("Couldn't find app with ID " + projectID + " on MCConnection "
+					+ mcConnection.toString());
+			return;
+		}
+
+		// Ask the server for an initial state - the monitor thread will handle updates but doesn't know the state
+		// until it changes (causing the server to emit an update event)
 		monitorThread = new MicroclimateServerMonitorThread(this);
+		monitorThread.setInitialState(getInitialState());
 		monitorThread.start();
+	}
 
-		/*
-		if (!updateState()) {
-			MCLogger.logError("Failed to contact server when initializing");
-			setServerState(IServer.STATE_STOPPED);
+	private void onInitializeFailure(String failMsg) {
+		MCLogger.logError("Creating Microclimate server failed at initialization: " + failMsg);
+
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				MessageDialog.openError(Display.getDefault().getActiveShell(),
+						"Error creating Microclimate server", failMsg);
+			}
+		});
+	}
+
+	private int getInitialState() {
+		// TODO hardcoded filewatcher URL - should be getting this from Portal using mcConnection.baseUrl
+		String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
+		statusUrl = String.format(statusUrl, app.projectID);
+
+		HttpResult result;
+		try {
+			result = HttpUtil.get(statusUrl);
+		} catch (IOException e) {
+			MCLogger.logError(e);
+			return IServer.STATE_UNKNOWN;
 		}
-		*/
+
+		if (!result.isGoodResponse) {
+			MCLogger.logError("Received bad response from server: " + result.responseCode);
+			MCLogger.logError("Error message: " + result.error);
+			return IServer.STATE_UNKNOWN;
+		}
+		else if (result.response == null) {
+			MCLogger.logError("Good response code, but null response when getting initial state");
+			return IServer.STATE_UNKNOWN;
+		}
+
+		try {
+			JSONObject appStateJso = new JSONObject(result.response);
+			if (appStateJso.has(MCSocket.KEY_APP_STATUS)) {
+				String status = appStateJso.getString(MCSocket.KEY_APP_STATUS);
+				MCLogger.log("Initial server state is " + status);
+
+				// MCLogger.log("Update app state to " + status);
+				return MicroclimateServerBehaviour.appStatusToServerState(status);
+			}
+		} catch (JSONException e) {
+			MCLogger.logError("JSON exception when getting initial state", e);
+		}
+		return IServer.STATE_UNKNOWN;
 	}
 
 	@Override
@@ -99,14 +170,13 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 	}
 
-	String getProjectID() {
-		return projectID;
+	MicroclimateApplication getApp() {
+		return app;
 	}
 
 	@Override
 	public void restart(String launchMode) throws CoreException {
-		MCLogger.log("Restarting " + getServer().getHost() + ":" + getServer().getServerPorts(null)[0].getPort()
-				+ " in " + launchMode + " mode");
+		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode");
 
 		int currentState = monitorThread.getLastKnownState();
 		MCLogger.log("Current status = " + serverStateToAppStatus(currentState));
@@ -139,7 +209,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			restartProjectPayload
 					.put("action", "restart")
 					.put("mode", launchMode)
-					.put("projectID", getProjectID());
+					.put("projectID", app.projectID);
 		} catch (JSONException e) {
 			MCLogger.logError(e);
 			return;
@@ -257,7 +327,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
     	}
 
     	if (debugPort == -1) {
-    		MCLogger.logError("Couldn't get debug port for MC Server");
+    		MCLogger.logError("Couldn't get debug port for MC Server, or it was never set");
     		return null;
     	}
 
@@ -270,7 +340,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCLogger.logError("Could not create debug connector");
 		}
 
-		Map connectorArgs = connector.defaultArguments();
+		Map<String, Connector.Argument> connectorArgs = connector.defaultArguments();
         connectorArgs = LaunchUtilities.configureConnector(connectorArgs, getServer().getHost(), debugPort);
 
 		boolean retry = false;

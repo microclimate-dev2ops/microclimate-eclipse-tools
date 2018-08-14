@@ -156,7 +156,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 		for(MicroclimateConnection mcc : connections) {
 			TableItem ti = new TableItem(connectionsTable, SWT.NONE);
-			ti.setText(new String[] { mcc.baseUrl(), "???" });
+			ti.setText(new String[] { mcc.baseUrl, "Other info??" });
 		}
 
 		needsRefreshConnections = false;

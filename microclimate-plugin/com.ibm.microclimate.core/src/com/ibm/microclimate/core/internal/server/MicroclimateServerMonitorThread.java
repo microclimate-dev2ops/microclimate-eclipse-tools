@@ -1,15 +1,7 @@
 package com.ibm.microclimate.core.internal.server;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-
-import org.eclipse.wst.server.core.IServer;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.internal.HttpUtil;
-import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
 public class MicroclimateServerMonitorThread extends Thread {
 
@@ -18,6 +10,7 @@ public class MicroclimateServerMonitorThread extends Thread {
 	private volatile boolean run = true;
 
 	private final MicroclimateServerBehaviour serverBehaviour;
+	private final MicroclimateApplication app;
 
 	private int lastKnownState;
 
@@ -27,6 +20,8 @@ public class MicroclimateServerMonitorThread extends Thread {
 
 	MicroclimateServerMonitorThread(MicroclimateServerBehaviour serverBehaviour) {
 		this.serverBehaviour = serverBehaviour;
+
+		app = serverBehaviour.getApp();
 
 		setPriority(Thread.MIN_PRIORITY + 1);
 		setDaemon(true);
@@ -66,6 +61,13 @@ public class MicroclimateServerMonitorThread extends Thread {
 		return lastKnownState;
 	}
 
+	/**
+	 * This should only be called once, just before this thread is started, in the Behaviour's initialize method.
+	 */
+	void setInitialState(int state) {
+		lastKnownState = state;
+	}
+
 	void disable() {
 		run = false;
 	}
@@ -86,65 +88,16 @@ public class MicroclimateServerMonitorThread extends Thread {
 	/**
 	 * Get the status of the app with the given projectID
 	 * @param projectID
-	 * @return IServer.STATE constant corresponding to the current status, or -1 if there's an error.
+	 * @return IServer.STATE constant corresponding to the current status
 	 */
 	int getAppState() {
-			String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
-			statusUrl = String.format(statusUrl, serverBehaviour.getProjectID());
-
-		String appStatusResponse = null;
-
-		try {
-			// Sometimes during restart, FW will be really slow to reply,
-			// and this request will time out.
-			HttpResult result = HttpUtil.get(statusUrl);
-
-			if (!result.isGoodResponse) {
-				MCLogger.logError("Received bad response from server: " + result.responseCode);
-				if (result.error.contains("Unknown project")) {
-					MCLogger.logError("Project " + serverBehaviour.getProjectID()+ " is unknown - deleted or disabled");
-				}
-				else {
-					MCLogger.logError("Error message: " + result.error);
-				}
-				return IServer.STATE_UNKNOWN;
-			}
-
-			appStatusResponse = result.response;
+		// TODO display build status somewhere if it's building.
+		String status = app.getAppStatus();
+		MCLogger.log("App status is " + status);
+		if (status == null) {
+			return -1;
 		}
-		catch (IOException e) {
-			if (e instanceof SocketTimeoutException) {
-				// This happens in the normal course of application restarts, so we can safely ignore it
-				MCLogger.logError("Server state update request timed out");
-				return -1;
-			}
-			else if (e.getMessage().contains("Connection refused")) {
-				// should display a msg to the user in this case
-				MCLogger.logError("Connection refused; Microclimate is not running at the expected URL " + statusUrl);
-				return IServer.STATE_UNKNOWN;
-			}
-			else {
-				// Unexpected error
-				MCLogger.logError(e);
-				return IServer.STATE_UNKNOWN;
-			}
-		}
-
-
-		final String appStatusKey = "appStatus";
-		try {
-			JSONObject appStateJso = new JSONObject(appStatusResponse);
-			if (appStateJso.has(appStatusKey)) {
-				String status = appStateJso.getString(appStatusKey);
-
-				// MCLogger.log("Update app state to " + status);
-				return MicroclimateServerBehaviour.appStatusToServerState(status);
-			}
-		} catch (JSONException e) {
-			MCLogger.logError("JSON had app status, but exception occurred anyway", e);
-		}
-
-		return -1;
+		return MicroclimateServerBehaviour.appStatusToServerState(status);
 	}
 
 	void waitForState(int state, int timeout) {

@@ -23,16 +23,19 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 	// Attributes
 	public static final String
 			ATTR_HTTP_PORT 	= "httpPort",
-			ATTR_ROOT_URL  	= "rootUrl",
-			ATTR_PROJ_ID   	= "projectID";
+			// Root URL of this particular project
+			ATTR_APP_URL  	= "appRootUrl",
+			ATTR_PROJ_ID	= "projectID",
+			// Base URL of the corresponding MicroclimateConnection
+			ATTR_MCC_URL	= "mcBaseUrl";
 
-	//private MicroclimateServerBehaviour behaviour;
+	private MicroclimateServerBehaviour behaviour;
 
 	@Override
 	public void initialize() {
-		MCLogger.log("Initialize MicroclimateServer at " + getModuleRootURL(null));
+		MCLogger.log("Initialize MicroclimateServer");
 
-		//behaviour = (MicroclimateServerBehaviour) getServer().loadAdapter(MicroclimateServerBehaviour.class, null);
+		behaviour = (MicroclimateServerBehaviour) getServer().loadAdapter(MicroclimateServerBehaviour.class, null);
 	}
 
 	@Override
@@ -42,27 +45,24 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 			return new ServerPort[0];
 		}
 
-		// TODO cache this, TODO add debug port
-		ServerPort[] serverPorts = new ServerPort[2];
+		// TODO cache this ?
 
-		int httpPortNum = getServer().getAttribute(ATTR_HTTP_PORT, -1);
-		if (httpPortNum == -1) {
-			MCLogger.logError("No httpPort attribute");
+		int httpPortNum = behaviour.getApp().getHttpPort();
+		ServerPort httpPort = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
+
+		ServerPort debugPort = null;
+
+		int debugPortNum = behaviour.getApp().getDebugPort();
+		if (debugPortNum != -1) {
+			debugPort = new ServerPort("microclimateServerPort", "debugPort", debugPortNum, "http");
+		}
+
+		if (debugPort != null) {
+			return new ServerPort[] { httpPort, debugPort };
 		}
 		else {
-			serverPorts[0] = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
+			return new ServerPort[] { httpPort };
 		}
-
-		// TODO
-		int debugPortNum = 34567;	// getServer().getAttribute(ATTR_DEBUG_PORT, -1);
-		if (debugPortNum == -1) {
-			MCLogger.logError("No debugPort attribute");
-		}
-		else {
-			serverPorts[1] = new ServerPort("microclimateServerPort", "debugPort", debugPortNum, "http");
-		}
-
-		return serverPorts;
 	}
 
 	/*
@@ -76,7 +76,7 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public URL getModuleRootURL(IModule arg0) {
-		String rootUrl = getServer().getAttribute(ATTR_ROOT_URL, "");
+		String rootUrl = getServer().getAttribute(ATTR_APP_URL, "");
 		if(rootUrl.isEmpty()) {
 			MCLogger.logError("No rootUrl attribute");
 			return null;

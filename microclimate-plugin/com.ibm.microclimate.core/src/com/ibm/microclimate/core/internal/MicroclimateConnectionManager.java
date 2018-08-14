@@ -66,11 +66,11 @@ public class MicroclimateConnectionManager {
 	private void add(MicroclimateConnection connection) {
 		if(!connections.contains(connection)) {
 			connections.add(connection);
-			MCLogger.log("Added a new MCConnection: " + connection.baseUrl());
+			MCLogger.log("Added a new MCConnection: " + connection.baseUrl);
 			writeToPreferences();
 		}
 		else {
-			MCLogger.log("MCConnection " + connection.baseUrl() + " already exists");
+			MCLogger.log("MCConnection " + connection.baseUrl + " already exists");
 		}
 	}
 
@@ -86,7 +86,7 @@ public class MicroclimateConnectionManager {
 
 	public static MicroclimateConnection getConnection(String baseUrl) {
 		for(MicroclimateConnection mcc : connections()) {
-			if(mcc.baseUrl().equals(baseUrl)) {
+			if(mcc.baseUrl.equals(baseUrl)) {
 				return mcc;
 			}
 		}
@@ -98,7 +98,7 @@ public class MicroclimateConnectionManager {
 	}
 
 	public static boolean remove(MicroclimateConnection connection) {
-		MCLogger.log("Trying to remove MCConnection: " + connection.baseUrl());
+		MCLogger.log("Trying to remove MCConnection: " + connection.baseUrl);
 		boolean removeResult = instance().connections.remove(connection);
 		instance().writeToPreferences();
 		return removeResult;

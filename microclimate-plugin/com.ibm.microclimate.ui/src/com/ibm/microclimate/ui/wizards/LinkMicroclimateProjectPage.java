@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -126,12 +128,15 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		new Label(shell, SWT.NONE);
 
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-		.addPropertyChangeListener(event -> {
-		    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY
-		    		&& !connectionsCombo.isDisposed()) {
-		    	populateConnectionsCombo();
-		    	populateProjectsTable();
-		    }
+		.addPropertyChangeListener(new IPropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent event) {
+			    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY
+			    		&& !connectionsCombo.isDisposed()) {
+			    	populateConnectionsCombo();
+			    	populateProjectsTable();
+			    }
+			}
 		});
 
 		shell.pack();
@@ -149,7 +154,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		}
 
 		for(MicroclimateConnection mcc : connections) {
-			connectionsCombo.add(mcc.baseUrl());
+			connectionsCombo.add(mcc.baseUrl);
 		}
 
 
@@ -185,13 +190,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		}
 
 		// Cache the mcApps here so that we can be sure the contents of mcApps match the contents of the table
-		try {
-			mcApps = mcConnection.apps();
-		}
-		catch(Exception e) {
-			MCLogger.logError(e);
-			MessageDialog.openError(getShell(), "Error getting project list", e.getMessage());
-		}
+		mcApps = mcConnection.getApps();
 
 		for(MicroclimateApplication mcApp : mcApps) {
 			TableItem ti = new TableItem(projectsTable, SWT.NONE);

@@ -126,9 +126,13 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 		newServer.setName(serverName);
 
-		newServer.setAttribute(MicroclimateServer.ATTR_HTTP_PORT, appToLink.httpPort);
-		newServer.setAttribute(MicroclimateServer.ATTR_ROOT_URL, appToLink.rootUrl.toString());
-		newServer.setAttribute(MicroclimateServer.ATTR_PROJ_ID, appToLink.id);
+		// We can't pass Objects to the server framework - only primitives
+		// so we provide the info needed for the Server to look up the relevant Microclimate app
+		newServer.setAttribute(MicroclimateServer.ATTR_HTTP_PORT, appToLink.getHttpPort());
+		newServer.setAttribute(MicroclimateServer.ATTR_APP_URL, appToLink.rootUrl.toString());
+		newServer.setAttribute(MicroclimateServer.ATTR_PROJ_ID, appToLink.projectID);
+		// The server will determine the corresponding MCConnection from the baseUrl
+		newServer.setAttribute(MicroclimateServer.ATTR_MCC_URL, appToLink.mcConnection.baseUrl);
 		newServer.saveAll(true, null);
 
 		String successMsg = "Linked project %s with Microclimate application %s.\n"
