@@ -112,7 +112,19 @@ public class MicroclimateConnectionManager {
 		return instance().connections.size();
 	}
 
+	/**
+	 * Try to remove the given connection. Removal will fail if the connection is still in use (ie. has a linked app).
+	 * @return
+	 * 	true if the connection was removed,
+	 * 	false if not - either because the connection is still in use and wasn't removed, or because it didnt' exist.
+	 */
 	public static boolean remove(MicroclimateConnection connection) {
+		if (connection.hasLinkedApp()) {
+			// should we still remove the connection?
+			MCLogger.logError("Can't remove a connection that still has a linked app");
+			return false;
+		}
+
 		boolean removeResult = instance().connections.remove(connection);
 		if (!removeResult) {
 			MCLogger.logError("Tried to remove MCConnection " + connection.baseUrl + ", but it didn't exist");
@@ -146,6 +158,7 @@ public class MicroclimateConnectionManager {
 		String storedConnections = preferenceStore.getString(CONNECTION_LIST_PREFSKEY).trim();
 		MCLogger.log("Reading connections from preferences: \"" + storedConnections + "\"");
 
+		StringBuilder failedConnectionsBuilder = new StringBuilder();
 		for(String line : storedConnections.split("\n")) {
 			if(line.trim().isEmpty()) {
 				continue;
@@ -155,17 +168,23 @@ public class MicroclimateConnectionManager {
 				add(MicroclimateConnection.fromString(line));
 			}
 			catch(ConnectException | URISyntaxException e) {
-				// Probably we should keep the connection info, but mark it as 'inactive' or similar
-				// TODO right now it will just be deleted (because it's never added back to the connections list)
+				// TODO Probably we should keep the connection info, but mark it as 'inactive' or similar
+				// right now it will just be deleted (because it's never added back to the connections list)
 				MCLogger.logError(e);
-				// TODO improve this when there are many connections
-				MessageDialog.openError(Display.getDefault().getActiveShell(),
-						"Failed to connect to Microclimate instance", e.getMessage());
+
+				failedConnectionsBuilder.append(e.getMessage()).append('\n');
 			}
 			catch(StringIndexOutOfBoundsException | NumberFormatException e) {
 				MCLogger.logError(e);
 				MCLogger.logError("Stored MCConnection preference line did not match expected format:\n" + line);
 			}
+		}
+
+		String failedConnections = failedConnectionsBuilder.toString();
+		if (!failedConnections.isEmpty()) {
+			MessageDialog.openError(Display.getDefault().getActiveShell(),
+					"Failed to connect to Microclimate instance(s)",
+					"The following Microclimate instances could not be connected to:\n" + failedConnections);
 		}
 
 		// writeToPreferences();

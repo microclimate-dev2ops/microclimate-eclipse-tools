@@ -23,25 +23,29 @@ import com.ibm.microclimate.core.MCLogger;
 public class MicroclimateApplication {
 
 	public final MicroclimateConnection mcConnection;
-	public final String projectID, name, language, host;
+	public final String projectID, name, projectType, host;
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 	public final URL rootUrl;
 
+	private boolean isLinked = false;
+
+	// App Status fields - These are set by the MicroclimateSocket, and read by the MicroclimateServerMonitorThread
+	// so we have to make sure the reads and writes are synchronized
 	private String appStatus;
 	private String buildStatus;
 	private String buildStatusDetail;
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, String language, String pathWithinWorkspace,
+			String id, String name, String projectType, String pathWithinWorkspace,
 			int httpPort, String contextRoot)
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
 		this.projectID = id;
 		this.name = name;
-		this.language = language;
+		this.projectType = projectType;
 		this.fullLocalPath = mcConnection.localWorkspacePath.append(pathWithinWorkspace);
 		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
@@ -76,7 +80,7 @@ public class MicroclimateApplication {
 				MCLogger.log("app: " + app.toString());
 				String id 	= app.getString("projectID");
 				String name = app.getString("name");
-				String lang = app.getString("language");
+				String type = app.getString("projectType");
 				String loc 	= app.getString("locOnDisk");
 
 				String httpPortStr = "";
@@ -102,7 +106,7 @@ public class MicroclimateApplication {
 					contextRoot = app.getString(contextRootKey);
 				}
 
-				result.add(new MicroclimateApplication(conn, id, name, lang, loc, httpPort, contextRoot));
+				result.add(new MicroclimateApplication(conn, id, name, type, loc, httpPort, contextRoot));
 
 			}
 			catch(JSONException e) {
@@ -164,6 +168,10 @@ public class MicroclimateApplication {
 
 	// Getters for our project state fields
 
+	public boolean isLinked() {
+		return isLinked;
+	}
+
 	public synchronized String getAppStatus() {
 		return appStatus;
 	}
@@ -185,6 +193,11 @@ public class MicroclimateApplication {
 	}
 
 	// Setters to be called by the MCSocket to update this project's state
+
+	public void setLinked(boolean isLinked) {
+		MCLogger.log("App " + name + " is now linked? " + isLinked);
+		this.isLinked = isLinked;
+	}
 
 	public synchronized void setAppStatus(String appStatus) {
 		this.appStatus = appStatus;
@@ -220,8 +233,8 @@ public class MicroclimateApplication {
 
 	@Override
 	public String toString() {
-		return String.format("%s@%s id=%s name=%s language=%s loc=%s",
+		return String.format("%s@%s id=%s name=%s type=%s loc=%s",
 				MicroclimateApplication.class.getSimpleName(), rootUrl.toString(),
-				projectID, name, language, fullLocalPath.toOSString());
+				projectID, name, projectType, fullLocalPath.toOSString());
 	}
 }

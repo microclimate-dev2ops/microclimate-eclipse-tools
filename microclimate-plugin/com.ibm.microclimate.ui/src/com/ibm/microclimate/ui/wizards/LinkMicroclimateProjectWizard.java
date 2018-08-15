@@ -11,6 +11,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
@@ -37,6 +38,19 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		selectedProject = getProjectFromSelection(selection);
+
+		String alreadyLinkedServer = isProjectAlreadyLinked(selectedProject);
+		if (alreadyLinkedServer != null) {
+			String alreadyLinkedMsg = String.format("%s is already linked to %s",
+					selectedProject.getName(), alreadyLinkedServer);
+
+			MessageDialog.openWarning(getShell(), "Project already linked", alreadyLinkedMsg);
+			// kill the wizard - nothing to do here
+			if (getShell() != null) {
+				getShell().close();
+			}
+		}
+
 		setDefaultPageImageDescriptor(Activator.getDefaultIcon());
 
 		// TODO help
@@ -61,6 +75,35 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		return project;
 	}
 
+	/**
+	 * Loop over Microclimate Servers, and see if any of them has its project attribute
+	 * set to the same name as this project. In this case there's no point in running the wizard.
+	 *
+	 * TODO will anything funky happen if the user renames the project?
+	 *
+	 * @return
+	 * 	The name of the server that the given project is already linked to,
+	 * 	or null if the project is not yet linked.
+	 */
+	private static String isProjectAlreadyLinked(IProject project) {
+		for (IServer server : ServerCore.getServers()) {
+			if (!MicroclimateServer.SERVER_ID.equals(server.getServerType().getId())) {
+				// not a MC server
+				continue;
+			}
+
+			final String serverProjectName = server.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, "");
+			if (serverProjectName.isEmpty()) {
+				MCLogger.logError("MC Server " + server.getName() + " didn't have an Eclipse Project attribute");
+				continue;
+			}
+
+			if (serverProjectName.equals(project.getName())) {
+				return server.getName();
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public void addPages() {
@@ -80,6 +123,8 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	public boolean performFinish() {
 
 		MicroclimateApplication appToLink = newProjectPage.getSelectedApp();
+
+
 		String mcAppPath = appToLink.fullLocalPath.toOSString();
 
 		String eclipseProjPath = selectedProject.getLocation().toOSString();
@@ -105,7 +150,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		}
 		catch(CoreException e) {
 			MCLogger.logError(e);
-			MessageDialog.openError(getShell(), "Error create Microclimate Server/Application", e.getMessage());
+			MessageDialog.openError(getShell(), "Error creating Microclimate Server/Application", e.getMessage());
 		}
 
 		return true;

@@ -1,8 +1,10 @@
 package com.ibm.microclimate.ui.prefs;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -25,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.Activator;
@@ -95,15 +98,29 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		removeSelectedBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
-				// TODO It should be a problem if they remove an MCConnection which has an app active in the workspace.
-				// Probably add a 'boolean isLinked' field to each app, and then when a connection is removed,
-				// block the removal if any of that connection's apps are linked.
+
+				int connectionsInUse = 0;
 
 				int[] selected = connectionsTable.getSelectionIndices();
 				for(int i : selected) {
-					if(!MicroclimateConnectionManager.remove(connections.get(i))) {
-						MCLogger.logError("Connection with index " + i + " was already removed");
+					MicroclimateConnection connection = connections.get(i);
+					if (connection.hasLinkedApp()) {
+						// You cannot remove it in this case.
+						connectionsInUse++;
 					}
+					else {
+						// Do the remove.
+						if(!MicroclimateConnectionManager.remove(connection)) {
+							MCLogger.logError("Connection with index " + i + " was already removed");
+						}
+					}
+				}
+
+				if (connectionsInUse > 0) {
+					MessageDialog.openError(getShell(), "Could not remove connections",
+							connectionsInUse + " connections have projects linked in the workspace. "
+									+ "Unlink the projects by deleting the servers "
+									+ "before removing their Microclimate Connection.");
 				}
 
 				refreshConnectionsList();
@@ -135,7 +152,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		*/
 
 		TableColumn enabled = new TableColumn(connectionsTable, SWT.BORDER);
-		enabled.setText("Any other info?");
+		enabled.setText("Linked Projects");
 		enabled.setWidth(tableGridData.widthHint - addresses.getWidth());
 
 		refreshConnectionsList();
@@ -167,7 +184,8 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		for(MicroclimateConnection mcc : connections) {
 			try {
 				TableItem ti = new TableItem(connectionsTable, SWT.NONE);
-				ti.setText(new String[] { mcc.baseUrl, "Other info? Linked apps?" });
+
+				ti.setText(new String[] { mcc.baseUrl, getLinkedAppsForConnection(mcc) });
 			}
 			catch(SWTException e) {
 				// suppress widget disposed exception - It gets thrown if the window is out of focus,
@@ -177,5 +195,22 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				}
 			}
 		}
+	}
+
+	private static String getLinkedAppsForConnection(MicroclimateConnection mcc) {
+		StringBuilder linkedAppsBuilder = new StringBuilder();
+		mcc.getLinkedApps().stream().forEachOrdered(new Consumer<MicroclimateApplication>() {
+			@Override
+			public void accept(MicroclimateApplication app) {
+				linkedAppsBuilder.append(app.name).append(", ");
+			}
+		});
+
+		// Remove the last ", "
+		if (linkedAppsBuilder.length() > 2) {
+			linkedAppsBuilder.setLength(linkedAppsBuilder.length() - 2);
+		}
+
+		return linkedAppsBuilder.length() > 0 ? linkedAppsBuilder.toString() : "None";
 	}
 }

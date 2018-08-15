@@ -122,12 +122,12 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		TableColumn nameColumn = new TableColumn(projectsTable, SWT.BORDER);
 		nameColumn.setText("Project Name");
 		nameColumn.setWidth((int)(tableLayout.minimumWidth / 2.75));
-		TableColumn languageColumn = new TableColumn(projectsTable, SWT.BORDER);
-		languageColumn.setText("Language");
-		languageColumn.setWidth(nameColumn.getWidth() / 2);
+		TableColumn typeColumn = new TableColumn(projectsTable, SWT.BORDER);
+		typeColumn.setText("Type");
+		typeColumn.setWidth(nameColumn.getWidth() / 2);
 		TableColumn urlColumn = new TableColumn(projectsTable, SWT.BORDER);
 		urlColumn.setText("URL");
-		urlColumn.setWidth(tableLayout.minimumWidth - nameColumn.getWidth() - languageColumn.getWidth());
+		urlColumn.setWidth(tableLayout.minimumWidth - nameColumn.getWidth() - typeColumn.getWidth());
 
 		// Since we called buildConnectionsCombo already, mcConnection must be set
 		populateProjectsTable();
@@ -205,11 +205,11 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		for(MicroclimateApplication mcApp : mcApps) {
 			TableItem ti = new TableItem(projectsTable, SWT.NONE);
 
-			String lang = mcApp.language;
+			String type = mcApp.projectType;
 			// uppercase the first letter because it looks nicer
-			lang = lang.substring(0, 1).toUpperCase() + lang.substring(1);
+			type = type.substring(0, 1).toUpperCase() + type.substring(1);
 
-			ti.setText(new String[] { mcApp.name, lang, mcApp.rootUrl.toString() });
+			ti.setText(new String[] { mcApp.name, type, mcApp.rootUrl.toString() });
 
 			// Gray out invalid projects
 			if (!isAppLinkable(mcApp)) {
@@ -219,7 +219,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	}
 
 	private static boolean isAppLinkable(MicroclimateApplication app) {
-		return app != null && "java".equals(app.language);
+		return app != null && "liberty".equals(app.projectType);
 	}
 
 	private void showNoConnectionsMsg() {
@@ -246,8 +246,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				return true;
 			}
 			else {
-				setErrorMessage("Invalid project selected - Only Java projects are supported at this time. "
-						+ "Please select a Java project.");
+				setErrorMessage("Invalid project selected - Only Liberty projects are supported at this time.");
 				return false;
 			}
 		}

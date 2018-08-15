@@ -78,6 +78,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					+ mcConnection.toString());
 			return;
 		}
+		app.setLinked(true);
 
 		// Ask the server for an initial state - the monitor thread will handle updates but doesn't know the state
 		// until it changes (causing the server to emit an update event)
@@ -156,6 +157,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void dispose() {
 		MCLogger.log("Dispose " + getServer().getName());
+		app.setLinked(false);
 		if (monitorThread != null) {
 			monitorThread.disable();
 			monitorThread.interrupt();

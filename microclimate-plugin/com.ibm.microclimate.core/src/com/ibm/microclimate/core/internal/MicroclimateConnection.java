@@ -3,6 +3,7 @@ package com.ibm.microclimate.core.internal;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class MicroclimateConnection {
 		String baseUrl_ = buildUrl(host, port);
 
 		if(!test(baseUrl_)) {
+			// TODO this message is displayed directly to the user, so we have to localize it.
 			throw new ConnectException(
 					String.format("Connecting to Microclimate instance at \"%s\" failed", baseUrl_));
 		}
@@ -43,6 +45,8 @@ public class MicroclimateConnection {
 		// TODO - Requires Portal API for getting user's workspace on their machine.
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
 		this.socket = new MicroclimateSocket(this);
+
+		getApps();
 	}
 
 	private static String buildUrl(String host, int port) {
@@ -62,6 +66,10 @@ public class MicroclimateConnection {
 		return getResult != null && getResult.contains("Microclimate");
 	}
 
+	/**
+	 * Refresh this connection's list of apps from the Microclimate project list endpoint.
+	 * @return The new list of apps
+	 */
 	public List<MicroclimateApplication> getApps() {
 
 		String projectsUrl = baseUrl + "api/v1/projects";
@@ -97,21 +105,47 @@ public class MicroclimateConnection {
 		return Collections.emptyList();
 	}
 
+	public List<MicroclimateApplication> getLinkedApps() {
+		List<MicroclimateApplication> result = new ArrayList<>();
+		for (MicroclimateApplication app : apps) {
+			if (app.isLinked()) {
+				result.add(app);
+			}
+		}
+		return result;
+	}
+
 	/**
 	 * @return The app with the given ID, if it exists in this Microclimate instance, else null.
 	 */
 	public MicroclimateApplication getAppByID(String projectID) {
-		if (apps == null) {
-			getApps();
-		}
+		return getAppByID(projectID, true);
+	}
 
+	private MicroclimateApplication getAppByID(String projectID, boolean retry) {
 		for (MicroclimateApplication app : apps) {
 			if (app.projectID.equals(projectID)) {
 				return app;
 			}
 		}
+
+		if (retry) {
+			// Refresh the project list and retry one time in case the project is new.
+			getApps();
+			return getAppByID(projectID, false);
+		}
 		MCLogger.logError("No project found with ID " + projectID);
+
 		return null;
+	}
+
+	public boolean hasLinkedApp() {
+		for (MicroclimateApplication app : apps) {
+			if (app.isLinked()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

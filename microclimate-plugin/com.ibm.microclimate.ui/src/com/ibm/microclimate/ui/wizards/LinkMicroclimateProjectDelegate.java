@@ -31,7 +31,6 @@ public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 			wizard = new NewMicroclimateConnectionWizard(true);
 		}
 		else {
-			// TODO check if already linked, in this case there's no point in running the wizard
 			wizard = new LinkMicroclimateProjectWizard();
 		}
 
