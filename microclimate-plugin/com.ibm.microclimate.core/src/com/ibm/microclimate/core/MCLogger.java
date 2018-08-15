@@ -4,6 +4,9 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+/**
+ * @author timetchells@ibm.com
+ */
 public class MCLogger {
 
 	private static final SimpleDateFormat TIME_SDF = new SimpleDateFormat("k:mm:ss");
@@ -12,11 +15,6 @@ public class MCLogger {
 	private static PrintStream errStream = System.err;
 
 	private MCLogger() {}
-
-	public static void setLogStream(PrintStream stream) {
-		MCLogger.outStream = stream;
-		MCLogger.errStream = stream;
-	}
 
 	public static void log(String msg) {
 		log(msg, false);
@@ -36,6 +34,10 @@ public class MCLogger {
 		cause.printStackTrace(errStream);
 	}
 
+	/**
+	 * Log the given message to stdout or stderr, depending on isError.
+	 * The message is prepended with a timestamp, as well as the caller's class name, method name, and line number.
+	 */
 	private static void log(String msg, boolean isError) {
 		StackTraceElement[] ste = Thread.currentThread().getStackTrace();
 		StackTraceElement callingMethod = null;
@@ -71,5 +73,4 @@ public class MCLogger {
 
 		stream.println(message);
 	}
-
 }

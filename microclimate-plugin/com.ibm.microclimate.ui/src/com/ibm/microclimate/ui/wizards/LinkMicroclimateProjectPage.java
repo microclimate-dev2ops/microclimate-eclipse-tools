@@ -15,6 +15,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -27,10 +28,18 @@ import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage;
 
+/**
+ * This wizard page allows the user to select a Microclimate Connection, then displays a list of applications running
+ * on that MC instance. The user can then select one of these apps to link to the selected Eclipse project.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class LinkMicroclimateProjectPage extends WizardPage {
 
 	// User's currently selected Microclimate Connection - can be null
 	private MicroclimateConnection mcConnection;
+	// List of Applications from the current mcConnection
 	private List<MicroclimateApplication> mcApps;
 
 	private Combo connectionsCombo;
@@ -77,8 +86,6 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				populateProjectsTable();
 			}
 		});
-
-		// Label spacer = new Label(shell, SWT.NONE);
 
 		Button manageConnectionsBtn = new Button(shell, SWT.BORDER);
 		manageConnectionsBtn.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
@@ -157,7 +164,6 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			connectionsCombo.add(mcc.baseUrl);
 		}
 
-
 		if(previousCount == 0) {
 			// Previously it was empty. Now, it is not empty. So we should automatically select the first item.
 			connectionsCombo.select(0);
@@ -185,7 +191,11 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projectsTable.removeAll();
 
 		if(mcConnection == null) {
-			showNoConnectionsMsg();
+			// Don't display this if the Preferences page is already open - ie only display it
+			// if this wizard is the active shell.
+			if (getShell().equals(Display.getDefault().getActiveShell())) {
+				showNoConnectionsMsg();
+			}
 			return;
 		}
 
@@ -200,7 +210,16 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			lang = lang.substring(0, 1).toUpperCase() + lang.substring(1);
 
 			ti.setText(new String[] { mcApp.name, lang, mcApp.rootUrl.toString() });
+
+			// Gray out invalid projects
+			if (!isAppLinkable(mcApp)) {
+				ti.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY));
+			}
 		}
+	}
+
+	private static boolean isAppLinkable(MicroclimateApplication app) {
+		return app != null && "java".equals(app.language);
 	}
 
 	private void showNoConnectionsMsg() {
@@ -219,7 +238,20 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	}
 
 	boolean canFinish() {
-		// Can finish if any project is selected
-		return getSelectedApp() != null;
+		// Can finish if any valid project is selected
+		MicroclimateApplication selectedApp = getSelectedApp();
+		if (selectedApp != null) {
+			if (isAppLinkable(selectedApp)) {
+				setErrorMessage(null);
+				return true;
+			}
+			else {
+				setErrorMessage("Invalid project selected - Only Java projects are supported at this time. "
+						+ "Please select a Java project.");
+				return false;
+			}
+		}
+
+		return false;
 	}
 }

@@ -9,27 +9,33 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
+/**
+ * Static utilities to eliminate some boilerplate for launching wizards.
+ *
+ * @author timetchells@ibm.com
+ */
 public class WizardLauncher {
+
+	private WizardLauncher() {}
 
 	/**
 	 * Useful when the wizard to be launched does not care about the workbench or selection.
 	 * Do not use with the LinkMicroclimateProjectWizard since it requires these.
-	 * @param wizard
 	 */
 	public static void launchWizardWithoutSelection(Wizard wizard) {
 		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 		dialog.create();
 		dialog.open();
 	}
-	
+
 	public static void launchWizard(INewWizard wizard, ISelection selection, IWorkbench workbench, Shell parentShell) {
 		IStructuredSelection structuredSelection = null;
 		if (selection instanceof IStructuredSelection) {
 			structuredSelection = (IStructuredSelection) selection;
 		}
-		
+
 		wizard.init(workbench, structuredSelection);
-		
+
 		WizardDialog dialog = new WizardDialog(parentShell, wizard);
 		dialog.create();
 		dialog.open();

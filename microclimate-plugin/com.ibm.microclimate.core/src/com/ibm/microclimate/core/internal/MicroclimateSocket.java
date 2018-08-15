@@ -11,12 +11,22 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
+/**
+ * Wrapper for a SocketIO client socket, which connects to FileWatcher and listens for project state changes,
+ * then updates the corresponding MicroclimateApplication's state.
+ * One of these exists for each MicroclimateConnection. That connection is stored here so we can access
+ * its applications.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class MicroclimateSocket {
 
 	public final Socket socket;
 
 	private final MicroclimateConnection mcConnection;
 
+	// SocketIO Event names
 	private static final String
 			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged",
 			EVENT_PROJECT_RESTART = "projectRestartResult";
@@ -68,6 +78,7 @@ public class MicroclimateSocket {
 				MCLogger.log("SocketIO message " + arg0[0].toString());
 			}
 		})
+		// Below are Filewatcher-specific events
 		.on(EVENT_PROJECT_STATUS_CHANGE, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
@@ -96,10 +107,10 @@ public class MicroclimateSocket {
 		});
 		socket.connect();
 
-		MCLogger.log("Created SocketIO socket at " + url);
+		MCLogger.log("Created MicroclimateSocket connected to " + url);
 	}
 
-	// TODO move these to a 'constants' file ?
+	// Event data JSON constants
 	public static final String
 			KEY_PROJECT_ID = "projectID",
 
@@ -139,6 +150,7 @@ public class MicroclimateSocket {
 
 	private void onProjectRestart(JSONObject event) throws JSONException {
 		// The restart event doesn't provide a project state. We just update the ports here
+		// The project state events will be received separately and handled normally.
 		MicroclimateApplication app = getApp(event);
 		if (app == null) {
 			// can't recover from this

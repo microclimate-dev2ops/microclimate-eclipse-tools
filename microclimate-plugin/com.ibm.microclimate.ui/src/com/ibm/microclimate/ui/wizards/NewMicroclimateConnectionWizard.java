@@ -7,6 +7,13 @@ import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.ui.Activator;
 
+/**
+ * This wizard, which can be launched through the MC Preferences page or as a prerequisite to Linking a project,
+ * allows the user to add at least one new MicroclimateConnection.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class NewMicroclimateConnectionWizard extends Wizard implements INewWizard {
 
 	// private IProject project;
@@ -18,7 +25,6 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 	private boolean runLinkProjectWizardOnFinish;
 
 	public NewMicroclimateConnectionWizard(boolean runLinkProjectWizardOnFinish) {
-		// TODO perhaps display a message like "You must connect to a Microclimate instance before adding a project"
 		this.runLinkProjectWizardOnFinish = runLinkProjectWizardOnFinish;
 	}
 
@@ -39,6 +45,13 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 		newConnectionPage = new NewMicroclimateConnectionPage();
 		// newConnectionPage.setProject(project);
 		addPage(newConnectionPage);
+
+		if (runLinkProjectWizardOnFinish) {
+			// This means that the user did not launch this wizard directly, but that this wizard was
+			// launched as a prerequisite to the Link project wizard.
+			// So, we should tell them why they got this wizard and not the Link wizard.
+			newConnectionPage.setMessage("You must connect to a Microclimate instance before you can Link a project.");
+		}
 	}
 
 	@Override
@@ -61,6 +74,4 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 		return true;
 	}
-
-
 }

@@ -15,6 +15,10 @@ import org.eclipse.wst.server.core.model.ServerDelegate;
 import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
 
+/**
+ * @author timetchells@ibm.com
+ *
+ */
 public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	public static final String SERVER_ID = "microclimate.server";		// must match ID in plugin.xml
@@ -41,15 +45,6 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public ServerPort[] getServerPorts() {
-		/*
-		if(getServer().getServerState() == IServer.STATE_STOPPED) {
-			MCLogger.logError("No ports for a stopped server");
-			return new ServerPort[0];
-		}
-		*/
-
-		// TODO cache this ?
-
 		int httpPortNum = behaviour.getApp().getHttpPort();
 		ServerPort httpPort = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
 
@@ -67,15 +62,6 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 			return new ServerPort[] { httpPort };
 		}
 	}
-
-	/*
-	public int getHttpPort() {
-		return getServerPorts()[0].getPort();
-	}
-
-	public int getDebugPort() {
-		return getServerPorts()[1].getPort();
-	}*/
 
 	@Override
 	public URL getModuleRootURL(IModule arg0) {
@@ -114,7 +100,4 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 	public void modifyModules(IModule[] arg0, IModule[] arg1, IProgressMonitor arg2) throws CoreException {
 		// Do nothing - not supported
 	}
-
-
-
 }

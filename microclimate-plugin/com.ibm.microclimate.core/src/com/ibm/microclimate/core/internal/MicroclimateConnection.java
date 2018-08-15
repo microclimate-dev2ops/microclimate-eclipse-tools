@@ -13,6 +13,10 @@ import org.eclipse.swt.widgets.Display;
 
 import com.ibm.microclimate.core.MCLogger;
 
+/**
+ *
+ * @author timetchells@ibm.com
+ */
 public class MicroclimateConnection {
 
 	public final String host;
@@ -36,19 +40,9 @@ public class MicroclimateConnection {
 		this.host = host;
 		this.port = port;
 		this.baseUrl = baseUrl_;
-		// TODO
+		// TODO - Requires Portal API for getting user's workspace on their machine.
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
 		this.socket = new MicroclimateSocket(this);
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if(!(other instanceof MicroclimateConnection)) {
-			return false;
-		}
-
-		MicroclimateConnection otherMcc = (MicroclimateConnection) other;
-		return otherMcc.baseUrl.equals(baseUrl);
 	}
 
 	private static String buildUrl(String host, int port) {
@@ -64,9 +58,7 @@ public class MicroclimateConnection {
 			return false;
 		}
 
-		//MCLogger.log("From " + url + " got:");
-		//MCLogger.log(getResult);
-
+		// TODO improve this!
 		return getResult != null && getResult.contains("Microclimate");
 	}
 
@@ -92,6 +84,7 @@ public class MicroclimateConnection {
 			return apps;
 		}
 		catch(Exception e) {
+
 			Display.getDefault().syncExec(new Runnable() {
 				@Override
 				public void run() {
@@ -104,6 +97,9 @@ public class MicroclimateConnection {
 		return Collections.emptyList();
 	}
 
+	/**
+	 * @return The app with the given ID, if it exists in this Microclimate instance, else null.
+	 */
 	public MicroclimateApplication getAppByID(String projectID) {
 		if (apps == null) {
 			getApps();
@@ -118,8 +114,18 @@ public class MicroclimateConnection {
 		return null;
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		if(!(other instanceof MicroclimateConnection)) {
+			return false;
+		}
+
+		MicroclimateConnection otherMcc = (MicroclimateConnection) other;
+		return otherMcc.baseUrl.equals(baseUrl);
+	}
+
 	// Note that toString and fromString are used to save and load connections from the preferences store
-	// in MicroclimateConnectionManager
+	// in MicroclimateConnectionManager, so be careful modifying these.
 
 	private static final String HOST_KEY = "$host", PORT_KEY = "$port";
 

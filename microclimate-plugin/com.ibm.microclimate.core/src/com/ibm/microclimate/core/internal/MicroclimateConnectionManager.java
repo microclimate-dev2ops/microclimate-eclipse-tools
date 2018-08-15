@@ -14,8 +14,16 @@ import org.eclipse.swt.widgets.Display;
 
 import com.ibm.microclimate.core.MCLogger;
 
+/**
+ * Singleton class to keep track of the list of current Microclimate Connections,
+ * and manage persisting them to and from the Preferences.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class MicroclimateConnectionManager {
 
+	// Singleton instance. Never access this directly. Use the instance() method.
 	private static MicroclimateConnectionManager instance;
 
 	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections";
@@ -25,22 +33,19 @@ public class MicroclimateConnectionManager {
 	private IPreferenceStore preferenceStore;
 
 	private MicroclimateConnectionManager() {
-		if(instance != null) {
-			MCLogger.logError("Multiple singleton instances of MCCM");
-		}
 		instance = this;
 
-		MCLogger.log("Init microclimateConnectionManager");
+		// MCLogger.log("Init MicroclimateConnectionManager");
 		preferenceStore = com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore();
 		loadFromPreferences();
 
+		// Add a preference listener to reload the cached list of connections each time it's modified.
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
 			.addPropertyChangeListener(new IPropertyChangeListener() {
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
-					// Refresh the list of connections whenever they are modified
 				    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-				    	MCLogger.log("Loading prefs in MCCM");
+				    	// MCLogger.log("Loading prefs in MCCM");
 				        loadFromPreferences();
 				    }
 				}
@@ -54,23 +59,36 @@ public class MicroclimateConnectionManager {
 		return instance;
 	}
 
+	/**
+	 * Try to connect to Microclimate at the given host:port.
+	 * @throws ConnectException if the connection fails, or if the connection already exists.
+	 * @return The new connection if it succeeds.
+	 */
 	public static MicroclimateConnection create(String host, int port) throws ConnectException, URISyntaxException {
 		// Will throw an exception if connection fails
 		MicroclimateConnection newConnection = new MicroclimateConnection(host, port);
 		// Connection succeeded
-		instance().add(newConnection);
-
+		boolean added = instance().add(newConnection);
+		if (!added) {
+			throw new ConnectException("Microclimate Connection at " + newConnection.baseUrl + " already exists.");
+		}
 		return newConnection;
 	}
 
-	private void add(MicroclimateConnection connection) {
+	/**
+	 * Adds the given connection to the list of connections.
+	 * @return true if added, false if the connection already existed.
+	 */
+	private boolean add(MicroclimateConnection connection) {
 		if(!connections.contains(connection)) {
 			connections.add(connection);
 			MCLogger.log("Added a new MCConnection: " + connection.baseUrl);
 			writeToPreferences();
+			return true;
 		}
 		else {
 			MCLogger.log("MCConnection " + connection.baseUrl + " already exists");
+			return false;
 		}
 	}
 
@@ -78,10 +96,7 @@ public class MicroclimateConnectionManager {
 	 * @return An <b>unmodifiable</b> copy of the list of existing MC connections.
 	 */
 	public static List<MicroclimateConnection> connections() {
-		// MCLogger.log("Returning " + connections.size() + " connections");
-		// Have to do this every time?
-		// loadFromPreferences();
-		return Collections.unmodifiableList(instance.connections);
+		return Collections.unmodifiableList(instance().connections);
 	}
 
 	public static MicroclimateConnection getConnection(String baseUrl) {
@@ -98,8 +113,10 @@ public class MicroclimateConnectionManager {
 	}
 
 	public static boolean remove(MicroclimateConnection connection) {
-		MCLogger.log("Trying to remove MCConnection: " + connection.baseUrl);
 		boolean removeResult = instance().connections.remove(connection);
+		if (!removeResult) {
+			MCLogger.logError("Tried to remove MCConnection " + connection.baseUrl + ", but it didn't exist");
+		}
 		instance().writeToPreferences();
 		return removeResult;
 	}
@@ -107,7 +124,6 @@ public class MicroclimateConnectionManager {
 	public static void clear() {
 		MCLogger.log("Clearing " + instance().connections.size() + " connections");
 		instance().connections.clear();
-		// instance().writeToPreferences();
 	}
 
 	// Preferences serialization
@@ -140,6 +156,7 @@ public class MicroclimateConnectionManager {
 			}
 			catch(ConnectException | URISyntaxException e) {
 				// Probably we should keep the connection info, but mark it as 'inactive' or similar
+				// TODO right now it will just be deleted (because it's never added back to the connections list)
 				MCLogger.logError(e);
 				// TODO improve this when there are many connections
 				MessageDialog.openError(Display.getDefault().getActiveShell(),

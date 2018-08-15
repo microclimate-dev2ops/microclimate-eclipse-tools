@@ -8,7 +8,14 @@ import org.eclipse.ui.IWorkbenchPart;
 
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 
-// From http://www.eclipse.org/articles/article.php?file=Article-JFaceWizards/index.html
+/**
+ *
+ * This delegate handles the action when a user selects the Microclimate > Link Project context menu item.
+ * Adapted from http://www.eclipse.org/articles/article.php?file=Article-JFaceWizards/index.html
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 
 	private IWorkbenchPart part;

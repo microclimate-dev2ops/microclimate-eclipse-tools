@@ -26,6 +26,8 @@ public class MicroclimateSourcePathComputer implements ISourcePathComputerDelega
 
 		// Get the project name from the launch configuration, look up the IProject, and return that IProject as a
 		// source container.
+
+		// MicroclimateServerLaunchConfigDelegate sets this attribute in the launch config.
 		final String projectName = config.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, "");
 		if (!projectName.isEmpty()) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);

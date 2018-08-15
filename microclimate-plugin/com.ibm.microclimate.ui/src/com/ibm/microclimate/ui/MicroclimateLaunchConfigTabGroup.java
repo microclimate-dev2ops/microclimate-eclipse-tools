@@ -15,7 +15,11 @@ import org.eclipse.wst.server.ui.ServerLaunchConfigurationTab;
 import com.ibm.microclimate.core.server.MicroclimateServer;
 
 /**
- * A tab group for launching the server.
+ * A tab group for editing a Microclimate Launch Configuration.
+ * Right now there isn't really any obvious reason a user would need to use this,
+ * but without it you get an error message when clicking on the launch config in the Configurations menu.
+ *
+ * @author timetchells@ibm.com
  */
 public class MicroclimateLaunchConfigTabGroup extends AbstractLaunchConfigurationTabGroup {
 

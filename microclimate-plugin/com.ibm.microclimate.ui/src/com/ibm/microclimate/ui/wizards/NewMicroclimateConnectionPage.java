@@ -5,8 +5,6 @@ import java.net.URISyntaxException;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -20,6 +18,13 @@ import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 
+/**
+ * This simple page allows the user to add new Microclimate connections, by entering a hostname and port and
+ * validating that Microclimate is indeed reachable at the given address.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class NewMicroclimateConnectionPage extends WizardPage {
 
 	private Text hostnameText, portText;
@@ -60,14 +65,17 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		hostnameText.setLayoutData(hostnamePortTextData);
 		hostnameText.setText("localhost");
 
+		/*
+		// Invalidate the wizard when the host or port are changed so that the user has to test the connection again.
 		ModifyListener modifyListener = new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent arg0) {
 				mcConnection = null;
+				getWizard().getContainer().updateButtons();
 			}
-		};
+		};*/
 
-		hostnameText.addModifyListener(modifyListener);
+		// hostnameText.addModifyListener(modifyListener);
 
 		Label portLabel = new Label(hostPortGroup, SWT.BORDER);
 		portLabel.setText("Port:");
@@ -77,10 +85,10 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		portText.setLayoutData(hostnamePortTextData);
 		portText.setText("9090");
 
-		portText.addModifyListener(modifyListener);
+		// portText.addModifyListener(modifyListener);
 
 		Button testConnectionBtn = new Button(hostPortGroup, SWT.NONE);
-		testConnectionBtn.setText("Test Connection");
+		testConnectionBtn.setText("Add Connection");
 		testConnectionBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
@@ -91,7 +99,6 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	}
 
 	void testConnection() {
-		// TODO prevent duplicate connections
 		mcConnection = null;
 
 		// Try to connect to Microclimate at the given hostname:port
@@ -117,7 +124,6 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 			setErrorMessage(e.getMessage());
 		}
 		catch(NumberFormatException e) {
-			// Shouldn't happen because we already validated this field
 			setErrorMessage(String.format("\"%s\" is not a valid port number", portStr));
 		}
 

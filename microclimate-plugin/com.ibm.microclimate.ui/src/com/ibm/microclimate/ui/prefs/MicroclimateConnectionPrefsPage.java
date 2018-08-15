@@ -8,6 +8,7 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -30,6 +31,13 @@ import com.ibm.microclimate.ui.Activator;
 import com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard;
 import com.ibm.microclimate.ui.wizards.WizardLauncher;
 
+/**
+ * This preferences page lists the current Microclimate connections, allows adding new ones, and removing existing ones.
+ * It can be launched through Preferences, or from the LinkMicroclimateProjectPage.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class MicroclimateConnectionPrefsPage extends PreferencePage implements IWorkbenchPreferencePage {
 
 	public static final String
@@ -42,15 +50,14 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 	private List<MicroclimateConnection> connections;
 
-	// TODO how to know when to refresh the page?
-	private boolean needsRefreshConnections = false;
-
 	public MicroclimateConnectionPrefsPage() {
 		super("Microclimate Connections", Activator.getDefaultIcon());
 	}
 
 	@Override
 	public void init(IWorkbench arg0) {
+		// Note that ConfigurationScope is used. This means that our list of MCConnections is shared
+		// between different workspaces.
 		setPreferenceStore(new ScopedPreferenceStore(ConfigurationScope.INSTANCE, MC_CONNECTIONS_PREFSKEY));
 		setDescription("Microclimate connection preferences description");
 	}
@@ -89,6 +96,8 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 				// TODO It should be a problem if they remove an MCConnection which has an app active in the workspace.
+				// Probably add a 'boolean isLinked' field to each app, and then when a connection is removed,
+				// block the removal if any of that connection's apps are linked.
 
 				int[] selected = connectionsTable.getSelectionIndices();
 				for(int i : selected) {
@@ -116,7 +125,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		connectionsTable.setHeaderVisible(true);
 
 		TableColumn addresses = new TableColumn(connectionsTable, SWT.BORDER);
-		addresses.setText("Address");
+		addresses.setText("URL");
 		addresses.setWidth(tableGridData.widthHint / 2);
 
 		/*
@@ -139,7 +148,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				    	MCLogger.log("Reloading preferences in MCCPP");
 				    	// calling refreshConnectionsList here results in WidgetDisposed exception if
 				    	// the window is not in focus
-				        needsRefreshConnections = true;
+				        refreshConnectionsList();
 				    }
 				}
 			});
@@ -147,18 +156,26 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		return parent;
 	}
 
-
 	private void refreshConnectionsList() {
 		// Update the cached connections when we update the table, so that they always match
 		connections = MicroclimateConnectionManager.connections();
 
-		connectionsTable.removeAll();
-
-		for(MicroclimateConnection mcc : connections) {
-			TableItem ti = new TableItem(connectionsTable, SWT.NONE);
-			ti.setText(new String[] { mcc.baseUrl, "Other info??" });
+		if (!connectionsTable.isDisposed()) {
+			connectionsTable.removeAll();
 		}
 
-		needsRefreshConnections = false;
+		for(MicroclimateConnection mcc : connections) {
+			try {
+				TableItem ti = new TableItem(connectionsTable, SWT.NONE);
+				ti.setText(new String[] { mcc.baseUrl, "Other info? Linked apps?" });
+			}
+			catch(SWTException e) {
+				// suppress widget disposed exception - It gets thrown if the window is out of focus,
+				// but then the table populates just fine anyway, so I don't know why it is a problem.
+				if (!"Widget is disposed".equals(e.getMessage())) {
+					throw e;
+				}
+			}
+		}
 	}
 }

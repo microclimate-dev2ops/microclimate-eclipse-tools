@@ -1,7 +1,5 @@
 package com.ibm.microclimate.core.server.debug;
 
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +19,7 @@ import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
 
 /**
- * Largely from com.ibm.ws.st.core.internal.launch.LaunchUtilities
+ * Taken largely from com.ibm.ws.st.core.internal.launch.LaunchUtilities
  * and com.ibm.ws.st.core.internal.launch.BaseLibertyLaunchConfiguration
  *
  * Static utilities to support launching and debugging Microclimate application servers.
@@ -33,30 +31,6 @@ import com.sun.jdi.connect.Connector;
 public class LaunchUtilities {
 
 	private LaunchUtilities() { }
-
-    /**
-     * Returns a free port number on localhost, or -1 if unable to find a free port.
-     *
-     * @return a free port number on localhost, or -1 if unable to find a free port
-     */
-    public static int findFreePort() {
-        ServerSocket socket = null;
-        try {
-            socket = new ServerSocket(0);
-            return socket.getLocalPort();
-        } catch (IOException e) {
-            // ignore
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        }
-        return -1;
-    }
 
     /**
      * Returns the default 'com.sun.jdi.SocketAttach' connector.
@@ -75,6 +49,9 @@ public class LaunchUtilities {
         return null;
     }
 
+	/**
+	 * @return argsToConfigure updated with the new arguments.
+	 */
     public static Map<String, Connector.Argument> configureConnector(
     		Map<String, Connector.Argument> argsToConfigure, String host, int portNumber) {
 
@@ -103,15 +80,14 @@ public class LaunchUtilities {
      *
      * @param launch launch to add the target to
      * @param port port the VM is connected to
-     * @param process associated system process
+     * @param process associated system process - Can be null if stdout/err don't need to be hooked up.
      * @param vm JDI virtual machine
      * @return the {@link IDebugTarget}
      */
     public static IDebugTarget createLocalJDTDebugTarget(ILaunch launch, int port, IProcess process, VirtualMachine vm,
-    		String name) {
+    		String name, boolean allowTerminate) {
 
-    	// TODO allow termination, or no? if so, need to give the user a way to start the server again.
-        return JDIDebugModel.newDebugTarget(launch, vm, name, process, false, true, true);
+    	return JDIDebugModel.newDebugTarget(launch, vm, name, process, allowTerminate, true, true);
     }
 
 

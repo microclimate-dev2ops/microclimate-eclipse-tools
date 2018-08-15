@@ -13,19 +13,24 @@ import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.server.MicroclimateServer;
 import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
+/**
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchConfigurationDelegate {
 
 	@Override
 	public void launch(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor)
 			throws CoreException {
 
-		MCLogger.log("Launching!!!!!! mode=" + launchMode);
-
         final IServer server = ServerUtil.getServer(config);
         if (server == null) {
             MCLogger.logError("Could not find server from configuration " + config.getName());
             return;
         }
+
+		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode");
 
         final MicroclimateServerBehaviour serverBehaviour =
         		(MicroclimateServerBehaviour) server.loadAdapter(MicroclimateServerBehaviour.class, null);
@@ -38,18 +43,12 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         			+ server.getName());
         }
 
-
         ILaunchConfigurationWorkingCopy configWc = config.getWorkingCopy();
         configWc.setAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, projectName);
         config = configWc.doSave();
 
-        //configWc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER, JavaSourceLocator.ID_JAVA_SOURCE_LOCATOR);
-        //config = configWc.doSave();
-
-
         setDefaultSourceLocator(launch, config);
         serverBehaviour.setLaunch(launch);
-
 
         serverBehaviour.doRestart(config, launchMode, launch, monitor);
 	}

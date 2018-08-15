@@ -14,10 +14,17 @@ import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
 
+/**
+ * Data type class to represent a Microclimate Application / Project
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class MicroclimateApplication {
 
 	public final MicroclimateConnection mcConnection;
-	public final String projectID, name, language, host, contextRoot;
+	public final String projectID, name, language, host;
+	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 	public final URL rootUrl;
 
@@ -29,7 +36,6 @@ public class MicroclimateApplication {
 	MicroclimateApplication(MicroclimateConnection mcConnection,
 			String id, String name, String language, String pathWithinWorkspace,
 			int httpPort, String contextRoot)
-
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
@@ -53,6 +59,9 @@ public class MicroclimateApplication {
 		//MCLogger.log(toString());
 	}
 
+	/**
+	 * Parse the given projectsJson from the Microclimate server to construct a list of applications on that server.
+	 */
 	public static List<MicroclimateApplication> buildFromProjectsJson(MicroclimateConnection conn,
 			String projectsJson) throws JSONException, NumberFormatException, MalformedURLException {
 
@@ -70,22 +79,22 @@ public class MicroclimateApplication {
 				String lang = app.getString("language");
 				String loc 	= app.getString("locOnDisk");
 
-				String exposedPort = "";
+				String httpPortStr = "";
 
-				// Often this step fails because "ports is not a json object". This means that the application is still
-				// starting up, so MC doesn't know its ports yet. Waiting a few seconds and then refreshing
-				// the project list works around this. See the catch block for how this is communicated to the user.
 				try {
-					exposedPort = app.getJSONObject("ports").getString("exposedPort");
+					httpPortStr = app.getJSONObject("ports").getString("exposedPort");
+					// TODO is there any reason to get the debug port here?
 				}
 				catch(JSONException e) {
+					// This happens if the app is not started / is still starting
+					// See displayAppsStartingMsg for an explanation of this is handled
 					if (e.getMessage().equals("JSONObject[\"ports\"] is not a JSONObject.")) {
 						appsStillStarting.add(name);
 					}
 					continue;
 				}
 
-				int httpPort = Integer.parseInt(exposedPort);
+				int httpPort = Integer.parseInt(httpPortStr);
 
 				final String contextRootKey = "contextroot";
 				String contextRoot = null;
@@ -106,6 +115,14 @@ public class MicroclimateApplication {
 		return result;
 	}
 
+	/**
+	 * If an app is still starting up when the app list is being read, the "ports" object will be an empty string,
+	 * and getting the "exposedPort" string from it will throw a JSONException (see above).
+	 * In this case the user has to wait for the app to start up before it will show up in the wizard,
+	 * so here we display a message to let them know why their apps are missing.
+	 *
+	 * @param appsStarting - Names of apps that have not yet bound to a port.
+	 */
 	private static void displayAppsStartingMsg(List<String> appsStarting) {
 		StringBuilder startingAppsBuilder = new StringBuilder();
 

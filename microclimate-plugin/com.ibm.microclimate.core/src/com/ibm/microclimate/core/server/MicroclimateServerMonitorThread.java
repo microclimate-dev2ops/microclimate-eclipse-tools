@@ -3,6 +3,14 @@ package com.ibm.microclimate.core.server;
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
+/**
+ * One of these threads exists for each MicroclimateServer. Each application's state is updated by
+ * its MicroclimateSocket whenever a state change event is received. This thread periodically checks for such a
+ * state change, and updates the ServerBehaviour accordingly.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class MicroclimateServerMonitorThread extends Thread {
 
 	public static final int POLL_RATE_MS = 2500;
@@ -13,10 +21,6 @@ public class MicroclimateServerMonitorThread extends Thread {
 	private final MicroclimateApplication app;
 
 	private int lastKnownState;
-
-	private int stateWaitingFor = -1;
-	private int stateWaitingTimeout = -1;
-	private int waitedMs = 0;
 
 	MicroclimateServerMonitorThread(MicroclimateServerBehaviour serverBehaviour) {
 		this.serverBehaviour = serverBehaviour;
@@ -33,18 +37,6 @@ public class MicroclimateServerMonitorThread extends Thread {
 		MCLogger.log("Start MCMonitorThread");
 		while(run && !Thread.currentThread().isInterrupted()) {
 			updateState();
-
-			if (isWaitingForState()) {
-				if (lastKnownState == stateWaitingFor) {
-					onFinishWaitingForState(true);
-				}
-				else if (waitedMs > stateWaitingTimeout) {
-					onFinishWaitingForState(false);
-				}
-				else {
-					waitedMs += POLL_RATE_MS;
-				}
-			}
 
 			try {
 				Thread.sleep(POLL_RATE_MS);
@@ -93,35 +85,10 @@ public class MicroclimateServerMonitorThread extends Thread {
 	int getAppState() {
 		// TODO display build status somewhere if it's building.
 		String status = app.getAppStatus();
-		MCLogger.log("App status is " + status);
+		// MCLogger.log("App status is " + status);
 		if (status == null) {
 			return -1;
 		}
 		return MicroclimateServerBehaviour.appStatusToServerState(status);
-	}
-
-	void waitForState(int state, int timeout) {
-		stateWaitingFor = state;
-		stateWaitingTimeout = timeout;
-	}
-
-	boolean isWaitingForState() {
-		return stateWaitingFor != -1;
-	}
-
-	void onFinishWaitingForState(boolean success) {
-
-		String state = MicroclimateServerBehaviour.serverStateToAppStatus(stateWaitingFor);
-
-		if (success) {
-			MCLogger.log("Finished waiting for state: " + state);
-		}
-		else {
-			MCLogger.logError("Waiting for state " + state + " timed out");
-		}
-
-		stateWaitingFor = -1;
-		stateWaitingTimeout = -1;
-		waitedMs = 0;
 	}
 }

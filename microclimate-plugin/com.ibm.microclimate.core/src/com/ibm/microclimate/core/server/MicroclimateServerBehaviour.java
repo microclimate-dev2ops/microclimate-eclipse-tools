@@ -14,7 +14,6 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.IStatusHandler;
 import org.eclipse.debug.core.model.IDebugTarget;
-import org.eclipse.jdt.debug.core.IJavaDebugTarget;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
@@ -27,16 +26,21 @@ import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
-import com.ibm.microclimate.core.server.debug.LaunchUtilities;
-import com.ibm.microclimate.core.internal.MicroclimateSocket;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.MicroclimateSocket;
+import com.ibm.microclimate.core.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 
+/**
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 @SuppressWarnings("restriction")
 public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
@@ -198,9 +202,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	/**
 	 * Request the MC server to restart in the given mode. Then wait for it to stop and start again, and attach
-	 * the debugger if necessary.
-	 * @param launchMode
-	 * @param monitor
+	 * the debugger if restarting into debug mode.
+	 *
+	 * This is called by the MicroclimateServerLaunchConfigDelegate
 	 */
 	public void doRestart(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch,
 			IProgressMonitor monitor) {
@@ -229,6 +233,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			return;
 		}
 
+		// Restarts are only valid if the server is Started. So, we go from Started -> Stopped -> Starting,
+		// then connect the debugger if required (Liberty won't leave 'Starting' state until the debugger is connected),
+		// then go from Starting -> Started.
 		waitForState(getStopTimeoutMs(), monitor, IServer.STATE_STOPPED, IServer.STATE_STARTING);
 
 		boolean starting = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING);
@@ -240,24 +247,41 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		if (ILaunchManager.DEBUG_MODE.equals(launchMode)) {
 			MCLogger.log("Preparing for debug mode");
 			try {
-				attachDebugger(launch, monitor);
+				IDebugTarget debugTarget = connectDebugger(launch, monitor);
+				if (debugTarget != null) {
+					// TODO how to set 'Debugging' state ?
+					MCLogger.log("Debugger connect success");
+				}
+				else {
+					MCLogger.logError("Debugger connect failure");
+				}
 			} catch (IllegalConnectorArgumentsException | CoreException | IOException e) {
 				MCLogger.logError(e);
 			}
 		}
 
-		waitForStarted(monitor);
-		MCLogger.log("Server is done restarting");
+		if (waitForStarted(monitor)) {
+			MCLogger.log("Server is done restarting into " + launchMode + " mode");
+		}
+		else {
+			MCLogger.logError("Server reached Starting state, but did not Start in time.");
+		}
 	}
 
 	private boolean waitForStarted(IProgressMonitor monitor) {
 		return waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTED);
 	}
 
+	/**
+	 * Wait for the server to enter the given state(s). The server state is updated by the MonitorThread.
+	 *
+	 * @return true if the server entered the state in time, false otherwise.
+	 */
 	private boolean waitForState(int timeoutMs, IProgressMonitor monitor, int... desiredStates) {
-		long startTime = System.currentTimeMillis();
-		int pollRateMs = 1000;
+		final long startTime = System.currentTimeMillis();
+		final int pollRateMs = 1000;
 
+		// This is just for logging
 		String desiredStatesStr = "";
 		if (desiredStates.length == 0) {
 			MCLogger.logError("No states passed to waitForState");
@@ -267,6 +291,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		for (int i = 1; i < desiredStates.length; i++) {
 			desiredStatesStr += " or " + serverStateToAppStatus(desiredStates[i]);
 		}
+		// End logging-only
 
 		while((System.currentTimeMillis() - startTime) < timeoutMs) {
 			if (monitor != null && monitor.isCanceled()) {
@@ -284,42 +309,30 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				MCLogger.logError(e);
 			}
 
-			// the ServerMonitorThread will update the state
+			// the ServerMonitorThread will update the state, so we just have to check it.
 			for (int desiredState : desiredStates) {
 				if (getServer().getServerState() == desiredState) {
 					MCLogger.log("Server is done switching to " + serverStateToAppStatus(desiredState));
 					return true;
 				}
 			}
-
 		}
 
 		MCLogger.logError("Server did not enter state(s): " + desiredStatesStr + " in " + timeoutMs + "ms");
-		setServerState(IServer.STATE_UNKNOWN);
 		return false;
 	}
 
-	private void attachDebugger(ILaunch launch, IProgressMonitor monitor)
-			throws IllegalConnectorArgumentsException, CoreException, IOException {
-
-        IDebugTarget debugTarget;
-        debugTarget = connectAndWait(launch,  monitor);
-
-        if (debugTarget != null) {
-            IJavaDebugTarget jdt = debugTarget.getAdapter(IJavaDebugTarget.class);
-            MCLogger.log(jdt.getName());
-        }
-	}
-
-	// from com.ibm.ws.st.core.internal.launch.BaseLibertyLaunchConfiguration
-    private IDebugTarget connectAndWait(ILaunch launch, IProgressMonitor monitor)
+	/**
+	 * From com.ibm.ws.st.core.internal.launch.BaseLibertyLaunchConfiguration.connectAndWait
+	 */
+    private IDebugTarget connectDebugger(ILaunch launch, IProgressMonitor monitor)
     		throws IllegalConnectorArgumentsException, CoreException, IOException {
 
     	MCLogger.log("Beginning to try to connect debugger");
 
 		// Here, we have to wait for the projectRestartResult event
 		// since its payload tells us the debug port to use
-		int debugPort = waitForRestartSuccess();
+		int debugPort = waitForDebugPort();
 
     	if (debugPort == -1) {
     		MCLogger.logError("Couldn't get debug port for MC Server, or it was never set");
@@ -330,6 +343,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 		int timeout = getStartTimeoutMs();
 
+		// Now prepare the Debug Connector, and try to attach it to the server's JVM
 		AttachingConnector connector = LaunchUtilities.getAttachingConnector();
 		if (connector == null) {
 			MCLogger.logError("Could not create debug connector");
@@ -374,11 +388,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				if (ex instanceof IllegalConnectorArgumentsException) {
 					throw (IllegalConnectorArgumentsException) ex;
 				}
-
 				if (ex instanceof InterruptedIOException) {
 					throw (InterruptedIOException) ex;
 				}
-
 				if (ex instanceof IOException) {
 					throw (IOException) ex;
 				}
@@ -386,15 +398,22 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				IDebugTarget debugTarget = null;
 				if (vm != null) {
 					LaunchUtilities.setDebugTimeout(vm);
-					String debugName = "Debugging " + getServer().getName();
-					debugTarget = LaunchUtilities.createLocalJDTDebugTarget(launch, debugPort, null, vm, debugName);
+
+					// This appears in the Debug view
+					final String debugName = "Debugging " + getServer().getName();
+			    	// TODO allow termination, or no? if so, need to give the user a way to start the server again.
+					debugTarget = LaunchUtilities
+							.createLocalJDTDebugTarget(launch, debugPort, null, vm, debugName, false);
+
 					monitor.worked(1);
 					monitor.done();
 				}
 				return debugTarget;
 			} catch (InterruptedIOException e) {
 				// timeout, consult status handler if there is one
-				IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, IJavaLaunchConfigurationConstants.ERR_VM_CONNECT_TIMEOUT, "", e);
+				IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+						IJavaLaunchConfigurationConstants.ERR_VM_CONNECT_TIMEOUT, "", e);
+
 				IStatusHandler handler = DebugPlugin.getDefault().getStatusHandler(status);
 
 				retry = false;
@@ -412,7 +431,13 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		return null;
 	}
 
-	private int waitForRestartSuccess() {
+    /**
+     * The debug port is set by FileWatcher emitting a 'projectRestartResult' event (see MicroclimateSocket class).
+     * Make sure to call app.invalidatePorts() when the app is restarted, otherwise this might return an outdated port.
+     *
+     * @return The debug port, or -1 if waiting for the restart event times out.
+     */
+	private int waitForDebugPort() {
 		final long startTime = System.currentTimeMillis();
 
 		while (System.currentTimeMillis() < (startTime + getStartTimeoutMs())) {
@@ -423,6 +448,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				MCLogger.logError(e);
 			}
 
+			// Make sure that app.invalidatePorts() was called when it needed to be,
+			// otherwise this might return old info
 			int port = app.getDebugPort();
 			if (port != -1) {
 				MCLogger.log("Debug port was retrieved successfully: " + port);

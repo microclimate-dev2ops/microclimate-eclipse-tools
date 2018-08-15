@@ -12,13 +12,23 @@ import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
 
+/**
+ * Static utilities to allow easy HTTP communication, and make diagnosing and handling errors a bit easier.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class HttpUtil {
+
+	private HttpUtil() {}
 
 	public static class HttpResult {
 		public final int responseCode;
 		public final boolean isGoodResponse;
 
+		// Can be null
 		public final String response;
+		// Can be null
 		public final String error;
 
 		public HttpResult(HttpURLConnection connection) throws IOException {
@@ -49,8 +59,6 @@ public class HttpUtil {
 		}
 	}
 
-
-	// Temporary
 	public static HttpResult get(String url) throws IOException {
 		HttpURLConnection connection = null;
 		BufferedReader in = null;
@@ -60,7 +68,7 @@ public class HttpUtil {
 			// MCLogger.log("GET " + url);
 
 			connection.setRequestMethod("GET");
-			connection.setReadTimeout(2000);
+			connection.setReadTimeout(5000);
 
 			return new HttpResult(connection);
 		} finally {
@@ -77,7 +85,6 @@ public class HttpUtil {
 		}
 	}
 
-	// Temporary
 	public static HttpResult post(String url, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
 		BufferedReader in = null;

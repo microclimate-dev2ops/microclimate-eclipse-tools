@@ -20,6 +20,14 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.server.MicroclimateServer;
 import com.ibm.microclimate.ui.Activator;
 
+/**
+ * This wizard allows the user to select a Microclimate project, then links it the Eclipse project whose context menu
+ * was used to launch the wizard. Upon finishing successfully, a MicroclimateServer representing the selected
+ * project is created and available in the UI.
+ *
+ * @author timetchells@ibm.com
+ *
+ */
 public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard {
 
 	private IProject selectedProject;
@@ -34,7 +42,6 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		// TODO help
 		setHelpAvailable(false);
 	}
-
 
 	private static IProject getProjectFromSelection(IStructuredSelection selection) {
 		if (selection == null) {
@@ -104,8 +111,12 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		return true;
 	}
 
+	/**
+	 * Called when the wizard finishes.
+	 * This creates the Server which is 'linked' to the given application.
+	 */
 	private void doLink(MicroclimateApplication appToLink) throws CoreException {
-		String serverName = "Microclimate Application: " + appToLink.name;
+		final String serverName = "Microclimate Application: " + appToLink.name;
 
 		IServerType mcServerType = null;
 
@@ -131,9 +142,15 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		newServer.setAttribute(MicroclimateServer.ATTR_HTTP_PORT, appToLink.getHttpPort());
 		newServer.setAttribute(MicroclimateServer.ATTR_APP_URL, appToLink.rootUrl.toString());
 		newServer.setAttribute(MicroclimateServer.ATTR_PROJ_ID, appToLink.projectID);
+
 		// The server will determine the corresponding MCConnection from the baseUrl
 		newServer.setAttribute(MicroclimateServer.ATTR_MCC_URL, appToLink.mcConnection.baseUrl);
+
+		// Store the name of the Eclipse project linked to this server. This will be used by the
+		// launch configuration to locate the source code when debugging
 		newServer.setAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, appToLink.name);
+
+		// Creates the server in the Servers view
 		newServer.saveAll(true, null);
 
 		String successMsg = "Linked project %s with Microclimate application %s.\n"
