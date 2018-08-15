@@ -11,7 +11,7 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
-public class MCSocket {
+public class MicroclimateSocket {
 
 	public final Socket socket;
 
@@ -21,7 +21,7 @@ public class MCSocket {
 			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged",
 			EVENT_PROJECT_RESTART = "projectRestartResult";
 
-	public MCSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
+	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 		this.mcConnection = mcConnection;
 
 		// TODO hardcoded filewatcher port
@@ -38,6 +38,11 @@ public class MCSocket {
 			@Override
 			public void call(Object... arg0) {
 				MCLogger.logError("SocketIO Connect Failure @ " + url);
+
+				// TODO In this case we should probably put all applications associated with this socket's MCConnection
+				// into Unknown state, and notify the user that this MC instance could not be contacted.
+				// It should only happen if Microclimate is not running, or if something is
+				// seriously wrong.
 
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];

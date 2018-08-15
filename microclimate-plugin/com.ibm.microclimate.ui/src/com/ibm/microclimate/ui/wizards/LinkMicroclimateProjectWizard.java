@@ -17,7 +17,7 @@ import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.server.MicroclimateServer;
+import com.ibm.microclimate.core.server.MicroclimateServer;
 import com.ibm.microclimate.ui.Activator;
 
 public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard {
@@ -133,6 +133,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		newServer.setAttribute(MicroclimateServer.ATTR_PROJ_ID, appToLink.projectID);
 		// The server will determine the corresponding MCConnection from the baseUrl
 		newServer.setAttribute(MicroclimateServer.ATTR_MCC_URL, appToLink.mcConnection.baseUrl);
+		newServer.setAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, appToLink.name);
 		newServer.saveAll(true, null);
 
 		String successMsg = "Linked project %s with Microclimate application %s.\n"

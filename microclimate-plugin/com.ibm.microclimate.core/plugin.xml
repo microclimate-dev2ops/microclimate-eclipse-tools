@@ -13,8 +13,8 @@
 		supportsRemoteHosts="false"
 		runtime="false"
 		launchConfigId="com.ibm.microclimate.core.launchConfigurationType"
-		class="com.ibm.microclimate.core.internal.server.MicroclimateServer"
-		behaviourClass="com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour">
+		class="com.ibm.microclimate.core.server.MicroclimateServer"
+		behaviourClass="com.ibm.microclimate.core.server.MicroclimateServerBehaviour">
 	</serverType>
 </extension>
  
@@ -23,10 +23,18 @@
     <launchConfigurationType
       id="com.ibm.microclimate.core.launchConfigurationType"
       name="%launchConfigurationType"
-      delegate="com.ibm.microclimate.core.internal.server.MicroclimateServerLaunchConfigDelegate"
+      delegate="com.ibm.microclimate.core.server.debug.MicroclimateServerLaunchConfigDelegate"
       modes="run, debug"
       sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
-      sourcePathComputerId="com.ibm.microclimate.core.sourcePathComputer"/>
+      sourcePathComputerId="com.ibm.microclimate.core.MicroclimateSourcePathComputer"/>
+</extension>
+
+<extension point="org.eclipse.debug.core.sourcePathComputers">
+	<sourcePathComputer
+		id="com.ibm.microclimate.core.MicroclimateSourcePathComputer"
+		class="com.ibm.microclimate.core.server.debug.MicroclimateSourcePathComputer"
+		name="Microclimate Source Path Computer">
+	</sourcePathComputer>
 </extension>
 
 

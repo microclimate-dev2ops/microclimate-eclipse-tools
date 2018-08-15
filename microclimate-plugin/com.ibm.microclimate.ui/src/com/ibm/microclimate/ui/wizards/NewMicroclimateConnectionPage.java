@@ -91,6 +91,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	}
 
 	void testConnection() {
+		// TODO prevent duplicate connections
 		mcConnection = null;
 
 		// Try to connect to Microclimate at the given hostname:port

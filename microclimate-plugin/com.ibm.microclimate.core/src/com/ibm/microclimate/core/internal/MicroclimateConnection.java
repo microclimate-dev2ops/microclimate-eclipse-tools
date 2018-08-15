@@ -21,7 +21,7 @@ public class MicroclimateConnection {
 	public final String baseUrl;
 	public final IPath localWorkspacePath;
 
-	public final MCSocket socket;
+	public final MicroclimateSocket socket;
 
 	private List<MicroclimateApplication> apps;
 
@@ -38,8 +38,7 @@ public class MicroclimateConnection {
 		this.baseUrl = baseUrl_;
 		// TODO
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
-		// TODO
-		socket = new MCSocket(this);
+		this.socket = new MicroclimateSocket(this);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.internal.server;
+package com.ibm.microclimate.core.server;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -27,7 +27,8 @@ import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
-import com.ibm.microclimate.core.internal.MCSocket;
+import com.ibm.microclimate.core.server.debug.LaunchUtilities;
+import com.ibm.microclimate.core.internal.MicroclimateSocket;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
@@ -118,8 +119,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 		try {
 			JSONObject appStateJso = new JSONObject(result.response);
-			if (appStateJso.has(MCSocket.KEY_APP_STATUS)) {
-				String status = appStateJso.getString(MCSocket.KEY_APP_STATUS);
+			if (appStateJso.has(MicroclimateSocket.KEY_APP_STATUS)) {
+				String status = appStateJso.getString(MicroclimateSocket.KEY_APP_STATUS);
 				MCLogger.log("Initial server state is " + status);
 
 				// MCLogger.log("Update app state to " + status);
@@ -191,15 +192,20 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 
 		// TODO progress mon ?
+		// See com.ibm.microclimate.core.internal.server.MicroclimateServerLaunchConfigDelegate
 		launchConfig.launch(launchMode, null);
 	}
 
 	/**
-	 * Request the MC server to restart in the given mode. Then wait for it to stop and start again.
+	 * Request the MC server to restart in the given mode. Then wait for it to stop and start again, and attach
+	 * the debugger if necessary.
 	 * @param launchMode
 	 * @param monitor
 	 */
-	void doRestart(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch, IProgressMonitor monitor) {
+	public void doRestart(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch,
+			IProgressMonitor monitor) {
+
+		// TODO hardcoded filewatcher port.
         String url = "http://localhost:9091/api/v1/projects/action";
 
 		JSONObject restartProjectPayload = new JSONObject();
@@ -208,15 +214,15 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					.put("action", "restart")
 					.put("mode", launchMode)
 					.put("projectID", app.projectID);
+
 		} catch (JSONException e) {
 			MCLogger.logError(e);
 			return;
 		}
 
 		try {
-			// returns an operationID if success - what to do with it?
+			// This initiates the restart
 			HttpUtil.post(url, restartProjectPayload);
-			// TODO test this
 			app.invalidatePorts();
 		} catch (IOException e) {
 			MCLogger.logError("Error POSTing restart request", e);

@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.internal.server;
+package com.ibm.microclimate.core.server;
 
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;

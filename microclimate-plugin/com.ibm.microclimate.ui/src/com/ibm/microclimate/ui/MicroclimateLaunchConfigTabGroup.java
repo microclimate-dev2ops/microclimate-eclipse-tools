@@ -12,7 +12,7 @@ import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.ServerCore;
 import org.eclipse.wst.server.ui.ServerLaunchConfigurationTab;
 
-import com.ibm.microclimate.core.internal.server.MicroclimateServer;
+import com.ibm.microclimate.core.server.MicroclimateServer;
 
 /**
  * A tab group for launching the server.
@@ -33,8 +33,11 @@ public class MicroclimateLaunchConfigTabGroup extends AbstractLaunchConfiguratio
 
         tabs[0] = new ServerLaunchConfigurationTab(list.toArray(new String[list.size()]));
         tabs[0].setLaunchConfigurationDialog(dialog);
-        tabs[1] = new SourceLookupTab();
-        tabs[1].setLaunchConfigurationDialog(dialog);
+
+        SourceLookupTab sourceLookupTab = new SourceLookupTab();
+        sourceLookupTab.setLaunchConfigurationDialog(dialog);
+        tabs[1] = sourceLookupTab;
+
         tabs[2] = new CommonTab();
         tabs[2].setLaunchConfigurationDialog(dialog);
         setTabs(tabs);

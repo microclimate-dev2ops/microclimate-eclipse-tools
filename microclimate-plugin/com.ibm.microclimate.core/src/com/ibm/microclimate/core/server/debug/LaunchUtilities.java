@@ -1,8 +1,7 @@
-package com.ibm.microclimate.core.internal.server;
+package com.ibm.microclimate.core.server.debug;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,12 +11,10 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.debug.core.model.RuntimeProcess;
 import org.eclipse.jdi.Bootstrap;
 import org.eclipse.jdt.debug.core.JDIDebugModel;
 import org.eclipse.jdt.internal.debug.core.JDIDebugPlugin;
 import org.eclipse.jdt.launching.JavaRuntime;
-import org.eclipse.wst.server.core.IServer;
 
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
@@ -100,18 +97,6 @@ public class LaunchUtilities {
         return argsToConfigure;
     }
 
-    protected static IProcess newProcess(final IServer server, ILaunch launch, Process p, String label) {
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put(IProcess.ATTR_PROCESS_TYPE, "java");
-
-        return new RuntimeProcess(launch, p, label, attributes) {
-            @Override
-            public boolean canTerminate() {
-            	return false;
-            }
-        };
-    }
-
     /**
      * Creates a new debug target for the given virtual machine and system process
      * that is connected on the specified port for the given launch.
@@ -125,7 +110,8 @@ public class LaunchUtilities {
     public static IDebugTarget createLocalJDTDebugTarget(ILaunch launch, int port, IProcess process, VirtualMachine vm,
     		String name) {
 
-        return JDIDebugModel.newDebugTarget(launch, vm, name, process, true, false, true);
+    	// TODO allow termination, or no? if so, need to give the user a way to start the server again.
+        return JDIDebugModel.newDebugTarget(launch, vm, name, process, false, true, true);
     }
 
 

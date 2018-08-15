@@ -1,4 +1,4 @@
-	package com.ibm.microclimate.core.internal.server;
+	package com.ibm.microclimate.core.server;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,7 +26,9 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 			ATTR_APP_URL  	= "appRootUrl",
 			ATTR_PROJ_ID	= "projectID",
 			// Base URL of the corresponding MicroclimateConnection
-			ATTR_MCC_URL	= "mcBaseUrl";
+			ATTR_MCC_URL	= "mcBaseUrl",
+			// The name of the Eclipse project associated with this server
+			ATTR_ECLIPSE_PROJECT_NAME = "eclipseProjectName";
 
 	private MicroclimateServerBehaviour behaviour;
 
