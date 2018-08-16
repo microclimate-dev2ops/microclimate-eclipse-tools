@@ -40,8 +40,8 @@ public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 		// If the project is already linked, don't run the wizard.
 		String alreadyLinkedServer = isProjectAlreadyLinked(selectedProject);
 		if (alreadyLinkedServer != null) {
-			String alreadyLinkedMsg = String.format("%s is already linked to %s. "
-					+ "If you wish to unlink this project, delete the corresponding server in the Servers view.",
+			String alreadyLinkedMsg = String.format("%s is already linked to server \"%s\".\n"
+					+ "If you wish to unlink this project, delete this server from the Servers view.",
 					selectedProject.getName(), alreadyLinkedServer);
 
 			Util.openDialog(false, "Project already linked", alreadyLinkedMsg);

@@ -1,7 +1,6 @@
 package com.ibm.microclimate.ui.prefs;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -27,7 +26,6 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.Activator;
@@ -99,14 +97,14 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 
-				int connectionsInUse = 0;
+				boolean connectionIsInUse = false;
 
 				int[] selected = connectionsTable.getSelectionIndices();
 				for(int i : selected) {
 					MicroclimateConnection connection = connections.get(i);
 					if (connection.hasLinkedApp()) {
 						// You cannot remove it in this case.
-						connectionsInUse++;
+						connectionIsInUse = true;
 					}
 					else {
 						// Do the remove.
@@ -116,11 +114,12 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 					}
 				}
 
-				if (connectionsInUse > 0) {
-					MessageDialog.openError(getShell(), "Could not remove connections",
-							connectionsInUse + " connections have projects linked in the workspace. "
-									+ "Unlink the projects by deleting the servers "
-									+ "before removing their Microclimate Connection.");
+				if (connectionIsInUse) {
+					// TODO is this actually a problem?
+					MessageDialog.openError(getShell(), "Could not remove connection",
+							"At least one of the selected connections has projects linked in the workspace.\n"
+									+ "Unlink any projects by deleting the corresponding servers "
+									+ "before removing the Microclimate Connection.");
 				}
 
 				refreshConnectionsList();
@@ -199,16 +198,14 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 	private static String getLinkedAppsForConnection(MicroclimateConnection mcc) {
 		StringBuilder linkedAppsBuilder = new StringBuilder();
-		mcc.getLinkedApps().stream().forEachOrdered(new Consumer<MicroclimateApplication>() {
-			@Override
-			public void accept(MicroclimateApplication app) {
-				linkedAppsBuilder.append(app.name).append(", ");
-			}
-		});
+		final String separator = ", ";
 
-		// Remove the last ", "
-		if (linkedAppsBuilder.length() > 2) {
-			linkedAppsBuilder.setLength(linkedAppsBuilder.length() - 2);
+		mcc.getLinkedApps().stream()
+				.forEachOrdered(app -> linkedAppsBuilder.append(app.name).append(separator));
+
+		// Remove the last separator
+		if (linkedAppsBuilder.length() > separator.length()) {
+			linkedAppsBuilder.setLength(linkedAppsBuilder.length() - separator.length());
 		}
 
 		return linkedAppsBuilder.length() > 0 ? linkedAppsBuilder.toString() : "None";
