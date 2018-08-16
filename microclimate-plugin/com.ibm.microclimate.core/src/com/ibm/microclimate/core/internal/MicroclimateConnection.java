@@ -3,14 +3,12 @@ package com.ibm.microclimate.core.internal;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 
 import com.ibm.microclimate.core.MCLogger;
 
@@ -29,6 +27,8 @@ public class MicroclimateConnection {
 	public final MicroclimateSocket socket;
 
 	private List<MicroclimateApplication> apps;
+
+	private static final String PROJECTS_LIST_PATH = "api/v1/projects";
 
 	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException {
 		String baseUrl_ = buildUrl(host, port);
@@ -68,11 +68,11 @@ public class MicroclimateConnection {
 
 	/**
 	 * Refresh this connection's list of apps from the Microclimate project list endpoint.
-	 * @return The new list of apps
+	 * @return The new list of apps, which matches that in the 'apps' private field.
 	 */
 	public List<MicroclimateApplication> getApps() {
 
-		String projectsUrl = baseUrl + "api/v1/projects";
+		final String projectsUrl = baseUrl + PROJECTS_LIST_PATH;
 
 		String projectsResponse = null;
 		try {
@@ -83,7 +83,7 @@ public class MicroclimateConnection {
 
 		if(projectsResponse == null) {
 			MCLogger.logError("Received null response from projects endpoint");
-			// TODO display a message that the Microclimate server appears to be down.
+			Util.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
 			return Collections.emptyList();
 		}
 
@@ -92,27 +92,20 @@ public class MicroclimateConnection {
 			return apps;
 		}
 		catch(Exception e) {
-
-			Display.getDefault().syncExec(new Runnable() {
-				@Override
-				public void run() {
-					MessageDialog.openError(Display.getDefault().getActiveShell(),
-							"Error getting project list", e.getMessage());
-				}
-
-			});
+			Util.openDialog(true, "Error getting list of projects", e.getMessage());
 		}
 		return Collections.emptyList();
 	}
 
 	public List<MicroclimateApplication> getLinkedApps() {
-		List<MicroclimateApplication> result = new ArrayList<>();
-		for (MicroclimateApplication app : apps) {
-			if (app.isLinked()) {
-				result.add(app);
-			}
-		}
-		return result;
+		return apps.stream()
+				.filter(app -> app.isLinked())
+				.collect(Collectors.toList());
+	}
+
+	public boolean hasLinkedApp() {
+		return apps.stream()
+				.anyMatch(app -> app.isLinked());
 	}
 
 	/**
@@ -137,15 +130,6 @@ public class MicroclimateConnection {
 		MCLogger.logError("No project found with ID " + projectID);
 
 		return null;
-	}
-
-	public boolean hasLinkedApp() {
-		for (MicroclimateApplication app : apps) {
-			if (app.isLinked()) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override

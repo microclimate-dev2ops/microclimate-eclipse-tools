@@ -37,10 +37,10 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 	private MicroclimateServerBehaviour behaviour;
 
 	@Override
-	public void initialize() {
+	public void setDefaults(IProgressMonitor monitor) {
 		MCLogger.log("Initialize MicroclimateServer");
 
-		behaviour = (MicroclimateServerBehaviour) getServer().loadAdapter(MicroclimateServerBehaviour.class, null);
+		behaviour = getServer().getAdapter(MicroclimateServerBehaviour.class);
 	}
 
 	@Override

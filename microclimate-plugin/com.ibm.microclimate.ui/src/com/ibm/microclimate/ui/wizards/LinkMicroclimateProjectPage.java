@@ -193,7 +193,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		if(mcConnection == null) {
 			// Don't display this if the Preferences page is already open - ie only display it
 			// if this wizard is the active shell.
-			if (getShell().equals(Display.getDefault().getActiveShell())) {
+			if (Display.getDefault().getActiveShell().equals(getShell())) {
 				showNoConnectionsMsg();
 			}
 			return;

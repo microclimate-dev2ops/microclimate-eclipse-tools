@@ -15,8 +15,6 @@ import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.IStatusHandler;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 import org.json.JSONException;
@@ -30,6 +28,7 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.MicroclimateSocket;
+import com.ibm.microclimate.core.internal.Util;
 import com.ibm.microclimate.core.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
@@ -90,13 +89,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	private void onInitializeFailure(String failMsg) {
 		MCLogger.logError("Creating Microclimate server failed at initialization: " + failMsg);
 
-		Display.getDefault().syncExec(new Runnable() {
-			@Override
-			public void run() {
-				MessageDialog.openError(Display.getDefault().getActiveShell(),
-						"Error creating Microclimate server", failMsg);
-			}
-		});
+		Util.openDialog(true, "Error creating Microclimate server", failMsg);
 	}
 
 	private int getInitialState() {
@@ -158,6 +151,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	public void dispose() {
 		MCLogger.log("Dispose " + getServer().getName());
 		app.setLinked(false);
+
+		// required to stop the auto publish thread
+		setServerState_(IServer.STATE_STOPPED);
+
 		if (monitorThread != null) {
 			monitorThread.disable();
 			monitorThread.interrupt();

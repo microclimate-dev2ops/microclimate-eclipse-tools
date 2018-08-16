@@ -117,6 +117,7 @@ public class HttpUtil {
 
 	private static String readAllFromStream(InputStream stream) {
 		Scanner s = new Scanner(stream);
+		// end-of-stream
 		s.useDelimiter("\\A");
 		String result = s.hasNext() ? s.next() : "";
 		s.close();

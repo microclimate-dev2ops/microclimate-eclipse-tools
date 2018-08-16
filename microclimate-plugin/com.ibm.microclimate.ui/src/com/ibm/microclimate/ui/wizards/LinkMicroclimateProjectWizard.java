@@ -1,17 +1,14 @@
 package com.ibm.microclimate.ui.wizards;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jem.util.emf.workbench.ProjectUtilities;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
@@ -37,72 +34,12 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		selectedProject = getProjectFromSelection(selection);
-
-		String alreadyLinkedServer = isProjectAlreadyLinked(selectedProject);
-		if (alreadyLinkedServer != null) {
-			String alreadyLinkedMsg = String.format("%s is already linked to %s",
-					selectedProject.getName(), alreadyLinkedServer);
-
-			MessageDialog.openWarning(getShell(), "Project already linked", alreadyLinkedMsg);
-			// kill the wizard - nothing to do here
-			if (getShell() != null) {
-				getShell().close();
-			}
-		}
+		selectedProject = LinkMicroclimateProjectDelegate.getProjectFromSelection(selection);
 
 		setDefaultPageImageDescriptor(Activator.getDefaultIcon());
 
 		// TODO help
 		setHelpAvailable(false);
-	}
-
-	private static IProject getProjectFromSelection(IStructuredSelection selection) {
-		if (selection == null) {
-			MCLogger.logError("Null selection passed to getProjectFromSelection");
-			return null;
-		}
-
-		IProject project = ProjectUtilities.getProject(selection.getFirstElement());
-		if (project == null){
-			Object firstElement = selection.getFirstElement();
-			if (firstElement instanceof IResource){
-				project = ((IResource)firstElement).getProject();
-			}
-		}
-		// If there are criteria which exclude certain projects, check those here,
-		// and return null if the project is not valid
-		return project;
-	}
-
-	/**
-	 * Loop over Microclimate Servers, and see if any of them has its project attribute
-	 * set to the same name as this project. In this case there's no point in running the wizard.
-	 *
-	 * TODO will anything funky happen if the user renames the project?
-	 *
-	 * @return
-	 * 	The name of the server that the given project is already linked to,
-	 * 	or null if the project is not yet linked.
-	 */
-	private static String isProjectAlreadyLinked(IProject project) {
-		for (IServer server : ServerCore.getServers()) {
-			if (!MicroclimateServer.SERVER_ID.equals(server.getServerType().getId())) {
-				// not a MC server
-				continue;
-			}
-
-			final String serverProjectName = server.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, "");
-			if (serverProjectName.isEmpty()) {
-				MCLogger.logError("MC Server " + server.getName() + " didn't have an Eclipse Project attribute");
-				continue;
-			}
-
-			if (serverProjectName.equals(project.getName())) {
-				return server.getName();
-			}
-		}
-		return null;
 	}
 
 	@Override
@@ -121,9 +58,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	@Override
 	public boolean performFinish() {
-
 		MicroclimateApplication appToLink = newProjectPage.getSelectedApp();
-
 
 		String mcAppPath = appToLink.fullLocalPath.toOSString();
 

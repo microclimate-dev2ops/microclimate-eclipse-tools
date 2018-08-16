@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,7 +26,9 @@ public class MicroclimateApplication {
 	public final IPath fullLocalPath;
 	public final URL rootUrl;
 
-	private boolean isLinked = false;
+	// The preference key that will be used to store whether this app is currently linked in the workspace
+	private final String isLinkedPrefsKey;
+	private boolean isLinked;
 
 	// App Status fields - These are set by the MicroclimateSocket, and read by the MicroclimateServerMonitorThread
 	// so we have to make sure the reads and writes are synchronized
@@ -59,6 +59,10 @@ public class MicroclimateApplication {
 
 		this.rootUrl = rootUrl;
 
+		this.isLinkedPrefsKey = mcConnection.baseUrl + id;
+		this.isLinked = com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+				.getBoolean(isLinkedPrefsKey);
+
 		//MCLogger.log("Created mcApp:");
 		//MCLogger.log(toString());
 	}
@@ -87,11 +91,10 @@ public class MicroclimateApplication {
 
 				try {
 					httpPortStr = app.getJSONObject("ports").getString("exposedPort");
-					// TODO is there any reason to get the debug port here?
 				}
 				catch(JSONException e) {
 					// This happens if the app is not started / is still starting
-					// See displayAppsStartingMsg for an explanation of this is handled
+					// See displayAppsStartingMsg method for an explanation of how this is handled
 					if (e.getMessage().equals("JSONObject[\"ports\"] is not a JSONObject.")) {
 						appsStillStarting.add(name);
 					}
@@ -157,13 +160,7 @@ public class MicroclimateApplication {
 				"\nPlease wait a few seconds and then refresh the projects list " +
 				"if you wish to link one of these applications.";
 
-		Display.getDefault().syncExec(new Runnable() {
-			@Override
-			public void run() {
-				MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Applications still starting",
-						appsStartingMsg);
-			}
-		});
+		Util.openDialog(false, "Applications still starting", appsStartingMsg);
 	}
 
 	// Getters for our project state fields
@@ -197,6 +194,9 @@ public class MicroclimateApplication {
 	public void setLinked(boolean isLinked) {
 		MCLogger.log("App " + name + " is now linked? " + isLinked);
 		this.isLinked = isLinked;
+
+		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+			.setValue(isLinkedPrefsKey, isLinked);
 	}
 
 	public synchronized void setAppStatus(String appStatus) {

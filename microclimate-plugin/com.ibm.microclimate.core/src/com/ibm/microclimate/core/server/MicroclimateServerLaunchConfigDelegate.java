@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server.debug;
+package com.ibm.microclimate.core.server;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -10,8 +10,6 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
 import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.server.MicroclimateServer;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
 /**
  *
@@ -32,8 +30,7 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
 
 		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode");
 
-        final MicroclimateServerBehaviour serverBehaviour =
-        		(MicroclimateServerBehaviour) server.loadAdapter(MicroclimateServerBehaviour.class, null);
+        final MicroclimateServerBehaviour serverBehaviour = server.getAdapter(MicroclimateServerBehaviour.class);
 
         final String projectName = server.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, "");
         if (projectName.isEmpty()) {

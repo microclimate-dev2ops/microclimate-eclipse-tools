@@ -6,11 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.widgets.Display;
 
 import com.ibm.microclimate.core.MCLogger;
 
@@ -30,13 +27,10 @@ public class MicroclimateConnectionManager {
 
 	private List<MicroclimateConnection> connections = new ArrayList<>();
 
-	private IPreferenceStore preferenceStore;
-
 	private MicroclimateConnectionManager() {
 		instance = this;
 
 		// MCLogger.log("Init MicroclimateConnectionManager");
-		preferenceStore = com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore();
 		loadFromPreferences();
 
 		// Add a preference listener to reload the cached list of connections each time it's modified.
@@ -149,13 +143,17 @@ public class MicroclimateConnectionManager {
 		}
 		MCLogger.log("Writing connections to preferences: " + prefsBuilder.toString());
 
-		preferenceStore.setValue(CONNECTION_LIST_PREFSKEY, prefsBuilder.toString());
+		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+				.setValue(CONNECTION_LIST_PREFSKEY, prefsBuilder.toString());
 	}
 
 	private void loadFromPreferences() {
 		clear();
 
-		String storedConnections = preferenceStore.getString(CONNECTION_LIST_PREFSKEY).trim();
+		String storedConnections = com.ibm.microclimate.core.Activator.getDefault()
+				.getPreferenceStore()
+				.getString(CONNECTION_LIST_PREFSKEY).trim();
+
 		MCLogger.log("Reading connections from preferences: \"" + storedConnections + "\"");
 
 		StringBuilder failedConnectionsBuilder = new StringBuilder();
@@ -182,8 +180,7 @@ public class MicroclimateConnectionManager {
 
 		String failedConnections = failedConnectionsBuilder.toString();
 		if (!failedConnections.isEmpty()) {
-			MessageDialog.openError(Display.getDefault().getActiveShell(),
-					"Failed to connect to Microclimate instance(s)",
+			Util.openDialog(true, "Failed to connect to Microclimate instance(s)",
 					"The following Microclimate instances could not be connected to:\n" + failedConnections);
 		}
 
