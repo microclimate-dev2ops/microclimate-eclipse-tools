@@ -1,5 +1,8 @@
 package com.ibm.microclimate.core.internal;
 
+import java.io.InputStream;
+import java.util.Scanner;
+
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
@@ -9,7 +12,7 @@ import org.eclipse.swt.widgets.Display;
  * @author timetchells@ibm.com
  *
  */
-public class Util {
+public class MCUtil {
 
 	/**
 	 * Open a dialog on top of the current active window. Can be called off the UI thread.
@@ -23,5 +26,15 @@ public class Util {
 				MessageDialog.open(kind, Display.getDefault().getActiveShell(), title, msg, 0);
 			}
 		});
+	}
+
+
+	public static String readAllFromStream(InputStream stream) {
+		Scanner s = new Scanner(stream);
+		// end-of-stream
+		s.useDelimiter("\\A");
+		String result = s.hasNext() ? s.next() : "";
+		s.close();
+		return result;
 	}
 }

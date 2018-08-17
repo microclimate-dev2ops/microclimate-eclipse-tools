@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Scanner;
 
 import org.json.JSONObject;
 
@@ -38,7 +37,7 @@ public class HttpUtil {
 			// Read error first because sometimes if there is an error, connection.getInputStream() throws an exception
 			InputStream eis = connection.getErrorStream();
 			if (eis != null) {
-				error = readAllFromStream(eis);
+				error = MCUtil.readAllFromStream(eis);
 			}
 			else {
 				error = null;
@@ -51,7 +50,7 @@ public class HttpUtil {
 
 			InputStream is = connection.getInputStream();
 			if (is != null) {
-				response = readAllFromStream(is);
+				response = MCUtil.readAllFromStream(is);
 			}
 			else {
 				response = null;
@@ -113,14 +112,5 @@ public class HttpUtil {
 				connection.disconnect();
 			}
 		}
-	}
-
-	private static String readAllFromStream(InputStream stream) {
-		Scanner s = new Scanner(stream);
-		// end-of-stream
-		s.useDelimiter("\\A");
-		String result = s.hasNext() ? s.next() : "";
-		s.close();
-		return result;
 	}
 }

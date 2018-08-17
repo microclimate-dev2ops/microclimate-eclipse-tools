@@ -180,7 +180,7 @@ public class MicroclimateConnectionManager {
 
 		String failedConnections = failedConnectionsBuilder.toString();
 		if (!failedConnections.isEmpty()) {
-			Util.openDialog(true, "Failed to connect to Microclimate instance(s)",
+			MCUtil.openDialog(true, "Failed to connect to Microclimate instance(s)",
 					"The following Microclimate instances could not be connected to:\n" + failedConnections);
 		}
 

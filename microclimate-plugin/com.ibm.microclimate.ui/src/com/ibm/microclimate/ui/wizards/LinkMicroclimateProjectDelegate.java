@@ -14,7 +14,7 @@ import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
-import com.ibm.microclimate.core.internal.Util;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.server.MicroclimateServer;
 
 /**
@@ -44,7 +44,7 @@ public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 					+ "If you wish to unlink this project, delete this server from the Servers view.",
 					selectedProject.getName(), alreadyLinkedServer);
 
-			Util.openDialog(false, "Project already linked", alreadyLinkedMsg);
+			MCUtil.openDialog(false, "Project already linked", alreadyLinkedMsg);
 
 			// Don't launch the wizard.
 			return;

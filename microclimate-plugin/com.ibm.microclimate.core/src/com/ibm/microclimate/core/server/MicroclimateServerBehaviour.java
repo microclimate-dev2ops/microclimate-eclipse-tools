@@ -3,6 +3,7 @@ package com.ibm.microclimate.core.server;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -24,11 +25,12 @@ import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.MicroclimateSocket;
-import com.ibm.microclimate.core.internal.Util;
+import com.ibm.microclimate.core.server.console.MicroclimateServerConsole;
 import com.ibm.microclimate.core.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
@@ -43,8 +45,10 @@ import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 @SuppressWarnings("restriction")
 public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
+	// Only set these once, in initialize().
 	private MicroclimateApplication app;
 	private MicroclimateServerMonitorThread monitorThread;
+	private Set<MicroclimateServerConsole> consoles;
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
@@ -81,12 +85,15 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		monitorThread = new MicroclimateServerMonitorThread(this);
 		monitorThread.setInitialState(getInitialState());
 		monitorThread.start();
+
+		// Set up our server consoles
+		consoles = MicroclimateServerConsole.createApplicationConsoles(app);
 	}
 
 	private void onInitializeFailure(String failMsg) {
 		MCLogger.logError("Creating Microclimate server failed at initialization: " + failMsg);
 
-		Util.openDialog(true, "Error creating Microclimate server", failMsg);
+		MCUtil.openDialog(true, "Error creating Microclimate server", failMsg);
 	}
 
 	private int getInitialState() {
@@ -149,13 +156,15 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		MCLogger.log("Dispose " + getServer().getName());
 		app.setLinked(false);
 
-		// required to stop the auto publish thread
-		setServerState_(IServer.STATE_STOPPED);
-
 		if (monitorThread != null) {
 			monitorThread.disable();
 			monitorThread.interrupt();
-			monitorThread = null;
+		}
+		// required to stop the auto publish thread
+		setServerState_(IServer.STATE_STOPPED);
+
+		for (MicroclimateServerConsole console : consoles) {
+			console.destroy();
 		}
 	}
 

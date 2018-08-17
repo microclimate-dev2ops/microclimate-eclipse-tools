@@ -15,12 +15,12 @@ public class MicroclimateServerMonitorThread extends Thread {
 
 	public static final int POLL_RATE_MS = 2500;
 
-	private volatile boolean run = true;
-
 	private final MicroclimateServerBehaviour serverBehaviour;
 	private final MicroclimateApplication app;
 
 	private int lastKnownState;
+
+	private volatile boolean run = true;
 
 	MicroclimateServerMonitorThread(MicroclimateServerBehaviour serverBehaviour) {
 		this.serverBehaviour = serverBehaviour;
@@ -41,9 +41,7 @@ public class MicroclimateServerMonitorThread extends Thread {
 			try {
 				Thread.sleep(POLL_RATE_MS);
 			}
-			catch(InterruptedException e) {
-				// MCLogger.logError(e);
-			}
+			catch(InterruptedException e) {}
 		}
 
 		MCLogger.log("Stop MCMonitorThread");

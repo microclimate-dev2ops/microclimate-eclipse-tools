@@ -179,13 +179,17 @@ public class MicroclimateApplication {
 				"\nPlease wait a few seconds and then refresh the projects list " +
 				"if you wish to link one of these applications.";
 
-		Util.openDialog(false, "Applications still starting", appsStartingMsg);
+		MCUtil.openDialog(false, "Applications still starting", appsStartingMsg);
 	}
 
 	// Getters for our project state fields
 
 	public boolean isLinked() {
 		return isLinked;
+	}
+
+	public Set<IPath> getLogFilePaths() {
+		return logPaths;
 	}
 
 	public synchronized String getAppStatus() {
@@ -252,6 +256,8 @@ public class MicroclimateApplication {
 	/**
 	 * Invalidate fields that can change when the application is restarted.
 	 * On restart success, these will be updated by the Socket handler for that event.
+	 * This is done because the server will wait for the ports to be
+	 * set to something other than -1 before trying to connect.
 	 */
 	public synchronized void invalidatePorts() {
 		MCLogger.log("Invalidate ports for " + rootUrl.toString());

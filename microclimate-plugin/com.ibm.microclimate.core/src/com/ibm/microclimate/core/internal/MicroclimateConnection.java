@@ -83,7 +83,7 @@ public class MicroclimateConnection {
 
 		if(projectsResponse == null) {
 			MCLogger.logError("Received null response from projects endpoint");
-			Util.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
+			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
 			return Collections.emptyList();
 		}
 
@@ -92,7 +92,7 @@ public class MicroclimateConnection {
 			return apps;
 		}
 		catch(Exception e) {
-			Util.openDialog(true, "Error getting list of projects", e.getMessage());
+			MCUtil.openDialog(true, "Error getting list of projects", e.getMessage());
 		}
 		return Collections.emptyList();
 	}
