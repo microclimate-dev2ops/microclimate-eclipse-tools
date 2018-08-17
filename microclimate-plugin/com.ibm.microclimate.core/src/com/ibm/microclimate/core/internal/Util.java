@@ -11,9 +11,8 @@ import org.eclipse.swt.widgets.Display;
  */
 public class Util {
 
-	// TODO switch all dialogs to use this
 	/**
-	 * Open a dialog on top of the currently active window. Can be called off the UI thread.
+	 * Open a dialog on top of the current active window. Can be called off the UI thread.
 	 */
 	public static void openDialog(boolean isError, String title, String msg) {
 		final int kind = isError ? MessageDialog.ERROR : MessageDialog.INFORMATION;

@@ -3,7 +3,9 @@ package com.ibm.microclimate.core.internal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.json.JSONArray;
@@ -25,6 +27,8 @@ public class MicroclimateApplication {
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 	public final URL rootUrl;
+
+	private final Set<IPath> logPaths;
 
 	// The preference key that will be used to store whether this app is currently linked in the workspace
 	private final String isLinkedPrefsKey;
@@ -50,6 +54,7 @@ public class MicroclimateApplication {
 		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.host;
+		this.logPaths = new HashSet<>();
 
 		URL rootUrl = new URL("http", host, httpPort, "");
 
@@ -70,56 +75,70 @@ public class MicroclimateApplication {
 	/**
 	 * Parse the given projectsJson from the Microclimate server to construct a list of applications on that server.
 	 */
-	public static List<MicroclimateApplication> buildFromProjectsJson(MicroclimateConnection conn,
+	public static List<MicroclimateApplication> getAppsFromProjectsJson(MicroclimateConnection mcConnection,
 			String projectsJson) throws JSONException, NumberFormatException, MalformedURLException {
 
-		List<MicroclimateApplication> result = new ArrayList<>();
+		List<MicroclimateApplication> runningApps = new ArrayList<>();
 
+		MCLogger.log(projectsJson);
 		JSONArray appArray = new JSONArray(projectsJson);
 
 		List<String> appsStillStarting = new ArrayList<>();
 		for(int i = 0; i < appArray.length(); i++) {
-			JSONObject app = appArray.getJSONObject(i);
+			JSONObject appJso = appArray.getJSONObject(i);
 			try {
-				MCLogger.log("app: " + app.toString());
-				String id 	= app.getString("projectID");
-				String name = app.getString("name");
-				String type = app.getString("projectType");
-				String loc 	= app.getString("locOnDisk");
+				MCLogger.log("app: " + appJso.toString());
+				String name = appJso.getString("name");
 
-				String httpPortStr = "";
-
-				try {
-					httpPortStr = app.getJSONObject("ports").getString("exposedPort");
-				}
-				catch(JSONException e) {
-					// This happens if the app is not started / is still starting
-					// See displayAppsStartingMsg method for an explanation of how this is handled
-					if (e.getMessage().equals("JSONObject[\"ports\"] is not a JSONObject.")) {
-						appsStillStarting.add(name);
-					}
+				String status = appJso.getString("appStatus");
+				if (!"started".equals(status)) {
+					// see displayAppsStartingMsg method for how this is handled
+					appsStillStarting.add(name);
 					continue;
 				}
+
+				String id 	= appJso.getString("projectID");
+				String type = appJso.getString("projectType");
+				String loc 	= appJso.getString("locOnDisk");
+
+				String httpPortStr = appJso.getJSONObject("ports").getString("exposedPort");
 
 				int httpPort = Integer.parseInt(httpPortStr);
 
 				final String contextRootKey = "contextroot";
 				String contextRoot = null;
-				if(app.has(contextRootKey)) {
-					contextRoot = app.getString(contextRootKey);
+				if(appJso.has(contextRootKey)) {
+					contextRoot = appJso.getString(contextRootKey);
 				}
 
-				result.add(new MicroclimateApplication(conn, id, name, type, loc, httpPort, contextRoot));
+				MicroclimateApplication mcApp =
+						new MicroclimateApplication(mcConnection, id, name, type, loc, httpPort, contextRoot);
+				runningApps.add(mcApp);
 
+				JSONObject logsJso = appJso.getJSONObject("logs");
+				// The logs object always exists, but can be empty.
+				if (logsJso.has("build")) {
+					String buildLogPath = logsJso.getJSONObject("build").getString("file");
+					mcApp.addLogPath(buildLogPath);
+				}
+
+				if (logsJso.has("app")) {
+					// TODO I'm not sure if this will always be an array, but it seems to be for Liberty projects
+					JSONArray appLogsJso = logsJso.getJSONObject("app").getJSONArray("file");
+					for (int j = 0; j < appLogsJso.length(); j++) {
+						String appLogPath = appLogsJso.getString(j);
+						mcApp.addLogPath(appLogPath);
+					}
+				}
 			}
 			catch(JSONException e) {
-				MCLogger.logError("Error parsing project json: " + app, e);
+				MCLogger.logError("Error parsing project json: " + appJso, e);
 			}
 		}
 
 		displayAppsStartingMsg(appsStillStarting);
 
-		return result;
+		return runningApps;
 	}
 
 	/**
@@ -197,6 +216,15 @@ public class MicroclimateApplication {
 
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
 			.setValue(isLinkedPrefsKey, isLinked);
+	}
+
+	/**
+	 * @param pathStr - The log path as extracted from the JSON, ie starting with /microclimate-workspace/
+	 */
+	private void addLogPath(String pathStr) {
+		IPath path = mcConnection.localWorkspacePath.append(pathStr);
+		MCLogger.log("Add log path " + path);
+		logPaths.add(path);
 	}
 
 	public synchronized void setAppStatus(String appStatus) {

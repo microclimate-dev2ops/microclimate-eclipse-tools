@@ -48,10 +48,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
-		// TODO investigate initialize being called on DISPOSE - then a second (useless) monitor thread is leaked!
-		// TODO investigate monitor thread being set to null when Eclipse is restarted, and how to work around this!
-		// Similarly, need to update server state when Eclipse is restarted
-
 		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
 
 		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
@@ -77,6 +73,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					+ mcConnection.toString());
 			return;
 		}
+		// Set unlinked in dispose()
 		app.setLinked(true);
 
 		// Ask the server for an initial state - the monitor thread will handle updates but doesn't know the state
@@ -93,7 +90,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private int getInitialState() {
-		// TODO hardcoded filewatcher URL - should be getting this from Portal using mcConnection.baseUrl
+		// TODO hardcoded filewatcher port
 		String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
 		statusUrl = String.format(statusUrl, app.projectID);
 

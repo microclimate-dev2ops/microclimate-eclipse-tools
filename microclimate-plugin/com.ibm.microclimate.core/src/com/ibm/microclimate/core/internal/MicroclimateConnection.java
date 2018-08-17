@@ -88,7 +88,7 @@ public class MicroclimateConnection {
 		}
 
 		try {
-			apps = MicroclimateApplication.buildFromProjectsJson(this, projectsResponse);
+			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse);
 			return apps;
 		}
 		catch(Exception e) {
