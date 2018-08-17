@@ -227,7 +227,7 @@ public class MicroclimateApplication {
 	 */
 	private void addLogPath(String pathStr) {
 		IPath path = mcConnection.localWorkspacePath.append(pathStr);
-		MCLogger.log("Add log path " + path);
+		// MCLogger.log("Add log path " + path);
 		logPaths.add(path);
 	}
 

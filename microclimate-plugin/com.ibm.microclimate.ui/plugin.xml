@@ -25,7 +25,7 @@
 		</objectContribution>
 	</extension>
 	
-   <extension
+   	<extension
          point="org.eclipse.ui.preferencePages">
          
          <page id="MicroclimateParentPage"
@@ -38,7 +38,7 @@
          	category="MicroclimateParentPage"
          	class="com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage">
          </page>    
-   </extension>
+   	</extension>
    
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
 		<launchConfigurationTypeImage
@@ -52,6 +52,31 @@
 			id="com.ibm.microclimate.ui.launchConfigurationTabGroup"
 			type="com.ibm.microclimate.core.launchConfigurationType"
 			class="com.ibm.microclimate.ui.MicroclimateLaunchConfigTabGroup"/>
+	</extension>
+	
+  	<extension point="org.eclipse.core.expressions.propertyTesters">
+    	<propertyTester
+	      	id="com.ibm.microclimate.ui.property.serverType"
+	      	namespace="com.ibm.microclimate"
+	      	properties="serverType"
+	      	type="java.lang.Object"
+	      	class="com.ibm.microclimate.ui.ServerPropertyTester"/>
+  	</extension>
+	
+	<extension point="org.eclipse.ui.popupMenus">
+		<objectContribution
+			id="com.ibm.microclimate.ui.popupMenu"
+			objectClass="org.eclipse.wst.server.core.IServer">
+		<visibility>
+			<objectState name="serverType" value="microclimate.server"/>
+		</visibility>
+		<action
+			id="com.ibm.microclimate.ui.popupMenu.openApp"
+			enablesFor="1"
+			icon="icons/microclimate.ico"
+			label="%ACTION_OPEN_APP"
+			class="com.ibm.microclimate.ui.OpenAppAction"/>
+		</objectContribution>
 	</extension>
 
  	<!--extension

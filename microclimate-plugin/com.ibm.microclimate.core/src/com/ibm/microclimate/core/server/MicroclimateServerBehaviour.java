@@ -178,7 +178,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 	}
 
-	MicroclimateApplication getApp() {
+	public MicroclimateApplication getApp() {
 		return app;
 	}
 

@@ -63,7 +63,7 @@ public class MicroclimateServerConsole extends IOConsole {
 		logMonitorThread = new MicroclimateServerLogMonitorThread(consoleName, logFile, outputStream);
 		logMonitorThread.start();
 
-		// TODO is this necessary?
+		// TODO delete if exists? or will this just 'overwrite' existing one?
 		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { this });
 	}
 
