@@ -2,20 +2,16 @@ package com.ibm.microclimate.ui.wizards;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.wst.server.core.IServerType;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
-import org.eclipse.wst.server.core.ServerCore;
+import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.server.MicroclimateServer;
+import com.ibm.microclimate.core.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.Activator;
 
 /**
@@ -96,46 +92,11 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	 * This creates the Server which is 'linked' to the given application.
 	 */
 	private void doLink(MicroclimateApplication appToLink) throws CoreException {
-		final String serverName = "Microclimate Application: " + appToLink.name;
-
-		IServerType mcServerType = null;
-
-		for (IServerType type : ServerCore.getServerTypes()) {
-			if (MicroclimateServer.SERVER_ID.equals(type.getId())) {
-				mcServerType = type;
-			}
-		}
-
-		if (mcServerType == null) {
-			MCLogger.logError("Didn't find MC Server Type!");
-			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-					"Missing Server Type: " + MicroclimateServer.SERVER_ID));
-		}
-
-		IServerWorkingCopy newServer = mcServerType.createServer(null, null, null, null);		// TODO progress mon?
-		newServer.setHost(appToLink.host);
-
-		newServer.setName(serverName);
-
-		// We can't pass Objects to the server framework - only primitives
-		// so we provide the info needed for the Server to look up the relevant Microclimate app
-		newServer.setAttribute(MicroclimateServer.ATTR_HTTP_PORT, appToLink.getHttpPort());
-		newServer.setAttribute(MicroclimateServer.ATTR_APP_URL, appToLink.rootUrl.toString());
-		newServer.setAttribute(MicroclimateServer.ATTR_PROJ_ID, appToLink.projectID);
-
-		// The server will determine the corresponding MCConnection from the baseUrl
-		newServer.setAttribute(MicroclimateServer.ATTR_MCC_URL, appToLink.mcConnection.baseUrl);
-
-		// Store the name of the Eclipse project linked to this server. This will be used by the
-		// launch configuration to locate the source code when debugging
-		newServer.setAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, appToLink.name);
-
-		// Creates the server in the Servers view
-		newServer.saveAll(true, null);
+		IServer newServer = MicroclimateServerFactory.create(appToLink);
 
 		String successMsg = "Linked project %s with Microclimate application %s.\n"
 				+ "Server \"%s\" is now available in the Servers view.";
-		successMsg = String.format(successMsg, selectedProject.getName(), appToLink.name, serverName);
+		successMsg = String.format(successMsg, selectedProject.getName(), appToLink.name, newServer.getName());
 
 		MessageDialog.openInformation(getShell(), "Linking Complete", successMsg);
 	}

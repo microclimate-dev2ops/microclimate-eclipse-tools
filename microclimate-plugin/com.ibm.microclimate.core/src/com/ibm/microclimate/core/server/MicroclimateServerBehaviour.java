@@ -200,7 +200,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			return;
 		}
 
-		// TODO progress mon ?
+		// TODO progress mon?
 		// See com.ibm.microclimate.core.internal.server.MicroclimateServerLaunchConfigDelegate
 		launchConfig.launch(launchMode, null);
 	}
@@ -234,6 +234,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			HttpUtil.post(url, restartProjectPayload);
 			app.invalidatePorts();
 		} catch (IOException e) {
+			// TODO handle better
 			MCLogger.logError("Error POSTing restart request", e);
 			return;
 		}

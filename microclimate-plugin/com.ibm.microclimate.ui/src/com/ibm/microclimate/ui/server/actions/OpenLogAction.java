@@ -23,14 +23,13 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
 import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.server.MicroclimateServer;
 
 /**
  * From com.ibm.ws.st.ui.internal.actions.OpenLogAction
  *
  */
 public class OpenLogAction extends Action {
-    protected MicroclimateServer mcServer;
+    // protected MicroclimateServer mcServer;
     protected final Shell shell;
     protected final IPath logFilePath;
 
@@ -38,6 +37,11 @@ public class OpenLogAction extends Action {
         super(name);
         this.shell = shell;
         this.logFilePath = logFile;
+    }
+
+    @Override
+    public String getText() {
+    	return logFilePath.lastSegment();
     }
 
     @Override
@@ -60,9 +64,12 @@ public class OpenLogAction extends Action {
                     if (page != null) {
                         IDE.openEditorOnFileStore(page, fileStore);
                     }
+                    else {
+                    	MCLogger.logError("Null WorkbenchPage");
+                    }
 
                 } catch (PartInitException e) {
-                    MCLogger.logError("Error Opening messages.log located at : " + filePath.toOSString(), e);
+                    MCLogger.logError("Error opening file: " + filePath.toOSString(), e);
                 }
             }
         });

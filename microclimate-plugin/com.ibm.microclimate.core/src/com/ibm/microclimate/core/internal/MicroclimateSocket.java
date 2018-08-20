@@ -65,6 +65,7 @@ public class MicroclimateSocket {
 			public void call(Object... arg0) {
 				MCLogger.logError("SocketIO @ " + url);
 
+				// TODO show somewhere that the connection is down (icon on the server?)
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];
 					MCLogger.logError("SocketIO Error", e);

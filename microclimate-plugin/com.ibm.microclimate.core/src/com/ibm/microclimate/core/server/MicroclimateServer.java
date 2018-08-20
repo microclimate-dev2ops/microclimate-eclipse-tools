@@ -25,7 +25,6 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	// Attributes
 	public static final String
-			ATTR_HTTP_PORT 	= "httpPort",
 			// Root URL of this particular project
 			ATTR_APP_URL  	= "appRootUrl",
 			ATTR_PROJ_ID	= "projectID",
@@ -45,12 +44,17 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public ServerPort[] getServerPorts() {
-		int httpPortNum = behaviour.getApp().getHttpPort();
+		final int httpPortNum = behaviour.getApp().getHttpPort();
+		if (httpPortNum == -1) {
+			MCLogger.logError("No HttpPort set for server " + getServer().getName());
+			return null;
+		}
+
 		ServerPort httpPort = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
 
 		ServerPort debugPort = null;
 
-		int debugPortNum = behaviour.getApp().getDebugPort();
+		final int debugPortNum = behaviour.getApp().getDebugPort();
 		if (debugPortNum != -1) {
 			debugPort = new ServerPort("microclimateServerPort", "debugPort", debugPortNum, "http");
 		}
@@ -83,7 +87,7 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public IStatus canModifyModules(IModule[] arg0, IModule[] arg1) {
-		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Modules cannot be modified on a microclimate server", null);
+		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Modules cannot be modified on a Microclimate Server", null);
 	}
 
 	@Override
@@ -99,5 +103,14 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 	@Override
 	public void modifyModules(IModule[] arg0, IModule[] arg1, IProgressMonitor arg2) throws CoreException {
 		// Do nothing - not supported
+
+		/*
+		 * TODO display a dialog when user clicks "Add and Remove..."
+		 * rather than having it silently fail when trying to get the server's runtime with:
+		 *
+		 java.lang.NullPointerException
+			at org.eclipse.wst.server.ui.internal.view.servers.ModuleSloshAction.perform(ModuleSloshAction.java:78)
+			at org.eclipse.wst.server.ui.internal.view.servers.AbstractServerAction.run(AbstractServerAction.java:64)
+		 */
 	}
 }

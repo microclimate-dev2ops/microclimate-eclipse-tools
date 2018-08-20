@@ -9,7 +9,7 @@ import org.eclipse.wst.server.core.IServer;
 import com.ibm.microclimate.core.server.MicroclimateServer;
 
 /**
- *
+ * TODO doesn't actually do anything yet.
  * From com.ibm.ws.st.ui.internal.ServerDecorator
  */
 public class MicroclimateServerDecorator extends LabelProvider implements ILightweightLabelDecorator {

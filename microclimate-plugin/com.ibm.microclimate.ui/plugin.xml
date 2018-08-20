@@ -60,7 +60,7 @@
 	      	namespace="com.ibm.microclimate"
 	      	properties="serverType"
 	      	type="java.lang.Object"
-	      	class="com.ibm.microclimate.ui.ServerPropertyTester"/>
+	      	class="com.ibm.microclimate.ui.MicroclimateServerPropertyTester"/>
   	</extension>
 	
 	<extension point="org.eclipse.ui.popupMenus">
@@ -103,29 +103,39 @@
 	      typeIds="microclimate.server"/>
 	</extension>
 	
-  	<extension point="org.eclipse.ui.navigator.navigatorContent">
+	<extension point="org.eclipse.ui.navigator.navigatorContent">
 		<navigatorContent
-	       id="com.ibm.microclimate.ui.server.content"
-	       name="Microclimate Server NavigatorContent"
-	       icon="icons/microclimate.ico"
-	       activeByDefault="true">
-	       <triggerPoints>
-	         <adapt type="org.eclipse.wst.server.core.IServer"> 
-	           <test
-	             forcePluginActivation="true"
-	             property="org.eclipse.wst.server.ui.serverType"
-	             value="microclimate.server"/>
-	         </adapt>
-	       </triggerPoints>
-	       <actionProvider
-	         dependsOn="org.eclipse.wst.server.ui.ServersView.ServerActionProvider"
-	         class="com.ibm.microclimate.ui.server.actions.LogActionProvider">
-	         <enablement>
-	           <adapt type="com.ibm.microclimate.core.server.MicroclimateServer"/>
-	         </enablement>
-	       </actionProvider>
-	    </navigatorContent>
-  	</extension>
+			id="com.ibm.microclimate.ui.server.content"
+			name="Microclimate Server NavigatorContent"
+			icon="icons/microclimate.ico"
+			activeByDefault="true">
+			   
+			<enablement>
+				<test
+				forcePluginActivation="true"
+				property="org.eclipse.wst.server.ui.serverType"
+				value="microclimate.server"/>
+			</enablement>
+			
+			<!--enablement>
+				<adapt type="com.ibm.microclimate.core.server.MicroclimateServer"/>
+			</enablement-->
+			
+			<!--triggerPoints>
+				<adapt type="org.eclipse.wst.server.core.IServer"> 
+				<test
+				forcePluginActivation="true"
+				property="org.eclipse.wst.server.ui.serverType"
+				value="microclimate.server"/>
+				</adapt>
+			</triggerPoints-->
+			
+			<actionProvider
+				dependsOn="org.eclipse.wst.server.ui.ServersView.ServerActionProvider"
+				class="com.ibm.microclimate.ui.server.actions.LogActionProvider">
+			</actionProvider>
+		</navigatorContent>
+	</extension>
 
  	<!--extension
 		point="org.eclipse.ui.newWizards">

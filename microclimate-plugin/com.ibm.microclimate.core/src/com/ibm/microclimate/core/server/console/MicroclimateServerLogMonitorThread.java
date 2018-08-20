@@ -29,7 +29,6 @@ public class MicroclimateServerLogMonitorThread extends Thread {
 	public MicroclimateServerLogMonitorThread(String consoleName, File inputFile, IOConsoleOutputStream output)
 			throws FileNotFoundException {
 
-		// TODO decide if messages.log and console.log should be combined into one?
 		this.inputFile = inputFile;
 		this.output = output;
 
