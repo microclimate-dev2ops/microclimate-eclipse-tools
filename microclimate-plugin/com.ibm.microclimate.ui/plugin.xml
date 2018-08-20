@@ -75,9 +75,57 @@
 			enablesFor="1"
 			icon="icons/microclimate.ico"
 			label="%ACTION_OPEN_APP"
-			class="com.ibm.microclimate.ui.OpenAppAction"/>
+			class="com.ibm.microclimate.ui.server.actions.OpenAppAction"/>
 		</objectContribution>
 	</extension>
+	
+	<extension point="org.eclipse.ui.decorators">
+	    <decorator
+	       id="com.ibm.microclimate.ui.ServerDecorator"
+	       label="Microclimate Server"
+	       icon="icons/microclimate.ico"
+	       lightweight="true"
+	       location="BOTTOM_RIGHT"
+	       state="true"
+	       class="com.ibm.microclimate.ui.server.MicroclimateServerDecorator">
+	      <enablement>
+	        <or>
+	          <objectClass name="org.eclipse.wst.server.core.IServer"/>
+	        </or>
+	      </enablement>
+	    </decorator>
+  	</extension>
+  	
+	<extension point="org.eclipse.wst.server.ui.serverImages">
+	    <image
+	      id="com.ibm.microclimate.ui.server.img"
+	      icon="icons/microclimate.ico"
+	      typeIds="microclimate.server"/>
+	</extension>
+	
+  	<extension point="org.eclipse.ui.navigator.navigatorContent">
+		<navigatorContent
+	       id="com.ibm.microclimate.ui.server.content"
+	       name="Microclimate Server NavigatorContent"
+	       icon="icons/microclimate.ico"
+	       activeByDefault="true">
+	       <triggerPoints>
+	         <adapt type="org.eclipse.wst.server.core.IServer"> 
+	           <test
+	             forcePluginActivation="true"
+	             property="org.eclipse.wst.server.ui.serverType"
+	             value="microclimate.server"/>
+	         </adapt>
+	       </triggerPoints>
+	       <actionProvider
+	         dependsOn="org.eclipse.wst.server.ui.ServersView.ServerActionProvider"
+	         class="com.ibm.microclimate.ui.server.actions.LogActionProvider">
+	         <enablement>
+	           <adapt type="com.ibm.microclimate.core.server.MicroclimateServer"/>
+	         </enablement>
+	       </actionProvider>
+	    </navigatorContent>
+  	</extension>
 
  	<!--extension
 		point="org.eclipse.ui.newWizards">

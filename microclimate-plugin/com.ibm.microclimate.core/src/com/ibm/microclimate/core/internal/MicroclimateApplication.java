@@ -22,6 +22,8 @@ import com.ibm.microclimate.core.MCLogger;
  */
 public class MicroclimateApplication {
 
+	public static final String BUILD_LOG_SHORTNAME = "build.log";
+
 	public final MicroclimateConnection mcConnection;
 	public final String projectID, name, projectType, host;
 	public final String contextRoot;	// can be null

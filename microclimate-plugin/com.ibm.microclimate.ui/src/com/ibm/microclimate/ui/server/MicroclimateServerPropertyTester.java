@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package com.ibm.microclimate.ui;
+package com.ibm.microclimate.ui.server;
 
 import org.eclipse.core.expressions.PropertyTester;
 import org.eclipse.core.runtime.Platform;
@@ -22,7 +22,7 @@ import com.ibm.microclimate.core.server.MicroclimateServer;
  *
  * From com.ibm.ws.st.ui.internal.plugin.ServerPropertyTester
  */
-public class ServerPropertyTester extends PropertyTester {
+public class MicroclimateServerPropertyTester extends PropertyTester {
     @Override
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
         if (expectedValue instanceof String) {

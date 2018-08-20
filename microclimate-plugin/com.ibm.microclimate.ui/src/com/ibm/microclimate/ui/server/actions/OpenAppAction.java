@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui;
+package com.ibm.microclimate.ui.server.actions;
 
 import java.net.URL;
 

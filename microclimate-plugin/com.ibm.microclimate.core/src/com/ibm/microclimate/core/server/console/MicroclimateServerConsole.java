@@ -31,9 +31,8 @@ public class MicroclimateServerConsole extends IOConsole {
 
 			String fileName = logFile.getName();
 
-			final String buildLogBaseName = "build.log";
-			if (fileName.endsWith(buildLogBaseName)) {
-				fileName = buildLogBaseName;
+			if (fileName.endsWith(MicroclimateApplication.BUILD_LOG_SHORTNAME)) {
+				fileName = MicroclimateApplication.BUILD_LOG_SHORTNAME;
 			}
 
 			String consoleName = app.name + " - " + fileName;
