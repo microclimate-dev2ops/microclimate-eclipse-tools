@@ -3,7 +3,6 @@ package com.ibm.microclimate.core.internal;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +49,7 @@ public class MicroclimateConnection {
 
 		mcSocket = new MicroclimateSocket(this);
 
-		getApps(false);
+		refreshApps(false);
 	}
 
 	/**
@@ -84,10 +83,8 @@ public class MicroclimateConnection {
 	 * @param isInLinkWizard
 	 * 		- If this is being invoked by the Link Project Wizard -
 	 * 		in this case we might have to display an 'apps still starting' dialog
-	 *
-	 * @return The new list of apps, which matches that in the 'apps' private field.
 	 */
-	public List<MicroclimateApplication> getApps(boolean isInLinkWizard) {
+	public void refreshApps(boolean isInLinkWizard) {
 
 		final String projectsUrl = baseUrl + PROJECTS_LIST_PATH;
 
@@ -101,17 +98,16 @@ public class MicroclimateConnection {
 		if(projectsResponse == null) {
 			MCLogger.logError("Received null response from projects endpoint");
 			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
-			return Collections.emptyList();
+			return;
 		}
 
 		try {
 			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse, isInLinkWizard);
-			return apps;
+			MCLogger.log("App list update success");
 		}
 		catch(Exception e) {
 			MCUtil.openDialog(true, "Error getting list of projects", e.getMessage());
 		}
-		return Collections.emptyList();
 	}
 
 	public List<MicroclimateApplication> getLinkedApps() {
@@ -133,17 +129,19 @@ public class MicroclimateConnection {
 	}
 
 	private MicroclimateApplication getAppByID(String projectID, boolean retry) {
+		refreshApps(false);
 		for (MicroclimateApplication app : apps) {
 			if (app.projectID.equals(projectID)) {
 				return app;
 			}
 		}
 
+		/*
 		if (retry) {
 			// Refresh the project list and retry one time in case the project is new.
 			getApps(false);
 			return getAppByID(projectID, false);
-		}
+		}*/
 		MCLogger.logError("No project found with ID " + projectID);
 
 		return null;
@@ -158,7 +156,7 @@ public class MicroclimateConnection {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
 			if (server != null) {
 				// All linked apps should have getLinkedServer return non-null.
-				server.setError("Connection to Microclimate at " + baseUrl + " lost");
+				server.setSuffix("Connection to Microclimate at " + baseUrl + " lost", true);
 			}
 		}
 

@@ -6,6 +6,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.server.AppStateConverter;
 import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
 import io.socket.client.IO;
@@ -120,21 +121,6 @@ public class MicroclimateSocket {
 		MCLogger.log("Created MicroclimateSocket connected to " + url);
 	}
 
-	// Event data JSON constants
-	public static final String
-			KEY_PROJECT_ID = "projectID",
-
-			KEY_STATUS = "status",
-			KEY_APP_STATUS = "appStatus",
-			KEY_BUILD_STATUS = "buildStatus",
-			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
-
-			KEY_PORTS = "ports",
-			KEY_EXPOSED_HTTP_PORT = "exposedPort",
-			KEY_EXPOSED_DEBUG_PORT = "exposedDebugPort",
-
-			REQUEST_STATUS_SUCCESS = "success";
-
 	private void onProjectStatusChanged(JSONObject event) throws JSONException {
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
@@ -142,20 +128,24 @@ public class MicroclimateSocket {
 			return;
 		}
 
-		serverBehaviour.setError(null);
-		if (event.has(KEY_APP_STATUS)) {
-			serverBehaviour.onAppStateUpdate(event.getString(KEY_APP_STATUS));
+		updateServerState(serverBehaviour, event);
+	}
+
+	public static void updateServerState(MicroclimateServerBehaviour serverBehaviour, JSONObject projectChangedEvent)
+			throws JSONException {
+
+		serverBehaviour.clearSuffix();
+		if (projectChangedEvent.has(MCConstants.KEY_APP_STATUS)) {
+			serverBehaviour.onAppStateUpdate(projectChangedEvent.getString(MCConstants.KEY_APP_STATUS));
 		}
 		// These are mutually exclusive - it won't have both an app status and a build status.
-		else if (event.has(KEY_BUILD_STATUS)) {
+		else if (projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
 			serverBehaviour.onBuildStateUpdate(
-					event.getString(KEY_BUILD_STATUS),
-					event.getString(KEY_DETAILED_BUILD_STATUS));
+					projectChangedEvent.getString(MCConstants.KEY_BUILD_STATUS),
+					projectChangedEvent.getString(MCConstants.KEY_DETAILED_BUILD_STATUS));
 		}
 		else {
-			// JSON doesn't match expected format
-			MCLogger.logError("Did not find one of the expected keys in projectStatusChanged event: "
-					+ event.toString());
+			MCLogger.log("No state of interest to update");
 		}
 	}
 
@@ -167,8 +157,8 @@ public class MicroclimateSocket {
 			MCLogger.logError("Failed to get serverBehaviour, aborting state update triggered by restart");
 		}
 
-		String status = event.getString(KEY_STATUS);
-		if (!REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
+		String status = event.getString(MCConstants.KEY_STATUS);
+		if (!MCConstants.REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
 			MCLogger.log("Project restart failed on the server: " + event.toString());
 			MCUtil.openDialog(true, "Error restarting project",
 					"Failed to restart server " + serverBehaviour.getServer().getName() + ": " + status);
@@ -176,17 +166,17 @@ public class MicroclimateSocket {
 		}
 
 		// this event should always have a 'ports' sub-object
-		JSONObject portsObj = event.getJSONObject("ports");
+		JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
 		// ports object should always have an http port
-		int port = parsePort(portsObj.getString(KEY_EXPOSED_HTTP_PORT));
+		int port = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_HTTP_PORT));
 		if (port != -1) {
 			serverBehaviour.getApp().setHttpPort(port);
 		}
 
 		// Debug port will obviously be missing if the restart was into Run mode.
-		if (portsObj.has(KEY_EXPOSED_DEBUG_PORT)) {
-			int debugPort = parsePort(portsObj.getString(KEY_EXPOSED_DEBUG_PORT));
+		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
+			int debugPort = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
 			if (debugPort != -1) {
 				serverBehaviour.getApp().setDebugPort(debugPort);
 			}
@@ -197,20 +187,19 @@ public class MicroclimateSocket {
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
 			MCLogger.logError("Failed to get serverBehaviour, aborting projectDeletion status update");
+			return;
 		}
 
-		/*
-		MCUtil.openDialog(false, "Project deleted or disabled",
-				"The project " + serverBehaviour.getApp().name + " was deleted or disabled in Microclimate");*/
-		serverBehaviour.onAppStateUpdate("unknown");
-		serverBehaviour.setError("Project has been deleted or disabled in Microclimate");
+		serverBehaviour.onAppStateUpdate(AppStateConverter.APPSTATE_STOPPED);
+		serverBehaviour.setSuffix("Project has been deleted or disabled in Microclimate", true);
 	}
 
 	private MicroclimateServerBehaviour getServerForEvent(JSONObject event) throws JSONException {
-		String projectID = event.getString(KEY_PROJECT_ID);
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		MicroclimateApplication app = mcConnection.getAppByID(projectID);
 		if (app == null) {
 			// can't recover from this
+			// This is normal if the project has been deleted or disabled
 			MCLogger.logError("MCApplication with ID " + projectID + " not found");
 			return null;
 		}

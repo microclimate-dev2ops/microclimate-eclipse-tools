@@ -1,5 +1,8 @@
 package com.ibm.microclimate.core;
 
+import java.net.URL;
+
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -11,9 +14,11 @@ public class Activator extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.ibm.microclimate.core"; //$NON-NLS-1$
 
+	public static final String CONSOLE_ICON_PATH = "icons/console-icon.ico";
+
 	// The shared instance
 	private static Activator plugin;
-	
+
 	/**
 	 * The constructor
 	 */
@@ -47,6 +52,11 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static Activator getDefault() {
 		return plugin;
+	}
+
+	public static ImageDescriptor getIcon(String path) {
+		final URL url = Activator.getDefault().getBundle().getEntry(CONSOLE_ICON_PATH);
+		return ImageDescriptor.createFromURL(url);
 	}
 
 }

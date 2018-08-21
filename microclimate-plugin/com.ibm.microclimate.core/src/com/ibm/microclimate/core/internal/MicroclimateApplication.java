@@ -26,8 +26,6 @@ import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
  */
 public class MicroclimateApplication {
 
-	public static final String BUILD_LOG_SHORTNAME = "build.log";
-
 	public final MicroclimateConnection mcConnection;
 	public final String projectID, name, projectType, host;
 	public final String contextRoot;	// can be null
@@ -95,8 +93,13 @@ public class MicroclimateApplication {
 				MCLogger.log("app: " + appJso.toString());
 				String name = appJso.getString("name");
 
-				String status = appJso.getString("appStatus");
-				if (!"started".equals(status)) {
+				if (!appJso.has(MCConstants.KEY_APP_STATUS)) {
+					appsStillStarting.add(name);
+					continue;
+				}
+
+				String status = appJso.getString(MCConstants.KEY_APP_STATUS);
+				if (!MCConstants.KEY_STATUS.equals(status)) {
 					// see displayAppsStartingMsg method for how this is handled
 					appsStillStarting.add(name);
 					continue;
@@ -106,7 +109,7 @@ public class MicroclimateApplication {
 				String type = appJso.getString("projectType");
 				String loc 	= appJso.getString("locOnDisk");
 
-				String httpPortStr = appJso.getJSONObject("ports").getString("exposedPort");
+				String httpPortStr = appJso.getJSONObject(MCConstants.KEY_PORTS).getString("exposedPort");
 
 				int httpPort = Integer.parseInt(httpPortStr);
 
@@ -148,6 +151,9 @@ public class MicroclimateApplication {
 		return runningApps;
 	}
 
+	// TODO it would probably be better to just put these apps into the table, but under 'URL' put that it isn't
+	// started yet - And then prevent the user from proceeded if they select one of these projects.
+	// Current behaviour is not user friendly, and will display this every time if there's a Disabled project.
 	/**
 	 * If an app is still starting up when the app list is being read, the "ports" object will be an empty string,
 	 * and getting the "exposedPort" string from it will throw a JSONException (see above).
@@ -181,10 +187,11 @@ public class MicroclimateApplication {
 			}
 		}
 
-		String appsStartingMsg = "The following application(s) exist but are still starting up: " +
+		String appsStartingMsg = "The following projects exist but are not running: " +
 				startingAppsBuilder.toString() +
 				"\nPlease wait a few seconds and then refresh the projects list " +
-				"if you wish to link one of these applications.";
+				"if you wish to link one of these applications.\n" +
+				"If the project never starts, make sure it isn't Disabled.";
 
 		MCLogger.log("Apps still starting: " + startingAppsBuilder.toString());
 

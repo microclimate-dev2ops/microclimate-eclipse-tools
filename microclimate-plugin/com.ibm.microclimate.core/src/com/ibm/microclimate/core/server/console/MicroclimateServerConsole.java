@@ -9,10 +9,13 @@ import java.util.Set;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.IOConsole;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 
+import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
 public class MicroclimateServerConsole extends IOConsole {
@@ -31,8 +34,8 @@ public class MicroclimateServerConsole extends IOConsole {
 
 			String fileName = logFile.getName();
 
-			if (fileName.endsWith(MicroclimateApplication.BUILD_LOG_SHORTNAME)) {
-				fileName = MicroclimateApplication.BUILD_LOG_SHORTNAME;
+			if (fileName.endsWith(MCConstants.BUILD_LOG_SHORTNAME)) {
+				fileName = MCConstants.BUILD_LOG_SHORTNAME;
 			}
 
 			String consoleName = app.name + " - " + fileName;
@@ -53,17 +56,26 @@ public class MicroclimateServerConsole extends IOConsole {
 
 	public MicroclimateServerConsole(String consoleName, File logFile) throws FileNotFoundException {
 		super(consoleName, MC_CONSOLE_TYPE,
-				com.ibm.microclimate.core.Activator
-				.imageDescriptorFromPlugin("com.ibm.microclimate.ui", "icons/microclimate.ico"),
+				com.ibm.microclimate.core.Activator.getIcon(Activator.CONSOLE_ICON_PATH),
 				true);
-		// TODO is there a better way to get the image? copy over the image to this plugin?
 
 		outputStream = newOutputStream();
 		logMonitorThread = new MicroclimateServerLogMonitorThread(consoleName, logFile, outputStream);
 		logMonitorThread.start();
 
-		// TODO delete if exists
-		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { this });
+		IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
+
+		// See if a console exists matching this one and remove it if it does,
+		// so that we don't have multiple of the same console (they would be identical anyway)
+		IConsole[] existingMCConsoles = consoleManager.getConsoles();
+		for (IConsole console : existingMCConsoles) {
+			if (console instanceof MicroclimateServerConsole && console.getName().equals(consoleName)) {
+				consoleManager.removeConsoles(new IConsole[] { console } );
+				break;
+			}
+		}
+
+		consoleManager.addConsoles(new IConsole[] { this });
 	}
 
 	@Override

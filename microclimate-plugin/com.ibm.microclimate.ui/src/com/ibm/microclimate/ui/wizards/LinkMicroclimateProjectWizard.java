@@ -2,6 +2,7 @@ package com.ibm.microclimate.ui.wizards;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -56,13 +57,16 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	public boolean performFinish() {
 		MicroclimateApplication appToLink = newProjectPage.getSelectedApp();
 
-		String mcAppPath = appToLink.fullLocalPath.toOSString();
+		IPath mcAppPath = appToLink.fullLocalPath;
+		String mcAppPathStr = mcAppPath.toOSString();
 
-		String eclipseProjPath = selectedProject.getLocation().toOSString();
+		IPath eclipseProjPath = selectedProject.getLocation();
+		String eclipseProjPathStr = eclipseProjPath.toOSString();
 
 		boolean isSamePath = mcAppPath.equals(eclipseProjPath);
 
-		MCLogger.log(String.format("Link %s to %s - same? %b\n", mcAppPath, eclipseProjPath, isSamePath));
+		MCLogger.log(String.format("Link %s to %s - same? %b\n",
+				mcAppPathStr, eclipseProjPathStr,  isSamePath));
 
 		if (!isSamePath) {
 			String failedMsg = "The project paths do not match:\n"
@@ -70,7 +74,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 					+ "Eclipse:      %s\n"
 					+ "Please re-create the Eclipse project at the same location "
 					+ "as the Microclimate project you wish to link it with.";
-			failedMsg = String.format(failedMsg, eclipseProjPath, mcAppPath);
+			failedMsg = String.format(failedMsg, mcAppPathStr, eclipseProjPathStr);
 
 			MessageDialog.openError(getShell(), "Linking failed", failedMsg);
 			return false;
@@ -81,7 +85,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		}
 		catch(CoreException e) {
 			MCLogger.logError(e);
-			MessageDialog.openError(getShell(), "Error creating Microclimate Server/Application", e.getMessage());
+			MessageDialog.openError(getShell(), "Error creating Microclimate Server", e.getMessage());
 		}
 
 		return true;

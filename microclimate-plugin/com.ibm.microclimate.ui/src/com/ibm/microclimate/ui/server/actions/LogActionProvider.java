@@ -27,7 +27,7 @@ import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 import org.eclipse.ui.navigator.ICommonMenuConstants;
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
 /**
@@ -81,8 +81,8 @@ public class LogActionProvider extends CommonActionProvider implements ISelectio
 
     	for (IPath logFilePath : mcServerBehaviour.getApp().getLogFilePaths()) {
     		String name = logFilePath.lastSegment();
-			if (name.endsWith(MicroclimateApplication.BUILD_LOG_SHORTNAME)) {
-				name = MicroclimateApplication.BUILD_LOG_SHORTNAME;
+			if (name.endsWith(MCConstants.BUILD_LOG_SHORTNAME)) {
+				name = MCConstants.BUILD_LOG_SHORTNAME;
 			}
 
 			OpenLogAction openLogAction = new OpenLogAction("Open " + name, shell, logFilePath);

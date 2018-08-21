@@ -10,6 +10,7 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.server.MicroclimateServer;
 import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
@@ -49,7 +50,20 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         setDefaultSourceLocator(launch, config);
         serverBehaviour.setLaunch(launch);
 
-        serverBehaviour.doRestart(config, launchMode, launch, monitor);
+        if (serverBehaviour.getSuffix() != null) {
+        	MCUtil.openDialog(true, "Server cannot be started",
+        			serverBehaviour.getServer().getName() + " cannot be restarted: " +
+					serverBehaviour.getSuffix());
+        }
+        else if (serverBehaviour.getApp() == null) {
+			MCUtil.openDialog(true, "Server Error",
+					"There was an error initializing " + server.getName() +
+					". Please delete and re-create the server.");
+        }
+        else {
+            serverBehaviour.doRestart(config, launchMode, launch, monitor);
+        }
+        monitor.done();
 	}
 
 }

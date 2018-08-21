@@ -2,14 +2,14 @@
 <extension point="org.eclipse.wst.server.core.serverTypes">
 	<serverType
 		id="%MICROCLIMATE_SERVER_ID"
-		name="%serverName"
-		description="%serverDescription"
+		name="%SERVER_NAME"
+		description="%SERVER_DESCRIPTION"
 		supportsManualCreation="false"
 		hasConfiguration="false"
 		launchModes="run,debug"
 		startTimeout="90000"
 		stopTimeout="45000"
-		initialState="started"
+		initialState="unknown"
 		supportsRemoteHosts="false"
 		runtime="false"
 		launchConfigId="com.ibm.microclimate.core.launchConfigurationType"
