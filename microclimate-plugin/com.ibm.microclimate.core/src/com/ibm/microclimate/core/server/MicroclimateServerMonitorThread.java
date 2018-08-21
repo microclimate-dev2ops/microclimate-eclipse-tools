@@ -84,6 +84,7 @@ public class MicroclimateServerMonitorThread extends Thread {
 	 */
 	int getAppState() {
 		if (app.isConnectionErrored()) {
+			// MCLogger.log("MCMT detected app connection error");
 			return IServer.STATE_UNKNOWN;
 		}
 

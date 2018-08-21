@@ -119,6 +119,7 @@ public class MicroclimateConnectionManager {
 			return false;
 		}
 
+		connection.disconnect();
 		boolean removeResult = instance().connections.remove(connection);
 		if (!removeResult) {
 			MCLogger.logError("Tried to remove MCConnection " + connection.baseUrl + ", but it didn't exist");

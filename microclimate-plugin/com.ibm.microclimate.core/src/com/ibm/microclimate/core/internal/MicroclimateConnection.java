@@ -24,6 +24,8 @@ public class MicroclimateConnection {
 	public final String baseUrl;
 	public final IPath localWorkspacePath;
 
+	private final MicroclimateSocket mcSocket;
+
 	private List<MicroclimateApplication> apps;
 
 	private long connectionFailedTimestamp = -1;
@@ -45,10 +47,21 @@ public class MicroclimateConnection {
 		// TODO - Requires Portal API for getting user's workspace on their machine.
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
 
-		// MicroclimateSocket socket =
-		new MicroclimateSocket(this);
+		mcSocket = new MicroclimateSocket(this);
 
 		getApps();
+	}
+
+	/**
+	 * Call this when the connection is removed.
+	 */
+	void disconnect() {
+		MCLogger.log("Disposing of MCConnection " + this);
+		mcSocket.socket.disconnect();
+
+		for (MicroclimateApplication app : getLinkedApps()) {
+			app.setLinked(false);
+		}
 	}
 
 	private static String buildUrl(String host, int port) {

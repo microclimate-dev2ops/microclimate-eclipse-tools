@@ -277,7 +277,7 @@ public class MicroclimateApplication {
 	 */
 	public synchronized String getErrorMsg() {
 		if (isConnectionErrored()) {
-			return "Disconnected from Microclimate at " + mcConnection.baseUrl;
+			return "Connection to Microclimate at " + mcConnection.baseUrl + " lost";
 		}
 
 		return null;

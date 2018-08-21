@@ -53,7 +53,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void initialize(IProgressMonitor monitor) {
 		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
-		setServerState(IServer.STATE_UNKNOWN);
+		setServerState_(IServer.STATE_UNKNOWN);
 
 		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
 		if (projectID.isEmpty()) {
@@ -84,7 +84,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		// Ask the server for an initial state - the monitor thread will handle updates but doesn't know the state
 		// until it changes (causing the server to emit an update event)
 		monitorThread = new MicroclimateServerMonitorThread(this);
-		monitorThread.setInitialState(getInitialState());
+		int initialState = getInitialState();
+		setServerState_(initialState);
+		monitorThread.setInitialState(initialState);
 		monitorThread.start();
 
 		// Set up our server consoles
@@ -143,7 +145,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	@Override
 	public void stop(boolean force) {
-		setServerState(IServer.STATE_STOPPED);
+		setServerState_(IServer.STATE_STOPPED);
 		// TODO when FW supports this
 	}
 
@@ -494,6 +496,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			return IServer.STATE_STOPPED;
 		}
 		else {
+			MCLogger.logError("Unrecognized AppStatus " + appStatus);
 			return IServer.STATE_UNKNOWN;
 		}
 	}

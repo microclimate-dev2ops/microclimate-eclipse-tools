@@ -95,7 +95,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		IServer newServer = MicroclimateServerFactory.create(appToLink);
 
 		String successMsg = "Linked project %s with Microclimate application %s.\n"
-				+ "Server \"%s\" is now available in the Servers view.";
+				+ "Server \"%s\" is now available in the Servers view, and its logs in the Console view.";
 		successMsg = String.format(successMsg, selectedProject.getName(), appToLink.name, newServer.getName());
 
 		MessageDialog.openInformation(getShell(), "Linking Complete", successMsg);
