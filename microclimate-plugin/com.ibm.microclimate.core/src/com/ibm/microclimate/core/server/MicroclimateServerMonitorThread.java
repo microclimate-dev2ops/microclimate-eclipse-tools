@@ -1,10 +1,5 @@
 package com.ibm.microclimate.core.server;
 
-import org.eclipse.wst.server.core.IServer;
-
-import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.internal.MicroclimateApplication;
-
 /**
  * One of these threads exists for each MicroclimateServer. Each application's state is updated by
  * its MicroclimateSocket whenever a state change event is received. This thread periodically checks for such a
@@ -13,6 +8,7 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
  * @author timetchells@ibm.com
  *
  */
+/*
 public class MicroclimateServerMonitorThread extends Thread {
 
 	public static final int POLL_RATE_MS = 2500;
@@ -55,7 +51,7 @@ public class MicroclimateServerMonitorThread extends Thread {
 
 	/**
 	 * This should only be called once, just before this thread is started, in the Behaviour's initialize method.
-	 */
+	 *
 	void setInitialState(int state) {
 		lastKnownState = state;
 	}
@@ -81,7 +77,7 @@ public class MicroclimateServerMonitorThread extends Thread {
 	 * Get the status of the app with the given projectID
 	 * @param projectID
 	 * @return IServer.STATE constant corresponding to the current status
-	 */
+	 *
 	int getAppState() {
 		if (app.isConnectionErrored()) {
 			// MCLogger.log("MCMT detected app connection error");
@@ -97,3 +93,4 @@ public class MicroclimateServerMonitorThread extends Thread {
 		return MicroclimateServerBehaviour.appStatusToServerState(status);
 	}
 }
+*/

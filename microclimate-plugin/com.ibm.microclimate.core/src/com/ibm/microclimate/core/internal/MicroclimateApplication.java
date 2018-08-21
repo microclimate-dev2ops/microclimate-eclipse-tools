@@ -8,11 +8,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.wst.server.core.IServer;
+import org.eclipse.wst.server.core.ServerCore;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.server.MicroclimateServer;
+import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
 /**
  * Data type class to represent a Microclimate Application / Project
@@ -32,15 +36,10 @@ public class MicroclimateApplication {
 
 	private final Set<IPath> logPaths;
 
-	// The preference key that will be used to store whether this app is currently linked in the workspace
-	private final String isLinkedPrefsKey;
-	private boolean isLinked;
+	private MicroclimateServerBehaviour linkedServer;
 
-	// App Status fields - These are set by the MicroclimateSocket, and read by the MicroclimateServerMonitorThread
+	// These are set by the MicroclimateSocket, and read by the MicroclimateServerMonitorThread
 	// so we have to make sure the reads and writes are synchronized
-	private String appStatus;
-	private String buildStatus;
-	private String buildStatusDetail;
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
@@ -66,9 +65,12 @@ public class MicroclimateApplication {
 
 		this.rootUrl = rootUrl;
 
-		this.isLinkedPrefsKey = mcConnection.baseUrl + id;
-		this.isLinked = com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-				.getBoolean(isLinkedPrefsKey);
+		for (IServer server : ServerCore.getServers()) {
+			if (projectID.equals(server.getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""))) {
+				linkTo(server);
+				break;
+			}
+		}
 
 		//MCLogger.log("Created mcApp:");
 		//MCLogger.log(toString());
@@ -78,7 +80,8 @@ public class MicroclimateApplication {
 	 * Parse the given projectsJson from the Microclimate server to construct a list of applications on that server.
 	 */
 	public static List<MicroclimateApplication> getAppsFromProjectsJson(MicroclimateConnection mcConnection,
-			String projectsJson) throws JSONException, NumberFormatException, MalformedURLException {
+			String projectsJson, boolean showStartingDialog)
+					throws JSONException, NumberFormatException, MalformedURLException {
 
 		List<MicroclimateApplication> runningApps = new ArrayList<>();
 
@@ -138,7 +141,9 @@ public class MicroclimateApplication {
 			}
 		}
 
-		displayAppsStartingMsg(appsStillStarting);
+		if (showStartingDialog) {
+			displayAppsStartingMsg(appsStillStarting);
+		}
 
 		return runningApps;
 	}
@@ -181,29 +186,15 @@ public class MicroclimateApplication {
 				"\nPlease wait a few seconds and then refresh the projects list " +
 				"if you wish to link one of these applications.";
 
+		MCLogger.log("Apps still starting: " + startingAppsBuilder.toString());
+
 		MCUtil.openDialog(false, "Applications still starting", appsStartingMsg);
 	}
 
 	// Getters for our project state fields
 
-	public boolean isLinked() {
-		return isLinked;
-	}
-
 	public Set<IPath> getLogFilePaths() {
 		return logPaths;
-	}
-
-	public synchronized String getAppStatus() {
-		return appStatus;
-	}
-
-	public synchronized String getBuildStatus() {
-		return buildStatus;
-	}
-
-	public synchronized String getBuildStatusDetail() {
-		return buildStatusDetail;
 	}
 
 	public synchronized int getHttpPort() {
@@ -214,14 +205,32 @@ public class MicroclimateApplication {
 		return debugPort;
 	}
 
-	// Setters to be called by the MCSocket to update this project's state
+	public boolean isLinked() {
+		return linkedServer != null;
+	}
 
-	public void setLinked(boolean isLinked) {
-		MCLogger.log("App " + name + " is now linked? " + isLinked);
-		this.isLinked = isLinked;
+	public void linkTo(IServer server) {
+		MCLogger.log("App " + name + " is now linked to: " + server.getName());
 
-		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-			.setValue(isLinkedPrefsKey, isLinked);
+		MicroclimateServerBehaviour serverBehaviour = server.getAdapter(MicroclimateServerBehaviour.class);
+		if (serverBehaviour == null) {
+			// should never happen because we already verified this is a microclimate server
+			MCLogger.logError("Couldn't adapt to MicroclimateServerBehaviour for server " + server.getName());
+		}
+
+		linkedServer = serverBehaviour;
+	}
+
+	public void unlink() {
+		MCLogger.log("App " + name + " is now unlinked");
+		linkedServer = null;
+	}
+
+	public MicroclimateServerBehaviour getLinkedServer() {
+		if (linkedServer == null) {
+			MCLogger.logError("Linked server requested for unlinked project " + name);
+		}
+		return linkedServer;
 	}
 
 	/**
@@ -231,18 +240,6 @@ public class MicroclimateApplication {
 		IPath path = mcConnection.localWorkspacePath.append(pathStr);
 		// MCLogger.log("Add log path " + path);
 		logPaths.add(path);
-	}
-
-	public synchronized void setAppStatus(String appStatus) {
-		this.appStatus = appStatus;
-	}
-
-	public synchronized void setBuildStatusDetail(String buildStatusDetail) {
-		this.buildStatusDetail = buildStatusDetail;
-	}
-
-	public synchronized void setBuildStatus(String buildStatus) {
-		this.buildStatus = buildStatus;
 	}
 
 	public synchronized void setHttpPort(int httpPort) {
@@ -265,22 +262,6 @@ public class MicroclimateApplication {
 		MCLogger.log("Invalidate ports for " + rootUrl.toString());
 		httpPort = -1;
 		debugPort = -1;
-	}
-
-	public synchronized boolean isConnectionErrored() {
-		return mcConnection.getLastConnectionError() != -1;
-	}
-
-	/**
-	 *   If this application has an error to overlay onto the Servers view, it will be returned by this method.
-	 *   If there is no current error, returns null.
-	 */
-	public synchronized String getErrorMsg() {
-		if (isConnectionErrored()) {
-			return "Connection to Microclimate at " + mcConnection.baseUrl + " lost";
-		}
-
-		return null;
 	}
 
 	@Override

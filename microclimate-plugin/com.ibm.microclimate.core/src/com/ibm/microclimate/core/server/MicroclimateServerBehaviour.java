@@ -47,13 +47,15 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	// Only set these once, in initialize().
 	private MicroclimateApplication app;
-	private MicroclimateServerMonitorThread monitorThread;
+	// private MicroclimateServerMonitorThread monitorThread;
 	private Set<MicroclimateServerConsole> consoles;
+
+	private String error = null;
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
 		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
-		setServerState_(IServer.STATE_UNKNOWN);
+		setServerState(IServer.STATE_UNKNOWN);
 
 		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
 		if (projectID.isEmpty()) {
@@ -74,20 +76,23 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 		app = mcConnection.getAppByID(projectID);
 		if (app == null) {
-			onInitializeFailure("Couldn't find app with ID " + projectID + " on Microclimate at "
-					+ mcConnection.baseUrl);
+			onInitializeFailure("Couldn't find project with ID " + projectID + " on Microclimate at "
+					+ mcConnection.baseUrl + ". Make sure the project has not been deleted.");
 			return;
 		}
 		// Set unlinked in dispose()
-		app.setLinked(true);
+		app.linkTo(getServer());
 
-		// Ask the server for an initial state - the monitor thread will handle updates but doesn't know the state
-		// until it changes (causing the server to emit an update event)
-		monitorThread = new MicroclimateServerMonitorThread(this);
 		int initialState = getInitialState();
-		setServerState_(initialState);
+		setServerState(initialState);
+
+		/*
+		monitorThread = new MicroclimateServerMonitorThread(this);
+
 		monitorThread.setInitialState(initialState);
 		monitorThread.start();
+		*/
+
 
 		// Set up our server consoles
 		consoles = MicroclimateServerConsole.createApplicationConsoles(app);
@@ -145,7 +150,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	@Override
 	public void stop(boolean force) {
-		setServerState_(IServer.STATE_STOPPED);
+		setServerState(IServer.STATE_STOPPED);
 		// TODO when FW supports this
 	}
 
@@ -157,27 +162,21 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void dispose() {
 		MCLogger.log("Dispose " + getServer().getName());
-		app.setLinked(false);
+		if (app != null) {
+			app.unlink();
+		}
 
+		/*
 		if (monitorThread != null) {
 			monitorThread.disable();
 			monitorThread.interrupt();
 		}
+		*/
 		// required to stop the auto publish thread
-		setServerState_(IServer.STATE_STOPPED);
+		setServerState(IServer.STATE_STOPPED);
 
 		for (MicroclimateServerConsole console : consoles) {
 			console.destroy();
-		}
-	}
-
-	/**
-	 * Wrapper for protected setServerState, to be called by the monitor thread
-	 */
-	void setServerState_(int serverState) {
-		if (getServer().getServerState() != serverState) {
-			MCLogger.log("Updating state of " + getServer().getName() + " to " + serverStateToAppStatus(serverState));
-			setServerState(serverState);
 		}
 	}
 
@@ -185,11 +184,37 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		return app;
 	}
 
+	public void onAppStateUpdate(String appStatus) {
+		int state = appStatusToServerState(appStatus);
+		if (state != getServer().getServerState()) {
+			MCLogger.log("Update state of " + getServer().getName() + " to " + appStatus);
+			setServerState(state);
+		}
+	}
+
+	public void onBuildStateUpdate(String buildStatus, String buildStatusDetail) {
+		// TODO
+		MCLogger.log(getServer().getName() + " has build status " + buildStatus + ", detail " + buildStatusDetail);
+	}
+
+	public void setError(String errMsg) {
+		error = errMsg;
+		setServerState(IServer.STATE_UNKNOWN);
+	}
+
+	public void clearError() {
+		error = null;
+	}
+
+	public String getError() {
+		return error;
+	}
+
 	@Override
 	public void restart(String launchMode) throws CoreException {
 		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode");
 
-		int currentState = monitorThread.getLastKnownState();
+		int currentState = getServer().getServerState();
 		MCLogger.log("Current status = " + serverStateToAppStatus(currentState));
 
 		if (IServer.STATE_STARTING == currentState) {
@@ -496,7 +521,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			return IServer.STATE_STOPPED;
 		}
 		else {
-			MCLogger.logError("Unrecognized AppStatus " + appStatus);
+			if (!"unknown".equals(appStatus)) {
+				MCLogger.logError("Unrecognized AppStatus " + appStatus);
+			}
 			return IServer.STATE_UNKNOWN;
 		}
 	}

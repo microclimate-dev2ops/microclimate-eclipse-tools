@@ -39,7 +39,6 @@ public class MicroclimateServerFactory {
 
 		IServerWorkingCopy newServerWc = mcServerType.createServer(null, null, null, null);		// TODO progress mon?
 		newServerWc.setHost(app.host);
-
 		newServerWc.setName(serverName);
 
 		// We can't pass Objects to the server attribute framework - only primitives

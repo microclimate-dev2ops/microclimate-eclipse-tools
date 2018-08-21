@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
 /**
  *
@@ -49,7 +50,7 @@ public class MicroclimateConnection {
 
 		mcSocket = new MicroclimateSocket(this);
 
-		getApps();
+		getApps(false);
 	}
 
 	/**
@@ -58,10 +59,6 @@ public class MicroclimateConnection {
 	void disconnect() {
 		MCLogger.log("Disposing of MCConnection " + this);
 		mcSocket.socket.disconnect();
-
-		for (MicroclimateApplication app : getLinkedApps()) {
-			app.setLinked(false);
-		}
 	}
 
 	private static String buildUrl(String host, int port) {
@@ -83,9 +80,14 @@ public class MicroclimateConnection {
 
 	/**
 	 * Refresh this connection's list of apps from the Microclimate project list endpoint.
+	 *
+	 * @param isInLinkWizard
+	 * 		- If this is being invoked by the Link Project Wizard -
+	 * 		in this case we might have to display an 'apps still starting' dialog
+	 *
 	 * @return The new list of apps, which matches that in the 'apps' private field.
 	 */
-	public List<MicroclimateApplication> getApps() {
+	public List<MicroclimateApplication> getApps(boolean isInLinkWizard) {
 
 		final String projectsUrl = baseUrl + PROJECTS_LIST_PATH;
 
@@ -103,7 +105,7 @@ public class MicroclimateConnection {
 		}
 
 		try {
-			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse);
+			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse, isInLinkWizard);
 			return apps;
 		}
 		catch(Exception e) {
@@ -139,7 +141,7 @@ public class MicroclimateConnection {
 
 		if (retry) {
 			// Refresh the project list and retry one time in case the project is new.
-			getApps();
+			getApps(false);
 			return getAppByID(projectID, false);
 		}
 		MCLogger.logError("No project found with ID " + projectID);
@@ -150,7 +152,16 @@ public class MicroclimateConnection {
 	/**
 	 * Called by the MicroclimateSocket when the socket.io connection goes down.
 	 */
-	public synchronized void notifyConnectionError() {
+	public synchronized void onConnectionError() {
+
+		for (MicroclimateApplication app : getLinkedApps()) {
+			MicroclimateServerBehaviour server = app.getLinkedServer();
+			if (server != null) {
+				// All linked apps should have getLinkedServer return non-null.
+				server.setError("Connection to Microclimate at " + baseUrl + " lost");
+			}
+		}
+
 		if (connectionFailedTimestamp == -1) {
 			connectionFailedTimestamp = System.currentTimeMillis();
 		}
@@ -161,10 +172,6 @@ public class MicroclimateConnection {
 	 */
 	public synchronized void clearConnectionError() {
 		connectionFailedTimestamp = -1;
-	}
-
-	public synchronized long getLastConnectionError() {
-		return connectionFailedTimestamp;
 	}
 
 	@Override

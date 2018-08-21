@@ -28,7 +28,7 @@ public class MicroclimateServerDecorator extends LabelProvider implements ILight
             		server.loadAdapter(MicroclimateServerBehaviour.class, null);
 
             if (mcServer != null && mcServer.getApp() != null) {
-            	String err = mcServer.getApp().getErrorMsg();
+            	String err = mcServer.getError();
             	if (err != null) {
             		ImageDescriptor img = Activator.getIcon(Activator.ERROR_ICON_PATH);
             		decoration.addOverlay(img);
