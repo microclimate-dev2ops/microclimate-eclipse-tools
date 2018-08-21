@@ -4,7 +4,6 @@ import java.net.URL;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -15,9 +14,14 @@ public class Activator extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.ibm.microclimate.ui"; //$NON-NLS-1$
 
+	public static final String
+			ICON_BASE_PATH = "icons/",
+			DEFAULT_ICON_PATH = "microclimate.ico",
+			ERROR_ICON_PATH = "error.gif";
+
 	// The shared instance
 	private static Activator plugin;
-	
+
 	/**
 	 * The constructor
 	 */
@@ -50,11 +54,14 @@ public class Activator extends AbstractUIPlugin {
 	public static Activator getDefault() {
 		return plugin;
 	}
-	
-	public static ImageDescriptor getDefaultIcon() {
-		final Bundle bundle = Activator.getDefault().getBundle();
-		final URL url = bundle.getEntry("icons/microclimate.ico"); 	//$NON-NLS-1$
+
+	public static ImageDescriptor getIcon(String path) {
+		final URL url = Activator.getDefault().getBundle().getEntry(ICON_BASE_PATH + path);
 		return ImageDescriptor.createFromURL(url);
+	}
+
+	public static ImageDescriptor getDefaultIcon() {
+		return getIcon(DEFAULT_ICON_PATH);
 	}
 
 }

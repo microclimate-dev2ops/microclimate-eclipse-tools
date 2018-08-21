@@ -267,6 +267,22 @@ public class MicroclimateApplication {
 		debugPort = -1;
 	}
 
+	public synchronized boolean isConnectionErrored() {
+		return mcConnection.getLastConnectionError() != -1;
+	}
+
+	/**
+	 *   If this application has an error to overlay onto the Servers view, it will be returned by this method.
+	 *   If there is no current error, returns null.
+	 */
+	public synchronized String getErrorMsg() {
+		if (isConnectionErrored()) {
+			return "Disconnected from Microclimate at " + mcConnection.baseUrl;
+		}
+
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("%s@%s id=%s name=%s type=%s loc=%s",

@@ -53,6 +53,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void initialize(IProgressMonitor monitor) {
 		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
+		setServerState(IServer.STATE_UNKNOWN);
 
 		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
 		if (projectID.isEmpty()) {
@@ -67,14 +68,14 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getConnection(mcConnectionBaseUrl);
 		if (mcConnection == null) {
-			onInitializeFailure("Couldn't get MCConnection with baseUrl " + mcConnectionBaseUrl);
+			onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl);
 			return;
 		}
 
 		app = mcConnection.getAppByID(projectID);
 		if (app == null) {
-			onInitializeFailure("Couldn't find app with ID " + projectID + " on MCConnection "
-					+ mcConnection.toString());
+			onInitializeFailure("Couldn't find app with ID " + projectID + " on Microclimate at "
+					+ mcConnection.baseUrl);
 			return;
 		}
 		// Set unlinked in dispose()
@@ -246,6 +247,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 		boolean starting = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING);
 		if (!starting) {
+			// TODO I haven't seen this happen, but we should probably display something to the user in this case.
+			// What could cause this to happen?
 			MCLogger.logError("Server did not enter Starting state");
 			return;
 		}

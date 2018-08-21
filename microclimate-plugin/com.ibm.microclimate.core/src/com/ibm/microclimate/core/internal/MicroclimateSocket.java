@@ -42,13 +42,13 @@ public class MicroclimateSocket {
 			@Override
 			public void call(Object... arg0) {
 				MCLogger.log("SocketIO connect success @ " + url);
+
+				mcConnection.clearConnectionError();
 			}
 		})
 		.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.logError("SocketIO Connect Failure @ " + url);
-
 				// TODO In this case we should probably put all applications associated with this socket's MCConnection
 				// into Unknown state, and notify the user that this MC instance could not be contacted.
 				// It should only happen if Microclimate is not running, or if something is
@@ -56,19 +56,17 @@ public class MicroclimateSocket {
 
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];
-					MCLogger.logError("SocketIO Connect Error", e);
+					MCLogger.logError("SocketIO Connect Error @ " + url, e);
 				}
+				mcConnection.notifyConnectionError();
 			}
 		})
 		.on(Socket.EVENT_ERROR, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.logError("SocketIO @ " + url);
-
-				// TODO show somewhere that the connection is down (icon on the server?)
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];
-					MCLogger.logError("SocketIO Error", e);
+					MCLogger.logError("SocketIO Error @ " + url, e);
 				}
 			}
 		})
@@ -76,7 +74,7 @@ public class MicroclimateSocket {
 			@Override
 			public void call(Object... arg0) {
 				// Don't think this is ever used
-				MCLogger.log("SocketIO message " + arg0[0].toString());
+				MCLogger.log("SocketIO EVENT_MESSAGE " + arg0[0].toString());
 			}
 		})
 		// Below are Filewatcher-specific events

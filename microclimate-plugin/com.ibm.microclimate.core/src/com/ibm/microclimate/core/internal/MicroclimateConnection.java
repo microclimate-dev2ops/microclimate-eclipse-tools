@@ -24,9 +24,9 @@ public class MicroclimateConnection {
 	public final String baseUrl;
 	public final IPath localWorkspacePath;
 
-	public final MicroclimateSocket socket;
-
 	private List<MicroclimateApplication> apps;
+
+	private long connectionFailedTimestamp = -1;
 
 	private static final String PROJECTS_LIST_PATH = "api/v1/projects";
 
@@ -44,7 +44,9 @@ public class MicroclimateConnection {
 		this.baseUrl = baseUrl_;
 		// TODO - Requires Portal API for getting user's workspace on their machine.
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
-		this.socket = new MicroclimateSocket(this);
+
+		// MicroclimateSocket socket =
+		new MicroclimateSocket(this);
 
 		getApps();
 	}
@@ -130,6 +132,26 @@ public class MicroclimateConnection {
 		MCLogger.logError("No project found with ID " + projectID);
 
 		return null;
+	}
+
+	/**
+	 * Called by the MicroclimateSocket when the socket.io connection goes down.
+	 */
+	public synchronized void notifyConnectionError() {
+		if (connectionFailedTimestamp == -1) {
+			connectionFailedTimestamp = System.currentTimeMillis();
+		}
+	}
+
+	/**
+	 * Called by the MicroclimateSocket when the socket.io connection is working.
+	 */
+	public synchronized void clearConnectionError() {
+		connectionFailedTimestamp = -1;
+	}
+
+	public synchronized long getLastConnectionError() {
+		return connectionFailedTimestamp;
 	}
 
 	@Override

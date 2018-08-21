@@ -1,5 +1,7 @@
 package com.ibm.microclimate.core.server;
 
+import org.eclipse.wst.server.core.IServer;
+
 import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
@@ -81,6 +83,10 @@ public class MicroclimateServerMonitorThread extends Thread {
 	 * @return IServer.STATE constant corresponding to the current status
 	 */
 	int getAppState() {
+		if (app.isConnectionErrored()) {
+			return IServer.STATE_UNKNOWN;
+		}
+
 		// TODO display build status somewhere if it's building.
 		String status = app.getAppStatus();
 		// MCLogger.log("App status is " + status);

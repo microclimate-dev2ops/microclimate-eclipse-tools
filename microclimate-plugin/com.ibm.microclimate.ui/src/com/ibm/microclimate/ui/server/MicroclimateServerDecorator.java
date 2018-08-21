@@ -1,15 +1,16 @@
 package com.ibm.microclimate.ui.server;
 
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.server.MicroclimateServer;
+import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.ui.Activator;
 
 /**
- * TODO doesn't actually do anything yet.
  * From com.ibm.ws.st.ui.internal.ServerDecorator
  */
 public class MicroclimateServerDecorator extends LabelProvider implements ILightweightLabelDecorator {
@@ -23,15 +24,16 @@ public class MicroclimateServerDecorator extends LabelProvider implements ILight
                 return;
             }
 
-            MicroclimateServer mcServer = (MicroclimateServer) server.loadAdapter(MicroclimateServer.class, new NullProgressMonitor());
+            MicroclimateServerBehaviour mcServer = (MicroclimateServerBehaviour)
+            		server.loadAdapter(MicroclimateServerBehaviour.class, null);
 
-            if (mcServer != null) {
-            	// TODO display build status here?
-            	/*
-                String name = mcServer.getServerDisplayName();
-                if (name != null && !name.isEmpty()) {
-					decoration.addSuffix(" [" + name + "]");
-				}*/
+            if (mcServer != null && mcServer.getApp() != null) {
+            	String err = mcServer.getApp().getErrorMsg();
+            	if (err != null) {
+            		ImageDescriptor img = Activator.getIcon(Activator.ERROR_ICON_PATH);
+            		decoration.addOverlay(img);
+            		decoration.addSuffix(" [" + err + "] ");
+            	}
             }
         }
         /*
