@@ -8,7 +8,7 @@
 			objectClass="org.eclipse.core.resources.IProject"
 			id="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectWizard.id">
 			<menu
-				label="Microclimate"
+				label="%CONTEXT_MENU_CATEGORY_NAME"
 				path="additions"
 				id="com.ibm.microclimate.ui.menu.category">
 				<separator
@@ -16,7 +16,7 @@
 				</separator>
 			</menu>
 			<action
-				label="Link to Microclimate Project"
+				label="%ACTION_LINK_TO_MICROCLIMATE"
 				class="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectDelegate"
 				menubarPath="com.ibm.microclimate.ui.menu.category/popupActions"
 				icon="icons/microclimate.ico"
@@ -29,12 +29,12 @@
          point="org.eclipse.ui.preferencePages">
          
          <page id="MicroclimateParentPage"
-         	name="Microclimate"
+         	name="%PREFS_PARENT_PAGE_NAME"
          	class="com.ibm.microclimate.ui.prefs.MicroclimatePrefsParentPage">
          </page>
          
          <page id="MicroclimateConnectionsPage"
-         	name="Connections"
+         	name="%PREFS_CONNECTION_PAGE_NAME"
          	category="MicroclimateParentPage"
          	class="com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage">
          </page>    
@@ -68,7 +68,7 @@
 			id="com.ibm.microclimate.ui.popupMenu"
 			objectClass="org.eclipse.wst.server.core.IServer">
 		<visibility>
-			<objectState name="serverType" value="microclimate.server"/>
+			<objectState name="serverType" value="%MICROCLIMATE_SERVER_ID"/>
 		</visibility>
 		<action
 			id="com.ibm.microclimate.ui.popupMenu.openApp"
@@ -82,7 +82,7 @@
 	<extension point="org.eclipse.ui.decorators">
 	    <decorator
 	       id="com.ibm.microclimate.ui.ServerDecorator"
-	       label="Microclimate Server"
+	       label="%SERVER_DECORATOR_LABEL"
 	       icon="icons/microclimate.ico"
 	       lightweight="true"
 	       location="BOTTOM_RIGHT"
@@ -114,7 +114,7 @@
 				<test
 				forcePluginActivation="true"
 				property="org.eclipse.wst.server.ui.serverType"
-				value="microclimate.server"/>
+				value="%MICROCLIMATE_SERVER_ID"/>
 			</enablement>
 			
 			<!--enablement>

@@ -1,7 +1,7 @@
 <plugin>
 <extension point="org.eclipse.wst.server.core.serverTypes">
 	<serverType
-		id="microclimate.server"
+		id="%MICROCLIMATE_SERVER_ID"
 		name="%serverName"
 		description="%serverDescription"
 		supportsManualCreation="false"
@@ -22,7 +22,7 @@
 <extension point="org.eclipse.debug.core.launchConfigurationTypes">
     <launchConfigurationType
       id="com.ibm.microclimate.core.launchConfigurationType"
-      name="%launchConfigurationType"
+      name="%LAUNCH_CONFIG_NAME"
       delegate="com.ibm.microclimate.core.server.debug.MicroclimateServerLaunchConfigDelegate"
       modes="run, debug"
       sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
