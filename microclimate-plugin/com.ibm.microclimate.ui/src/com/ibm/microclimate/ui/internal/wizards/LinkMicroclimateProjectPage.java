@@ -201,8 +201,28 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		// Cache the mcApps here so that we can be sure the contents of mcApps match the contents of the table
 		mcApps = mcConnection.getApps();
+		// Sort the apps so that unlinkable apps show up at the bottom of the table.
+		mcApps.sort((app1, app2) -> {
+			if (app1.isLinkable()) {
+				if (app2.isLinkable()) {
+					// both are linkable
+					return 0;
+				}
+				else {
+					// app1 should be sorted first
+					return -1;
+				}
+			}
+			else if(app2.isLinkable()) {
+				// app2 should be sorted first
+				return 1;
+			}
+			else {
+				// neither are linkable
+				return 0;
+			}
+		});
 
-		// TODO sort invalid applications to the bottom of the table
 		for(MicroclimateApplication app : mcApps) {
 			TableItem ti = new TableItem(projectsTable, SWT.NONE);
 
@@ -221,14 +241,10 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			ti.setText(new String[] { app.name, type, baseUrlStr });
 
 			// Gray out invalid projects
-			if (!isAppLinkable(app)) {
+			if (!app.isLinkable()) {
 				ti.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY));
 			}
 		}
-	}
-
-	private static boolean isAppLinkable(MicroclimateApplication app) {
-		return app != null && app.isRunning() && app.isLibertyProject();
 	}
 
 	private void showNoConnectionsMsg() {
@@ -250,7 +266,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		// Can finish if any valid project is selected
 		MicroclimateApplication selectedApp = getSelectedApp();
 		if (selectedApp != null) {
-			if (isAppLinkable(selectedApp)) {
+			if (selectedApp.isLinkable()) {
 				setErrorMessage(null);
 				return true;
 			}
