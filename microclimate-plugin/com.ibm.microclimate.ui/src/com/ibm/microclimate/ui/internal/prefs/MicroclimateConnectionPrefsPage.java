@@ -128,8 +128,8 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 						MicroclimateConnectionManager.remove(connection);
 					}
 					else {
-						String[] buttons = new String[] { "Delete Servers", "Cancel" };
-						final int deleteBtnIndex = 0;
+						String[] buttons = new String[] { "Cancel", "Delete Servers"  };
+						final int deleteBtnIndex = 1;
 
 						String message =
 								"The following Microclimate applications have linked servers in the workspace: " +
@@ -141,7 +141,11 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 						MessageDialog dialog = new MessageDialog(
 								getShell(), "Connection has active servers",
 								Display.getDefault().getSystemImage(SWT.ICON_WARNING),
-								message, MessageDialog.WARNING, buttons, 1);	// Select "Cancel" by default
+								message, MessageDialog.WARNING, buttons,
+								// Below is the index of the initially selected button - This unfortunately is always
+								// the rightmost button in the dialog. So it's not possible to have the normal order
+								// (ie Cancel to the left of OK) but also have Cancel selected initially.
+								deleteBtnIndex);
 
 						boolean delete = dialog.open() == deleteBtnIndex;
 
