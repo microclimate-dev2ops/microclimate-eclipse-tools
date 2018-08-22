@@ -111,12 +111,6 @@ public class MicroclimateConnectionManager {
 	 * 	false if not - either because the connection is still in use and wasn't removed, or because it didnt' exist.
 	 */
 	public static boolean remove(MicroclimateConnection connection) {
-		if (connection.hasLinkedApp()) {
-			// should we still remove the connection?
-			MCLogger.logError("Can't remove a connection that still has a linked app");
-			return false;
-		}
-
 		connection.disconnect();
 		boolean removeResult = instance().connections.remove(connection);
 		if (!removeResult) {
