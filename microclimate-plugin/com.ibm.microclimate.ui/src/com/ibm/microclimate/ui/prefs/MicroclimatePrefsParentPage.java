@@ -14,8 +14,8 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 
 	@Override
 	public void init(IWorkbench arg0) {
-		// TODO what to put here?!
-		setDescription("Microclimate is really great and good");
+		setDescription("Expand this preferences category to set specific Microclimate preferences.");
+		noDefaultAndApplyButton();
 	}
 
 	@Override

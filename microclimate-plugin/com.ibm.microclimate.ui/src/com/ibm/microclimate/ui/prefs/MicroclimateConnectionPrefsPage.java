@@ -53,6 +53,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 	public MicroclimateConnectionPrefsPage() {
 		super("Microclimate Connections", Activator.getDefaultIcon());
+		setMessage("Manage Microclimate Connections");
 	}
 
 	@Override
@@ -60,7 +61,6 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		// Note that ConfigurationScope is used. This means that our list of MCConnections is shared
 		// between different workspaces.
 		setPreferenceStore(new ScopedPreferenceStore(ConfigurationScope.INSTANCE, MC_CONNECTIONS_PREFSKEY));
-		setDescription("Microclimate connection preferences description");
 	}
 
 	@Override
@@ -68,12 +68,38 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 		parent.setLayout(new GridLayout(1, true));
 
-		Composite top = new Composite(parent, SWT.LEFT);
-		top.setLayout(new GridLayout(3, false));
+		Composite composite = new Composite(parent, SWT.CENTER);
+		composite.setLayout(new GridLayout(2, false));
+		composite.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, true));
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		composite.setLayoutData(data);
 
-		Button addNewBtn = new Button(top, SWT.BORDER);
-		addNewBtn.setText("Add New Connection");
-		addNewBtn.addSelectionListener(new SelectionAdapter() {
+		Label existingConnections = new Label(composite, SWT.NONE);
+		existingConnections.setText("Create or remove connections:");
+		GridData gridData = new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1);
+		existingConnections.setLayoutData(gridData);
+
+		connectionsTable = new Table(composite, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
+		connectionsTable.setLinesVisible(true);
+		connectionsTable.setHeaderVisible(true);
+		gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2);
+		gridData.widthHint = 450;
+		gridData.heightHint = 300;
+		connectionsTable.setLayoutData(gridData);
+
+		TableColumn addresses = new TableColumn(connectionsTable, SWT.BORDER);
+		addresses.setText("URL");
+		addresses.setWidth(gridData.widthHint / 2);
+
+		TableColumn enabled = new TableColumn(connectionsTable, SWT.BORDER);
+		enabled.setText("Linked Projects");
+		enabled.setWidth(gridData.widthHint - addresses.getWidth());
+		
+		Button addButton = new Button(composite, SWT.PUSH);
+		addButton.setText("Add...");
+		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
+		addButton.setLayoutData(gridData);
+		addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 				Wizard wizard = new NewMicroclimateConnectionWizard(false);
@@ -81,19 +107,11 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			}
 		});
 
-		/*
-		Button disableSelectedBtn = new Button(top, SWT.BORDER);
-		disableSelectedBtn.setText("Disable Selected");
-		*/
-
-		Label spacer = new Label(top, SWT.NONE);
-		GridData spacerData = new GridData();
-		spacerData.widthHint = 160;
-		spacer.setLayoutData(spacerData);
-
-		Button removeSelectedBtn = new Button(top, SWT.BORDER);
-		removeSelectedBtn.setText("Remove Selected");
-		removeSelectedBtn.addSelectionListener(new SelectionAdapter() {
+		Button removeButton = new Button(composite, SWT.PUSH);
+		removeButton.setText("Remove");
+		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
+		removeButton.setLayoutData(gridData);
+		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 
@@ -125,47 +143,33 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				refreshConnectionsList();
 			}
 		});
-
-		Composite bottom = new Composite(parent, SWT.CENTER);
-		bottom.setLayout(new GridLayout(1, false));
-		bottom.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, true));
-
-		Label existingConnections = new Label(bottom, SWT.NONE);
-		existingConnections.setText("Connections:");
-
-		connectionsTable = new Table(bottom, SWT.BORDER | SWT.MULTI);
-		GridData tableGridData = new GridData(GridData.FILL_BOTH, GridData.FILL_BOTH);
-		tableGridData.widthHint = 450;
-		tableGridData.heightHint = 300;
-		connectionsTable.setLayoutData(tableGridData);
-		connectionsTable.setHeaderVisible(true);
-
-		TableColumn addresses = new TableColumn(connectionsTable, SWT.BORDER);
-		addresses.setText("URL");
-		addresses.setWidth(tableGridData.widthHint / 2);
-
-		/*
-		TableColumn lastUsed = new TableColumn(connectionsTable, SWT.BORDER);
-		lastUsed.setText("Last Used");
-		lastUsed.setWidth(tableGridData.widthHint / 3);
-		*/
-
-		TableColumn enabled = new TableColumn(connectionsTable, SWT.BORDER);
-		enabled.setText("Linked Projects");
-		enabled.setWidth(tableGridData.widthHint - addresses.getWidth());
+		
+		connectionsTable.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				int count = connectionsTable.getSelectionCount();
+				if (count > 0) {
+					removeButton.setEnabled(true);
+				} else {
+					removeButton.setEnabled(false);
+				}
+			}
+		});
 
 		refreshConnectionsList();
+		addButton.setEnabled(true);
+		removeButton.setEnabled(false);
 
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
 			.addPropertyChangeListener(new IPropertyChangeListener() {
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
-				    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-				    	MCLogger.log("Reloading preferences in MCCPP");
-				    	// calling refreshConnectionsList here results in WidgetDisposed exception if
-				    	// the window is not in focus
-				        refreshConnectionsList();
-				    }
+					if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
+						MCLogger.log("Reloading preferences in MCCPP");
+						// calling refreshConnectionsList here results in WidgetDisposed exception if
+						// the window is not in focus
+						refreshConnectionsList();
+					}
 				}
 			});
 
@@ -208,6 +212,6 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			linkedAppsBuilder.setLength(linkedAppsBuilder.length() - separator.length());
 		}
 
-		return linkedAppsBuilder.length() > 0 ? linkedAppsBuilder.toString() : "None";
+		return linkedAppsBuilder.length() > 0 ? linkedAppsBuilder.toString() : "none";
 	}
 }
