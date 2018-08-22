@@ -3,6 +3,7 @@ package com.ibm.microclimate.core.internal;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,15 +28,11 @@ public class MicroclimateConnection {
 
 	private List<MicroclimateApplication> apps;
 
-	private long connectionFailedTimestamp = -1;
-
-	private static final String PROJECTS_LIST_PATH = "api/v1/projects";
-
 	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException {
 		String baseUrl_ = buildUrl(host, port);
 
 		if(!test(baseUrl_)) {
-			// TODO this message is displayed directly to the user, so we have to localize it.
+			// Note this message is displayed directly to the user, so we have to localize it.
 			throw new ConnectException(
 					String.format("Connecting to Microclimate instance at \"%s\" failed", baseUrl_));
 		}
@@ -46,7 +43,13 @@ public class MicroclimateConnection {
 		// TODO - Requires Portal API for getting user's workspace on their machine.
 		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
 
+		// Must set host field before doing this
 		mcSocket = new MicroclimateSocket(this);
+		if(!mcSocket.blockUntilFirstConnection()) {
+			// Note this message is displayed directly to the user, so we have to localize it.
+			throw new ConnectException(
+					String.format("Connecting to Microclimate Socket at \"%s\" failed", mcSocket.socketUri.toString()));
+		}
 
 		refreshApps();
 	}
@@ -72,7 +75,6 @@ public class MicroclimateConnection {
 			return false;
 		}
 
-		// TODO improve this!
 		return getResult != null && getResult.contains("Microclimate");
 	}
 
@@ -81,7 +83,7 @@ public class MicroclimateConnection {
 	 */
 	public void refreshApps() {
 
-		final String projectsUrl = baseUrl + PROJECTS_LIST_PATH;
+		final String projectsUrl = baseUrl + MCConstants.PROJECTS_LIST_PATH;
 
 		String projectsResponse = null;
 		try {
@@ -111,12 +113,20 @@ public class MicroclimateConnection {
 	}
 
 	public List<MicroclimateApplication> getLinkedApps() {
+		if (apps == null) {
+			return Collections.emptyList();
+		}
+
 		return apps.stream()
 				.filter(app -> app.isLinked())
 				.collect(Collectors.toList());
 	}
 
 	public boolean hasLinkedApp() {
+		if (apps == null) {
+			return false;
+		}
+
 		return apps.stream()
 				.anyMatch(app -> app.isLinked());
 	}
@@ -125,10 +135,6 @@ public class MicroclimateConnection {
 	 * @return The app with the given ID, if it exists in this Microclimate instance, else null.
 	 */
 	public MicroclimateApplication getAppByID(String projectID) {
-		return getAppByID(projectID, true);
-	}
-
-	private MicroclimateApplication getAppByID(String projectID, boolean retry) {
 		refreshApps();
 		for (MicroclimateApplication app : apps) {
 			if (app.projectID.equals(projectID)) {
@@ -136,14 +142,7 @@ public class MicroclimateConnection {
 			}
 		}
 
-		/*
-		if (retry) {
-			// Refresh the project list and retry one time in case the project is new.
-			getApps(false);
-			return getAppByID(projectID, false);
-		}*/
 		MCLogger.logError("No project found with ID " + projectID);
-
 		return null;
 	}
 
@@ -151,6 +150,7 @@ public class MicroclimateConnection {
 	 * Called by the MicroclimateSocket when the socket.io connection goes down.
 	 */
 	public synchronized void onConnectionError() {
+		MCLogger.log("MCConnection to " + baseUrl + " lost");
 
 		for (MicroclimateApplication app : getLinkedApps()) {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
@@ -159,16 +159,14 @@ public class MicroclimateConnection {
 				server.onMicroclimateDisconnect(baseUrl);
 			}
 		}
-
-		if (connectionFailedTimestamp == -1) {
-			connectionFailedTimestamp = System.currentTimeMillis();
-		}
 	}
 
 	/**
 	 * Called by the MicroclimateSocket when the socket.io connection is working.
 	 */
 	public synchronized void clearConnectionError() {
+		MCLogger.log("MCConnection to " + baseUrl + " restored");
+
 		for (MicroclimateApplication app : getLinkedApps()) {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
 			if (server != null) {
@@ -176,8 +174,6 @@ public class MicroclimateConnection {
 				server.onMicroclimateReconnect();
 			}
 		}
-
-		connectionFailedTimestamp = -1;
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package com.ibm.microclimate.core.internal;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.eclipse.wst.server.core.IServer;
@@ -25,6 +26,12 @@ public class MicroclimateSocket {
 
 	public final Socket socket;
 
+	public final URI socketUri;
+
+	private boolean hasLostConnection = false;
+
+	private volatile boolean hasConnected = false;
+
 	// Track the previous Exception so we don't spam the logs with the same connection failure message
 	private Exception previousException;
 
@@ -35,17 +42,25 @@ public class MicroclimateSocket {
 			EVENT_PROJECT_DELETION = "projectDeletion";
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
+
+		socketUri = new URI("http", null, mcConnection.host, 9091, null, null, null);
+
 		// TODO hardcoded filewatcher port
-		final String url = "http://" + mcConnection.host + ':' + "9091";
-		socket = IO.socket(url);
+		// socketUri = "http://" + mcConnection.host + ':' + "9091";
+		socket = IO.socket(socketUri);
 
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log("SocketIO connect success @ " + url);
+				MCLogger.log("SocketIO connect success @ " + socketUri);
 
-				mcConnection.clearConnectionError();
-				previousException = null;
+				if (!hasConnected) {
+					hasConnected = true;
+				}
+				if (hasLostConnection) {
+					mcConnection.clearConnectionError();
+					previousException = null;
+				}
 			}
 		})
 		.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {
@@ -55,10 +70,11 @@ public class MicroclimateSocket {
 					Exception e = (Exception) arg0[0];
 					if (previousException == null || !e.getMessage().equals(previousException.getMessage())) {
 						previousException = e;
-						MCLogger.logError("SocketIO Connect Error @ " + url, e);
+						MCLogger.logError("SocketIO Connect Error @ " + socketUri, e);
 					}
 				}
 				mcConnection.onConnectionError();
+				hasLostConnection = true;
 			}
 		})
 		.on(Socket.EVENT_ERROR, new Emitter.Listener() {
@@ -66,7 +82,7 @@ public class MicroclimateSocket {
 			public void call(Object... arg0) {
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];
-					MCLogger.logError("SocketIO Error @ " + url, e);
+					MCLogger.logError("SocketIO Error @ " + socketUri, e);
 				}
 			}
 		})
@@ -120,7 +136,7 @@ public class MicroclimateSocket {
 
 		socket.connect();
 
-		MCLogger.log("Created MicroclimateSocket connected to " + url);
+		MCLogger.log("Created MicroclimateSocket connected to " + socketUri);
 	}
 
 	private void onProjectStatusChanged(JSONObject event) throws JSONException {
@@ -199,5 +215,23 @@ public class MicroclimateSocket {
 			MCLogger.logError(String.format("Couldn't parse port from \"%s\"", portStr), e);
 			return -1;
 		}
+	}
+
+	boolean blockUntilFirstConnection() {
+		final int delay = 100;
+		final int timeout = 2500;
+		int waited = 0;
+		while(!hasConnected && waited < timeout) {
+			try {
+				Thread.sleep(delay);
+				MCLogger.log("Waiting for MicroclimateSocket initial connection");
+				waited += delay;
+			}
+			catch(InterruptedException e) {
+				MCLogger.logError(e);
+			}
+		}
+		MCLogger.log("MicroclimateSocket initialized in time ? " + hasConnected);
+		return hasConnected;
 	}
 }

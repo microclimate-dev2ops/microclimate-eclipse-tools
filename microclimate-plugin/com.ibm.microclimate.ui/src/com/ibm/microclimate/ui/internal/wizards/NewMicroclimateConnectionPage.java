@@ -48,6 +48,8 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 	}
 
+	// TODO in the Local case, the user can only create one connection,
+	// so we should just tell them that if they have one already.
 	private void createHostnameAndPortFields(Composite shell) {
 		Composite hostPortGroup = new Composite(shell, SWT.BORDER);
 		//gridData.verticalSpan = 2;
@@ -60,6 +62,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		hostnameLabel.setText("Hostname:");
 		hostnameLabel.setLayoutData(hostnamePortLabelData);
 
+		// TODO grey this out (for now) because it's only ever localhost anyway
 		hostnameText = new Text(hostPortGroup, SWT.BORDER);
 		GridData hostnamePortTextData = new GridData(GridData.FILL, GridData.BEGINNING, true, false, 2, 1);
 		hostnameText.setLayoutData(hostnamePortTextData);
@@ -117,7 +120,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 			if(mcConnection != null) {
 				setErrorMessage(null);
-				setMessage("Connecting to " + hostPortAddr + " succeeded");
+				setMessage("Connecting to " + mcConnection.baseUrl + " succeeded");
 			}
 		}
 		catch(ConnectException | URISyntaxException e) {

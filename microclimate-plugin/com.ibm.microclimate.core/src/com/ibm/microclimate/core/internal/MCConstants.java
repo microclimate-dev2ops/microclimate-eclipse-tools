@@ -12,6 +12,8 @@ public class MCConstants {
 
 			PROJECT_TYPE_LIBERTY = "liberty",
 
+			PROJECTS_LIST_PATH = "api/v1/projects",
+
 			// App statuses
 			APPSTATE_STARTED = "started",
 			APPSTATE_STARTING = "starting",

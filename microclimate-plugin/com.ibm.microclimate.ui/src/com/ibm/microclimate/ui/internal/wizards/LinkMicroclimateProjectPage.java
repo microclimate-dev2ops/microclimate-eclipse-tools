@@ -202,6 +202,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		// Cache the mcApps here so that we can be sure the contents of mcApps match the contents of the table
 		mcApps = mcConnection.getApps();
 
+		// TODO sort invalid applications to the bottom of the table
 		for(MicroclimateApplication app : mcApps) {
 			TableItem ti = new TableItem(projectsTable, SWT.NONE);
 
