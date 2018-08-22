@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.wizards;
+package com.ibm.microclimate.ui.internal.wizards;
 
 import java.util.List;
 
@@ -22,11 +22,11 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
-import com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage;
+import com.ibm.microclimate.ui.internal.prefs.MicroclimateConnectionPrefsPage;
 
 /**
  * This wizard page allows the user to select a Microclimate Connection, then displays a list of applications running

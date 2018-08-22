@@ -6,21 +6,21 @@
 		<objectContribution
 			adaptable="true"
 			objectClass="org.eclipse.core.resources.IProject"
-			id="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectWizard.id">
+			id="com.ibm.microclimate.ui.internal.wizards.LinkMicroclimateProjectWizard.id">
 			<menu
 				label="%CONTEXT_MENU_CATEGORY_NAME"
 				path="additions"
-				id="com.ibm.microclimate.ui.menu.category">
+				id="com.ibm.microclimate.ui.internal.menu.category">
 				<separator
 					name="popupActions">
 				</separator>
 			</menu>
 			<action
 				label="%ACTION_LINK_TO_MICROCLIMATE"
-				class="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectDelegate"
-				menubarPath="com.ibm.microclimate.ui.menu.category/popupActions"
-				icon="icons/microclimate.ico"
-				id="com.ibm.microclimate.ui.wizards.LinkMicroclimateProjectDelegate.action.id">
+				class="com.ibm.microclimate.ui.internal.wizards.LinkMicroclimateProjectDelegate"
+				menubarPath="com.ibm.microclimate.ui.internal.menu.category/popupActions"
+				icon="%DEFAULT_ICON_PATH"
+				id="com.ibm.microclimate.ui.internal.wizards.LinkMicroclimateProjectDelegate.action.id">
 			</action>
 		</objectContribution>
 	</extension>
@@ -30,64 +30,64 @@
          
          <page id="MicroclimateParentPage"
          	name="%PREFS_PARENT_PAGE_NAME"
-         	class="com.ibm.microclimate.ui.prefs.MicroclimatePrefsParentPage">
+         	class="com.ibm.microclimate.ui.internal.prefs.MicroclimatePrefsParentPage">
          </page>
          
          <page id="MicroclimateConnectionsPage"
          	name="%PREFS_CONNECTION_PAGE_NAME"
          	category="MicroclimateParentPage"
-         	class="com.ibm.microclimate.ui.prefs.MicroclimateConnectionPrefsPage">
+         	class="com.ibm.microclimate.ui.internal.prefs.MicroclimateConnectionPrefsPage">
          </page>    
    	</extension>
    
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
 		<launchConfigurationTypeImage
-			id="com.ibm.microclimate.ui.launchConfigurationTypeImage"
-			configTypeID="com.ibm.microclimate.core.launchConfigurationType"
-			icon="icons/microclimate.ico"/>
+			id="com.ibm.microclimate.core.internal.launchConfigurationTypeImage"
+			configTypeID="com.ibm.microclimate.core.internal.launchConfigurationType"
+			icon="%DEFAULT_ICON_PATH"/>
 	</extension>
 	
 	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
 		<launchConfigurationTabGroup
-			id="com.ibm.microclimate.ui.launchConfigurationTabGroup"
-			type="com.ibm.microclimate.core.launchConfigurationType"
-			class="com.ibm.microclimate.ui.MicroclimateLaunchConfigTabGroup"/>
+			id="com.ibm.microclimate.ui.internal.launchConfigurationTabGroup"
+			type="com.ibm.microclimate.core.internal.launchConfigurationType"
+			class="com.ibm.microclimate.ui.internal.MicroclimateLaunchConfigTabGroup"/>
 	</extension>
 	
   	<extension point="org.eclipse.core.expressions.propertyTesters">
     	<propertyTester
-	      	id="com.ibm.microclimate.ui.property.serverType"
+	      	id="com.ibm.microclimate.ui.internal.property.serverType"
 	      	namespace="com.ibm.microclimate"
 	      	properties="serverType"
 	      	type="java.lang.Object"
-	      	class="com.ibm.microclimate.ui.MicroclimateServerPropertyTester"/>
+	      	class="com.ibm.microclimate.ui.internal.MicroclimateServerPropertyTester"/>
   	</extension>
 	
 	<extension point="org.eclipse.ui.popupMenus">
 		<objectContribution
-			id="com.ibm.microclimate.ui.popupMenu"
+			id="com.ibm.microclimate.ui.internal.popupMenu"
 			objectClass="org.eclipse.wst.server.core.IServer">
 		<visibility>
 			<objectState name="serverType" value="%MICROCLIMATE_SERVER_ID"/>
 		</visibility>
 		<action
-			id="com.ibm.microclimate.ui.popupMenu.openApp"
+			id="com.ibm.microclimate.ui.internal.popupMenu.openApp"
 			enablesFor="1"
-			icon="icons/microclimate.ico"
+			icon="%DEFAULT_ICON_PATH"
 			label="%ACTION_OPEN_APP"
-			class="com.ibm.microclimate.ui.server.actions.OpenAppAction"/>
+			class="com.ibm.microclimate.ui.internal.server.actions.OpenAppAction"/>
 		</objectContribution>
 	</extension>
 	
 	<extension point="org.eclipse.ui.decorators">
 	    <decorator
-	       id="com.ibm.microclimate.ui.ServerDecorator"
+	       id="com.ibm.microclimate.ui.internal.ServerDecorator"
 	       label="%SERVER_DECORATOR_LABEL"
-	       icon="icons/microclimate.ico"
+	       icon="%DEFAULT_ICON_PATH"
 	       lightweight="true"
 	       location="BOTTOM_RIGHT"
 	       state="true"
-	       class="com.ibm.microclimate.ui.server.MicroclimateServerDecorator">
+	       class="com.ibm.microclimate.ui.internal.server.MicroclimateServerDecorator">
 	      <enablement>
 	        <or>
 	          <objectClass name="org.eclipse.wst.server.core.IServer"/>
@@ -98,16 +98,16 @@
   	
 	<extension point="org.eclipse.wst.server.ui.serverImages">
 	    <image
-	      id="com.ibm.microclimate.ui.server.img"
-	      icon="icons/microclimate.ico"
+	      id="com.ibm.microclimate.ui.internal.server.img"
+	      icon="%DEFAULT_ICON_PATH"
 	      typeIds="microclimate.server"/>
 	</extension>
 	
 	<extension point="org.eclipse.ui.navigator.navigatorContent">
 		<navigatorContent
-			id="com.ibm.microclimate.ui.server.content"
+			id="com.ibm.microclimate.ui.internal.server.content"
 			name="Microclimate Server NavigatorContent"
-			icon="icons/microclimate.ico"
+			icon="%DEFAULT_ICON_PATH"
 			activeByDefault="true">
 			   
 			<enablement>
@@ -132,7 +132,7 @@
 			
 			<actionProvider
 				dependsOn="org.eclipse.wst.server.ui.ServersView.ServerActionProvider"
-				class="com.ibm.microclimate.ui.server.actions.LogActionProvider">
+				class="com.ibm.microclimate.ui.internal.server.actions.LogActionProvider">
 			</actionProvider>
 		</navigatorContent>
 	</extension>
@@ -141,13 +141,13 @@
 		point="org.eclipse.ui.newWizards">
      	<category
             name="Microclimate"
-            id="com.ibm.microclimate.ui">
+            id="com.ibm.microclimate.ui.internal">
      	</category>		
 		<wizard
-       		icon="icons/microclimate.ico"
-            id="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"
+       		icon="%DEFAULT_ICON_PATH"
+            id="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"
             name="Plugin XML Wizard Description">
-            <class class="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"/>
+            <class class="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"/>
           	<description>
             	New Microclimate Connection
          	</description>
@@ -161,14 +161,14 @@
 		point="org.eclipse.ui.newWizards">
      	<category
             name="Microclimate"
-            id="com.ibm.microclimate.ui">
+            id="com.ibm.microclimate.ui.internal">
      	</category>		
 		<wizard
-       		icon="icons/microclimate.ico"
+       		icon="%DEFAULT_ICON_PATH"
             hasPages="true"
-            id="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"
+            id="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"
             name="Plugin XML Wizard Description">
-            <class class="com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard"/>
+            <class class="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"/>
           	<description>
             	New Microclimate Project
          	</description>

@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server.console;
+package com.ibm.microclimate.core.internal.server.console;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,8 +14,8 @@ import org.eclipse.ui.console.IOConsole;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 
 import com.ibm.microclimate.core.Activator;
-import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MCConstants;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
 public class MicroclimateServerConsole extends IOConsole {
@@ -56,7 +56,7 @@ public class MicroclimateServerConsole extends IOConsole {
 
 	public MicroclimateServerConsole(String consoleName, File logFile) throws FileNotFoundException {
 		super(consoleName, MC_CONSOLE_TYPE,
-				com.ibm.microclimate.core.Activator.getIcon(Activator.CONSOLE_ICON_PATH),
+				com.ibm.microclimate.core.Activator.getIcon(Activator.DEFAULT_ICON_PATH),
 				true);
 
 		outputStream = newOutputStream();

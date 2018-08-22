@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.prefs;
+package com.ibm.microclimate.ui.internal.prefs;
 
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.widgets.Composite;

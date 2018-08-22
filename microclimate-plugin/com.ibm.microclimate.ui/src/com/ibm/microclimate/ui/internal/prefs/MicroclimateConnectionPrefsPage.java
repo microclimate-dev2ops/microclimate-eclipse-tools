@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.prefs;
+package com.ibm.microclimate.ui.internal.prefs;
 
 import java.util.List;
 
@@ -25,12 +25,12 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.Activator;
-import com.ibm.microclimate.ui.wizards.NewMicroclimateConnectionWizard;
-import com.ibm.microclimate.ui.wizards.WizardLauncher;
+import com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard;
+import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
 
 /**
  * This preferences page lists the current Microclimate connections, allows adding new ones, and removing existing ones.

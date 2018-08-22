@@ -14,7 +14,7 @@ public class Activator extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.ibm.microclimate.core"; //$NON-NLS-1$
 
-	public static final String CONSOLE_ICON_PATH = "icons/console-icon.ico";
+	public static final String DEFAULT_ICON_PATH = "icons/microclimate.ico";
 
 	// The shared instance
 	private static Activator plugin;
@@ -55,7 +55,7 @@ public class Activator extends AbstractUIPlugin {
 	}
 
 	public static ImageDescriptor getIcon(String path) {
-		final URL url = Activator.getDefault().getBundle().getEntry(CONSOLE_ICON_PATH);
+		final URL url = Activator.getDefault().getBundle().getEntry(DEFAULT_ICON_PATH);
 		return ImageDescriptor.createFromURL(url);
 	}
 

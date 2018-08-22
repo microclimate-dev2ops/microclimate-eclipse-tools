@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.server;
+package com.ibm.microclimate.ui.internal.server;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IDecoration;
@@ -6,8 +6,8 @@ import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.server.MicroclimateServer;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 import com.ibm.microclimate.ui.Activator;
 
 /**

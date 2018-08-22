@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server.debug;
+package com.ibm.microclimate.core.internal.server.debug;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -9,10 +9,10 @@ import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.server.MicroclimateServer;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  *

@@ -6,8 +6,7 @@ import org.eclipse.wst.server.core.IServer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;

@@ -9,8 +9,6 @@ import java.net.URL;
 
 import org.json.JSONObject;
 
-import com.ibm.microclimate.core.MCLogger;
-
 /**
  * Static utilities to allow easy HTTP communication, and make diagnosing and handling errors a bit easier.
  *

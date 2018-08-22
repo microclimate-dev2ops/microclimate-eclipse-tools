@@ -9,8 +9,7 @@ import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
-import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  *

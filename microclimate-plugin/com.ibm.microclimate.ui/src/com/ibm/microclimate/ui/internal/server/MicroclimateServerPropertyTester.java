@@ -1,10 +1,10 @@
-package com.ibm.microclimate.ui.server;
+package com.ibm.microclimate.ui.internal.server;
 
 import org.eclipse.core.expressions.PropertyTester;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.server.MicroclimateServer;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 
 /**
  * Test the server type where type is the type specified in the

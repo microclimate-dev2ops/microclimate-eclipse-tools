@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server.debug;
+package com.ibm.microclimate.core.internal.server.debug;
 
 import java.util.List;
 import java.util.Map;

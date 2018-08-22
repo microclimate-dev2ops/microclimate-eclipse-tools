@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server;
+package com.ibm.microclimate.core.internal.server;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,16 +23,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.Activator;
-import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
+import com.ibm.microclimate.core.internal.server.console.MicroclimateServerConsole;
+import com.ibm.microclimate.core.internal.server.debug.LaunchUtilities;
 import com.ibm.microclimate.core.internal.MCConstants;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
-import com.ibm.microclimate.core.server.console.MicroclimateServerConsole;
-import com.ibm.microclimate.core.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;

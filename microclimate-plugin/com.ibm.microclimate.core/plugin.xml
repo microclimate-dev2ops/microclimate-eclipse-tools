@@ -12,27 +12,27 @@
 		initialState="unknown"
 		supportsRemoteHosts="false"
 		runtime="false"
-		launchConfigId="com.ibm.microclimate.core.launchConfigurationType"
-		class="com.ibm.microclimate.core.server.MicroclimateServer"
-		behaviourClass="com.ibm.microclimate.core.server.MicroclimateServerBehaviour">
+		launchConfigId="com.ibm.microclimate.core.internal.launchConfigurationType"
+		class="com.ibm.microclimate.core.internal.server.MicroclimateServer"
+		behaviourClass="com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour">
 	</serverType>
 </extension>
  
 <!-- This relies on com.ibm.microclimate.ui org.eclipse.debug.ui.launchConfigurationTabGroups extension -->
 <extension point="org.eclipse.debug.core.launchConfigurationTypes">
     <launchConfigurationType
-      id="com.ibm.microclimate.core.launchConfigurationType"
+      id="com.ibm.microclimate.core.internal.launchConfigurationType"
       name="%LAUNCH_CONFIG_NAME"
-      delegate="com.ibm.microclimate.core.server.debug.MicroclimateServerLaunchConfigDelegate"
+      delegate="com.ibm.microclimate.core.internal.server.debug.MicroclimateServerLaunchConfigDelegate"
       modes="run, debug"
       sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
-      sourcePathComputerId="com.ibm.microclimate.core.MicroclimateSourcePathComputer"/>
+      sourcePathComputerId="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"/>
 </extension>
 
 <extension point="org.eclipse.debug.core.sourcePathComputers">
 	<sourcePathComputer
-		id="com.ibm.microclimate.core.MicroclimateSourcePathComputer"
-		class="com.ibm.microclimate.core.server.debug.MicroclimateSourcePathComputer"
+		id="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"
+		class="com.ibm.microclimate.core.internal.server.debug.MicroclimateSourcePathComputer"
 		name="Microclimate Source Path Computer">
 	</sourcePathComputer>
 </extension>

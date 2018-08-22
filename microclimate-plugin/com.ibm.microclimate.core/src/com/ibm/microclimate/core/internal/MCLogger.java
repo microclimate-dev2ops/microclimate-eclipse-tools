@@ -1,8 +1,10 @@
-package com.ibm.microclimate.core;
+package com.ibm.microclimate.core.internal;
 
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+
+import com.ibm.microclimate.core.Activator;
 
 /**
  * @author timetchells@ibm.com

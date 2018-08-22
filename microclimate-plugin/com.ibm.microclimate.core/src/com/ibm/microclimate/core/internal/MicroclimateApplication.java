@@ -14,9 +14,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.server.MicroclimateServer;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  * Data type class to represent a Microclimate Application / Project

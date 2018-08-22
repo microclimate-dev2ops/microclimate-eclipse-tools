@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.server.actions;
+package com.ibm.microclimate.ui.internal.server.actions;
 
 import java.net.URL;
 
@@ -13,10 +13,10 @@ import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 public class OpenAppAction implements IObjectActionDelegate {
 

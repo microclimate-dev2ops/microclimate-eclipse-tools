@@ -2,8 +2,6 @@ package com.ibm.microclimate.core.internal;
 
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.MCLogger;
-
 public class MCConstants {
 
 	private MCConstants() {}

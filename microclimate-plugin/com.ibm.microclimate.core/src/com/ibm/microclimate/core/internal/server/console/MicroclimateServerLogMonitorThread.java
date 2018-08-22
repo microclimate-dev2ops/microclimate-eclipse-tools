@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server.console;
+package com.ibm.microclimate.core.internal.server.console;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import org.eclipse.ui.console.IOConsoleOutputStream;
 
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 
 /**
  * This thread periodically checks the given input stream for new contents, and if it has changed,

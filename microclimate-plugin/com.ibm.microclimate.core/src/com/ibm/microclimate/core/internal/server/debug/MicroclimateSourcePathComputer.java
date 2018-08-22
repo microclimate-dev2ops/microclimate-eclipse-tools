@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server.debug;
+package com.ibm.microclimate.core.internal.server.debug;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -9,7 +9,7 @@ import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.debug.core.sourcelookup.ISourcePathComputerDelegate;
 import org.eclipse.debug.core.sourcelookup.containers.ProjectSourceContainer;
 
-import com.ibm.microclimate.core.server.MicroclimateServer;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 
 /**
  * This class is used by the Microclimate Launch Config to add the Java project of interest

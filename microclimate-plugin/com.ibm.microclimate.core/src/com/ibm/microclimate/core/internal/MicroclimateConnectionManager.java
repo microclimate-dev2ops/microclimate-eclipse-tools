@@ -9,8 +9,6 @@ import java.util.List;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
-import com.ibm.microclimate.core.MCLogger;
-
 /**
  * Singleton class to keep track of the list of current Microclimate Connections,
  * and manage persisting them to and from the Preferences.

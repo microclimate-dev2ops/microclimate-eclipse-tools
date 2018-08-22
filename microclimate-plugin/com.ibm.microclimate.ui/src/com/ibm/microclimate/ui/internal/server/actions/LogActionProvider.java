@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package com.ibm.microclimate.ui.server.actions;
+package com.ibm.microclimate.ui.internal.server.actions;
 
 import java.util.Iterator;
 
@@ -28,7 +28,7 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
 import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.internal.MCConstants;
-import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  * From com.ibm.ws.st.ui.internal.actions.LogActionProvider

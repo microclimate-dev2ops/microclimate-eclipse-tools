@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.wizards;
+package com.ibm.microclimate.ui.internal.wizards;
 
 import java.net.ConnectException;
 import java.net.URISyntaxException;
@@ -14,7 +14,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 

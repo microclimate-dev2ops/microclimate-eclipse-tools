@@ -1,4 +1,4 @@
-	package com.ibm.microclimate.core.server;
+	package com.ibm.microclimate.core.internal.server;
 
 import java.net.URL;
 
@@ -12,7 +12,7 @@ import org.eclipse.wst.server.core.model.IURLProvider;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
 import com.ibm.microclimate.core.Activator;
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 
 /**
  * @author timetchells@ibm.com

@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.wizards;
+package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -12,10 +12,10 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
 
-import com.ibm.microclimate.core.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.server.MicroclimateServer;
 
 /**
  *

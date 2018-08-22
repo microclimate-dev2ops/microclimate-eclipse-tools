@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.wizards;
+package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -10,9 +10,9 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.server.MicroclimateServerFactory;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.Activator;
 
 /**

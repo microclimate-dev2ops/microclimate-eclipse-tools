@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui.wizards;
+package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;

@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.server;
+package com.ibm.microclimate.core.internal.server;
 
 /**
  * One of these threads exists for each MicroclimateServer. Each application's state is updated by

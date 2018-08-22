@@ -1,4 +1,4 @@
-package com.ibm.microclimate.ui;
+package com.ibm.microclimate.ui.internal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.ServerCore;
 import org.eclipse.wst.server.ui.ServerLaunchConfigurationTab;
 
-import com.ibm.microclimate.core.server.MicroclimateServer;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 
 /**
  * A tab group for editing a Microclimate Launch Configuration.
