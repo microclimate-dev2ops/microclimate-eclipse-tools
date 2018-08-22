@@ -25,14 +25,14 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.Activator;
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
-import com.ibm.microclimate.core.internal.server.console.MicroclimateServerConsole;
-import com.ibm.microclimate.core.internal.server.debug.LaunchUtilities;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.server.console.MicroclimateServerConsole;
+import com.ibm.microclimate.core.internal.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
@@ -52,8 +52,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	private Set<MicroclimateServerConsole> consoles;
 
 	private String suffix = null;
-
-	private boolean hasLostMcConnection = false;
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
@@ -217,18 +215,12 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	public void onMicroclimateDisconnect(String microclimateUrl) {
-		MCLogger.log(getServer().getName() + " MCConnection lost");
 		setSuffix("Connection to Microclimate at " + microclimateUrl + " lost", IServer.STATE_UNKNOWN);
-		hasLostMcConnection = true;
 	}
 
 	public void onMicroclimateReconnect() {
-		MCLogger.log(getServer().getName() + " MCConnection restored");
-		if (hasLostMcConnection) {
-			hasLostMcConnection = false;
-			clearSuffix();
-			setInitialState();
-		}
+		clearSuffix();
+		setInitialState();
 	}
 
 	/**

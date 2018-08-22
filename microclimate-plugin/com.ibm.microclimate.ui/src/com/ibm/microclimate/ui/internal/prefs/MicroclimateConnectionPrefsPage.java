@@ -94,7 +94,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		TableColumn enabled = new TableColumn(connectionsTable, SWT.BORDER);
 		enabled.setText("Linked Projects");
 		enabled.setWidth(gridData.widthHint - addresses.getWidth());
-		
+
 		Button addButton = new Button(composite, SWT.PUSH);
 		addButton.setText("Add...");
 		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
@@ -133,7 +133,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				}
 
 				if (connectionIsInUse) {
-					// TODO is this actually a problem?
+					// TODO give them the option to delete the servers for them
 					MessageDialog.openError(getShell(), "Could not remove connection",
 							"At least one of the selected connections has projects linked in the workspace.\n"
 									+ "Unlink any projects by deleting the corresponding servers "
@@ -143,7 +143,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				refreshConnectionsList();
 			}
 		});
-		
+
 		connectionsTable.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
