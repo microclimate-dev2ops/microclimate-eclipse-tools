@@ -2,11 +2,11 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.URISyntaxException;
 
+import org.eclipse.wst.server.core.IServer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MCLogger;
-import com.ibm.microclimate.core.server.AppStateConverter;
 import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
 import io.socket.client.IO;
@@ -26,7 +26,8 @@ public class MicroclimateSocket {
 
 	public final Socket socket;
 
-	private final MicroclimateConnection mcConnection;
+	// Track the previous Exception so we don't spam the logs with the same connection failure message
+	private Exception previousException;
 
 	// SocketIO Event names
 	private static final String
@@ -35,8 +36,6 @@ public class MicroclimateSocket {
 			EVENT_PROJECT_DELETION = "projectDeletion";
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
-		this.mcConnection = mcConnection;
-
 		// TODO hardcoded filewatcher port
 		final String url = "http://" + mcConnection.host + ':' + "9091";
 		socket = IO.socket(url);
@@ -47,6 +46,7 @@ public class MicroclimateSocket {
 				MCLogger.log("SocketIO connect success @ " + url);
 
 				mcConnection.clearConnectionError();
+				previousException = null;
 			}
 		})
 		.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {
@@ -54,7 +54,10 @@ public class MicroclimateSocket {
 			public void call(Object... arg0) {
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];
-					MCLogger.logError("SocketIO Connect Error @ " + url, e);
+					if (previousException == null || !e.getMessage().equals(previousException.getMessage())) {
+						previousException = e;
+						MCLogger.logError("SocketIO Connect Error @ " + url, e);
+					}
 				}
 				mcConnection.onConnectionError();
 			}
@@ -128,25 +131,7 @@ public class MicroclimateSocket {
 			return;
 		}
 
-		updateServerState(serverBehaviour, event);
-	}
-
-	public static void updateServerState(MicroclimateServerBehaviour serverBehaviour, JSONObject projectChangedEvent)
-			throws JSONException {
-
-		serverBehaviour.clearSuffix();
-		if (projectChangedEvent.has(MCConstants.KEY_APP_STATUS)) {
-			serverBehaviour.onAppStateUpdate(projectChangedEvent.getString(MCConstants.KEY_APP_STATUS));
-		}
-		// These are mutually exclusive - it won't have both an app status and a build status.
-		else if (projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
-			serverBehaviour.onBuildStateUpdate(
-					projectChangedEvent.getString(MCConstants.KEY_BUILD_STATUS),
-					projectChangedEvent.getString(MCConstants.KEY_DETAILED_BUILD_STATUS));
-		}
-		else {
-			MCLogger.log("No state of interest to update");
-		}
+		serverBehaviour.updateServerState(event);
 	}
 
 	private void onProjectRestart(JSONObject event) throws JSONException {
@@ -169,7 +154,7 @@ public class MicroclimateSocket {
 		JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
 		// ports object should always have an http port
-		int port = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_HTTP_PORT));
+		int port = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
 		if (port != -1) {
 			serverBehaviour.getApp().setHttpPort(port);
 		}
@@ -190,27 +175,21 @@ public class MicroclimateSocket {
 			return;
 		}
 
-		serverBehaviour.onAppStateUpdate(AppStateConverter.APPSTATE_STOPPED);
-		serverBehaviour.setSuffix("Project has been deleted or disabled in Microclimate", true);
+		serverBehaviour.onProjectDeletion();
 	}
 
 	private MicroclimateServerBehaviour getServerForEvent(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
-		MicroclimateApplication app = mcConnection.getAppByID(projectID);
-		if (app == null) {
+
+		IServer server = MicroclimateApplication.getServerWithProjectID(projectID);
+		if (server == null) {
 			// can't recover from this
 			// This is normal if the project has been deleted or disabled
-			MCLogger.logError("MCApplication with ID " + projectID + " not found");
+			MCLogger.log("No server linked to project with ID " + projectID);
 			return null;
 		}
 
-		MicroclimateServerBehaviour server = app.getLinkedServer();
-		if (server == null) {
-			// This happens when the project to be updated doesn't have a linked server. Do nothing in this case.
-			return null;
-		}
-
-		return server;
+		return server.getAdapter(MicroclimateServerBehaviour.class);
 	}
 
 	private int parsePort(String portStr) {

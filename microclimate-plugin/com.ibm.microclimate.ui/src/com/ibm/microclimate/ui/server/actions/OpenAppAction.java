@@ -14,6 +14,8 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.server.MicroclimateServerBehaviour;
 
 public class OpenAppAction implements IObjectActionDelegate {
@@ -51,7 +53,14 @@ public class OpenAppAction implements IObjectActionDelegate {
 
         MicroclimateServerBehaviour mcServer = (MicroclimateServerBehaviour)
         		server.loadAdapter(MicroclimateServerBehaviour.class, null);
-        URL appRootUrl = mcServer.getApp().rootUrl;
+        MicroclimateApplication app = mcServer.getApp();
+        if (app == null || mcServer.getServer().getServerState() != IServer.STATE_STARTED) {
+        	MCUtil.openDialog(true, "Can't open an app that isn't running",
+        			"This server's project is not found or not running. "
+        			+ "Please make sure the project is [Started] before trying to open the application.");
+        }
+
+        URL appRootUrl = app.getBaseUrl();
 
         // Use the app's ID as the browser ID so that if this is called again on the same app,
         // the browser will be re-used

@@ -1,5 +1,6 @@
 package com.ibm.microclimate.core.server;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.Map;
@@ -30,7 +31,6 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
-import com.ibm.microclimate.core.internal.MicroclimateSocket;
 import com.ibm.microclimate.core.server.console.MicroclimateServerConsole;
 import com.ibm.microclimate.core.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
@@ -52,6 +52,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	private Set<MicroclimateServerConsole> consoles;
 
 	private String suffix = null;
+
+	private boolean hasLostMcConnection = false;
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
@@ -80,21 +82,14 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			// TODO the user doesn't want to have to look up the project by ID
 			onInitializeFailure("Couldn't find project with ID " + projectID + " on Microclimate at "
 					+ mcConnection.baseUrl + ". Make sure the project has not been deleted or disabled.");
+			// getServer().delete();
+			onProjectDeletion();
 			return;
 		}
 		// Set unlinked in dispose()
 		app.linkTo(getServer());
 
-		int initialState = getInitialState();
-		setServerState(initialState);
-
-		/*
-		monitorThread = new MicroclimateServerMonitorThread(this);
-
-		monitorThread.setInitialState(initialState);
-		monitorThread.start();
-		*/
-
+		setInitialState();
 
 		// Set up our server consoles
 		consoles = MicroclimateServerConsole.createApplicationConsoles(app);
@@ -104,38 +99,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		MCLogger.logError("Creating Microclimate server failed at initialization: " + failMsg);
 		setServerState(IServer.STATE_UNKNOWN);
 		MCUtil.openDialog(true, "Error creating Microclimate server", failMsg);
-	}
-
-	private int getInitialState() {
-		// TODO hardcoded filewatcher port
-		String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
-		statusUrl = String.format(statusUrl, app.projectID);
-
-		HttpResult result;
-		try {
-			result = HttpUtil.get(statusUrl);
-		} catch (IOException e) {
-			MCLogger.logError(e);
-			return IServer.STATE_UNKNOWN;
-		}
-
-		if (!result.isGoodResponse) {
-			MCLogger.logError("Received bad response from server: " + result.responseCode);
-			MCLogger.logError("Error message: " + result.error);
-			return IServer.STATE_UNKNOWN;
-		}
-		else if (result.response == null) {
-			MCLogger.logError("Good response code, but null response when getting initial state");
-			return IServer.STATE_UNKNOWN;
-		}
-
-		try {
-			JSONObject appStateJso = new JSONObject(result.response);
-			MicroclimateSocket.updateServerState(this, appStateJso);
-		} catch (JSONException e) {
-			MCLogger.logError("JSON exception when getting initial state", e);
-		}
-		return IServer.STATE_UNKNOWN;
 	}
 
 	@Override
@@ -176,42 +139,96 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		return app;
 	}
 
-	public void onAppStateUpdate(String appStatus) {
-		int state = AppStateConverter.appStatusToServerState(appStatus);
+	private void setInitialState() {
+		// TODO hardcoded filewatcher port
+		String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
+		statusUrl = String.format(statusUrl, app.projectID);
+
+		HttpResult result;
+		try {
+			result = HttpUtil.get(statusUrl);
+		}
+		catch(FileNotFoundException e) {
+			// This happens if the project has been disabled or deleted
+			onProjectDeletion();
+			return;
+		}
+		catch (IOException e) {
+			MCLogger.logError(e);
+			setServerState(IServer.STATE_UNKNOWN);
+			return;
+		}
+
+		if (!result.isGoodResponse) {
+			MCLogger.logError("Received bad response from server: " + result.responseCode);
+			MCLogger.logError("Error message: " + result.error);
+		}
+		else if (result.response == null) {
+			MCLogger.logError("Good response code, but null response when getting initial state");
+		}
+		else {
+			try {
+				JSONObject appStateJso = new JSONObject(result.response);
+				// Pass this off to the regular server state updater
+				updateServerState(appStateJso);
+				return;
+			} catch (JSONException e) {
+				MCLogger.logError("JSON exception when getting initial state", e);
+			}
+		}
+		setServerState(IServer.STATE_UNKNOWN);
+	}
+
+	public void updateServerState(JSONObject projectChangedEvent)
+			throws JSONException {
+
+		clearSuffix();
+		if (projectChangedEvent.has(MCConstants.KEY_APP_STATUS)) {
+			onAppStateUpdate(projectChangedEvent.getString(MCConstants.KEY_APP_STATUS));
+		}
+		// These are mutually exclusive - it won't have both an app status and a build status.
+		else if (projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
+			onBuildStateUpdate(
+					projectChangedEvent.getString(MCConstants.KEY_BUILD_STATUS),
+					projectChangedEvent.getString(MCConstants.KEY_DETAILED_BUILD_STATUS));
+		}
+		else {
+			MCLogger.log("No state of interest to update");
+		}
+	}
+
+	private void onAppStateUpdate(String appStatus) {
+		int state = MCConstants.appStatusToServerState(appStatus);
 		if (state != getServer().getServerState()) {
 			MCLogger.log("Update state of " + getServer().getName() + " to " + appStatus);
 			setServerState(state);
 		}
 	}
 
-	public void onBuildStateUpdate(String buildStatus, String buildStatusDetail) {
+	private void onBuildStateUpdate(String buildStatus, String buildStatusDetail) {
 		MCLogger.log(getServer().getName() + " has build status " + buildStatus + ", detail " + buildStatusDetail);
 
-		String newSuffix;
+		final String status = MCConstants.buildStateToUserFriendly(buildStatus, buildStatusDetail);
+		setSuffix(status, IServer.STATE_STOPPED);
+	}
 
-		if (MCConstants.BUILD_STATUS_INPROGRESS.equals(buildStatus)) {
-			newSuffix = "Build In Progress";
-		}
-		else if (MCConstants.BUILD_STATUS_SUCCESS.equals(buildStatus)) {
-			newSuffix = "Build Succeeded";
-		}
-		else if (MCConstants.BUILD_STATUS_FAILED.equals(buildStatus)) {
-			String buildLogName = MCConstants.BUILD_LOG_SHORTNAME;
-			for (MicroclimateServerConsole console : consoles) {
-				if (console.getName().contains(buildLogName)) {
-					buildLogName = console.getName();
-				}
-			}
-			newSuffix = "Build Failed - Please check " + buildLogName;
-		}
-		else {
-			newSuffix = "Building";
-		}
+	public void onProjectDeletion() {
+		setSuffix("Project has been deleted or disabled in Microclimate", IServer.STATE_STOPPED);
+	}
 
-		// if (getServer().getServerState() == IServer.STATE_STOPPED) {
-			// let the user know the server is stopped because it's still building
-		setSuffix(newSuffix, false);
-		// }
+	public void onMicroclimateDisconnect(String microclimateUrl) {
+		MCLogger.log(getServer().getName() + " MCConnection lost");
+		setSuffix("Connection to Microclimate at " + microclimateUrl + " lost", IServer.STATE_UNKNOWN);
+		hasLostMcConnection = true;
+	}
+
+	public void onMicroclimateReconnect() {
+		MCLogger.log(getServer().getName() + " MCConnection restored");
+		if (hasLostMcConnection) {
+			hasLostMcConnection = false;
+			clearSuffix();
+			setInitialState();
+		}
 	}
 
 	/**
@@ -219,24 +236,39 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	 * It is meant to hold an error message, or a 'building' state, etc.
 	 * It is intended to be used if the server is not started because it is waiting for something,
 	 * or because of an error.
-	 *
-	 * @param setUnknownState - If the suffix is an error message (disconnected, broken, etc), set this to true.
 	 */
-	public void setSuffix(String suffix, boolean setUnknownState) {
+	private synchronized void setSuffix(String suffix, int newServerState) {
+		// MCLogger.log("SetSuffix for server " + getServer().getName() + " to " + suffix);
 		this.suffix = suffix;
 
-		//if (setUnknownState) {
-		// This is required because changing the state forces the ServerDecorator to be invoked
-		setServerState(IServer.STATE_UNKNOWN);
-		//}
+		forceRefreshServerDecorator(newServerState);
 	}
 
-	public void clearSuffix() {
+	/**
+	 * Make sure to set the server state after calling this, by either setInitialState or updateServerState.
+	 */
+	private synchronized void clearSuffix() {
 		suffix = null;
+		// This state will be overwritten immediately after.
+		forceRefreshServerDecorator(IServer.STATE_STOPPED);
 	}
 
-	public String getSuffix() {
+	public synchronized String getSuffix() {
 		return suffix;
+	}
+
+	/**
+	 * Hack to refresh the server decorator by forcing a state change -
+	 * change to a state different from the desired one, then set the desired state after.
+	 */
+	private void forceRefreshServerDecorator(int newServerState) {
+		if (newServerState == IServer.STATE_UNKNOWN) {
+			setServerState(IServer.STATE_STOPPED);
+		}
+		else {
+			setServerState(IServer.STATE_UNKNOWN);
+		}
+		setServerState(newServerState);
 	}
 
 	@Override
@@ -244,7 +276,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode");
 
 		int currentState = getServer().getServerState();
-		MCLogger.log("Current status = " + AppStateConverter.serverStateToAppStatus(currentState));
+		MCLogger.log("Current status = " + MCConstants.serverStateToAppStatus(currentState));
 
 		if (IServer.STATE_STARTING == currentState) {
 			waitForStarted(null);
@@ -352,9 +384,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCLogger.logError("No states passed to waitForState");
 			return false;
 		}
-		desiredStatesStr = AppStateConverter.serverStateToAppStatus(desiredStates[0]);
+		desiredStatesStr = MCConstants.serverStateToAppStatus(desiredStates[0]);
 		for (int i = 1; i < desiredStates.length; i++) {
-			desiredStatesStr += " or " + AppStateConverter.serverStateToAppStatus(desiredStates[i]);
+			desiredStatesStr += " or " + MCConstants.serverStateToAppStatus(desiredStates[i]);
 		}
 		// End logging-only
 
@@ -366,7 +398,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 			try {
 				MCLogger.log("Waiting for server to be: " + desiredStatesStr + ", is currently " +
-						AppStateConverter.serverStateToAppStatus(getServer().getServerState()));
+						MCConstants.serverStateToAppStatus(getServer().getServerState()));
 
 				Thread.sleep(pollRateMs);
 			}
@@ -377,7 +409,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			// the ServerMonitorThread will update the state, so we just have to check it.
 			for (int desiredState : desiredStates) {
 				if (getServer().getServerState() == desiredState) {
-					MCLogger.log("Server is done switching to " + AppStateConverter.serverStateToAppStatus(desiredState));
+					MCLogger.log("Server is done switching to " + MCConstants.serverStateToAppStatus(desiredState));
 					return true;
 				}
 			}

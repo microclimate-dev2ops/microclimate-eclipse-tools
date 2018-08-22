@@ -30,14 +30,16 @@ public class MicroclimateApplication {
 	public final String projectID, name, projectType, host;
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
-	public final URL rootUrl;
 
 	private final Set<IPath> logPaths;
 
 	private MicroclimateServerBehaviour linkedServer;
 
-	// These are set by the MicroclimateSocket, and read by the MicroclimateServerMonitorThread
-	// so we have to make sure the reads and writes are synchronized
+	// Must be updated whenever httpPort changes. Can be null
+	private URL baseUrl;
+
+	// These are set by the MicroclimateSocket so we have to make sure the reads and writes are synchronized
+	// An httpPort of -1 indicates the app is not started - could be building or disabled.
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
@@ -55,30 +57,31 @@ public class MicroclimateApplication {
 		this.host = mcConnection.host;
 		this.logPaths = new HashSet<>();
 
-		URL rootUrl = new URL("http", host, httpPort, "");
+		setBaseUrl();
 
-		if (contextRoot != null) {
-			rootUrl = new URL(rootUrl, contextRoot);
-		}
-
-		this.rootUrl = rootUrl;
-
-		for (IServer server : ServerCore.getServers()) {
-			if (projectID.equals(server.getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""))) {
-				linkTo(server);
-				break;
-			}
+		IServer linkedServer = getServerWithProjectID(projectID);
+		if (linkedServer != null) {
+			linkTo(linkedServer);
 		}
 
 		//MCLogger.log("Created mcApp:");
 		//MCLogger.log(toString());
 	}
 
+	public static IServer getServerWithProjectID(String projectID) {
+		for (IServer server : ServerCore.getServers()) {
+			if (projectID.equals(server.getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""))) {
+				return server;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Parse the given projectsJson from the Microclimate server to construct a list of applications on that server.
 	 */
 	public static List<MicroclimateApplication> getAppsFromProjectsJson(MicroclimateConnection mcConnection,
-			String projectsJson, boolean showStartingDialog)
+			String projectsJson)
 					throws JSONException, NumberFormatException, MalformedURLException {
 
 		List<MicroclimateApplication> runningApps = new ArrayList<>();
@@ -86,57 +89,71 @@ public class MicroclimateApplication {
 		MCLogger.log(projectsJson);
 		JSONArray appArray = new JSONArray(projectsJson);
 
-		List<String> appsStillStarting = new ArrayList<>();
 		for(int i = 0; i < appArray.length(); i++) {
 			JSONObject appJso = appArray.getJSONObject(i);
 			try {
 				MCLogger.log("app: " + appJso.toString());
-				String name = appJso.getString("name");
+				String name = appJso.getString(MCConstants.KEY_NAME);
+				String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
 
-				if (!appJso.has(MCConstants.KEY_APP_STATUS)) {
-					appsStillStarting.add(name);
-					continue;
+				String type = "unknown";
+				try {
+					type = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
+				}
+				catch(JSONException e) {
+					MCLogger.logError("Error getting project type from: " + appJso, e);
+				}
+				String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
+
+				int httpPort = -1;
+
+				// Is the app started?
+				// If so, get the port. If not, leave port set to -1, this indicates the app is not started.
+				if (appJso.has(MCConstants.KEY_APP_STATUS)
+						&& MCConstants.APPSTATE_STARTED.equals(appJso.getString(MCConstants.KEY_APP_STATUS))) {
+
+					try {
+						String httpPortStr = appJso.getJSONObject(MCConstants.KEY_PORTS)
+								.getString(MCConstants.KEY_EXPOSED_PORT);
+						httpPort = Integer.parseInt(httpPortStr);
+					}
+					catch(JSONException e) {
+						// Indicates the app is not started
+						MCLogger.log(name + " has not bound to a port");
+					}
 				}
 
-				String status = appJso.getString(MCConstants.KEY_APP_STATUS);
-				if (!MCConstants.KEY_STATUS.equals(status)) {
-					// see displayAppsStartingMsg method for how this is handled
-					appsStillStarting.add(name);
-					continue;
-				}
-
-				String id 	= appJso.getString("projectID");
-				String type = appJso.getString("projectType");
-				String loc 	= appJso.getString("locOnDisk");
-
-				String httpPortStr = appJso.getJSONObject(MCConstants.KEY_PORTS).getString("exposedPort");
-
-				int httpPort = Integer.parseInt(httpPortStr);
-
-				final String contextRootKey = "contextroot";
 				String contextRoot = null;
-				if(appJso.has(contextRootKey)) {
-					contextRoot = appJso.getString(contextRootKey);
+				if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
+					contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
 				}
 
 				MicroclimateApplication mcApp =
 						new MicroclimateApplication(mcConnection, id, name, type, loc, httpPort, contextRoot);
 				runningApps.add(mcApp);
 
-				JSONObject logsJso = appJso.getJSONObject("logs");
-				// The logs object always exists, but can be empty.
-				if (logsJso.has("build")) {
-					String buildLogPath = logsJso.getJSONObject("build").getString("file");
-					mcApp.addLogPath(buildLogPath);
-				}
+				if (appJso.has(MCConstants.KEY_LOGS)) {
+					JSONObject logsJso = appJso.getJSONObject(MCConstants.KEY_LOGS);
+					if (logsJso.has(MCConstants.KEY_LOG_BUILD)) {
+						String buildLogPath = logsJso.getJSONObject(MCConstants.KEY_LOG_BUILD)
+								.getString(MCConstants.KEY_LOG_FILE);
 
-				if (logsJso.has("app")) {
-					// TODO I'm not sure if this will always be an array, but it seems to be for Liberty projects
-					JSONArray appLogsJso = logsJso.getJSONObject("app").getJSONArray("file");
-					for (int j = 0; j < appLogsJso.length(); j++) {
-						String appLogPath = appLogsJso.getString(j);
-						mcApp.addLogPath(appLogPath);
+						mcApp.addLogPath(buildLogPath);
 					}
+
+					if (logsJso.has(MCConstants.KEY_LOG_APP)) {
+						// TODO I'm not sure if this will always be an array, but it seems to be for Liberty projects
+						JSONArray appLogsJso = logsJso.getJSONObject(MCConstants.KEY_LOG_APP)
+								.getJSONArray(MCConstants.KEY_LOG_FILE);
+
+						for (int j = 0; j < appLogsJso.length(); j++) {
+							String appLogPath = appLogsJso.getString(j);
+							mcApp.addLogPath(appLogPath);
+						}
+					}
+				}
+				else {
+					MCLogger.logError("Project JSON didn't have logs key: " + appJso);
 				}
 			}
 			catch(JSONException e) {
@@ -144,61 +161,31 @@ public class MicroclimateApplication {
 			}
 		}
 
-		if (showStartingDialog) {
-			displayAppsStartingMsg(appsStillStarting);
-		}
-
 		return runningApps;
 	}
 
-	// TODO it would probably be better to just put these apps into the table, but under 'URL' put that it isn't
-	// started yet - And then prevent the user from proceeded if they select one of these projects.
-	// Current behaviour is not user friendly, and will display this every time if there's a Disabled project.
-	/**
-	 * If an app is still starting up when the app list is being read, the "ports" object will be an empty string,
-	 * and getting the "exposedPort" string from it will throw a JSONException (see above).
-	 * In this case the user has to wait for the app to start up before it will show up in the wizard,
-	 * so here we display a message to let them know why their apps are missing.
-	 *
-	 * @param appsStarting - Names of apps that have not yet bound to a port.
-	 */
-	private static void displayAppsStartingMsg(List<String> appsStarting) {
-		StringBuilder startingAppsBuilder = new StringBuilder();
-
-		if (appsStarting.size() == 0) {
+	private void setBaseUrl() throws MalformedURLException {
+		if (httpPort == -1) {
+			MCLogger.log("Un-setting baseUrl because httpPort is not valid");
+			baseUrl = null;
 			return;
 		}
-		else if (appsStarting.size() == 1) {
-			startingAppsBuilder.append(appsStarting.get(0));
+
+		baseUrl = new URL("http", host, httpPort, "");
+
+		if (contextRoot != null) {
+			baseUrl = new URL(baseUrl, contextRoot);
 		}
-		else {
-			for (int i = 0; i < appsStarting.size(); i++) {
-				String appName = appsStarting.get(i);
-
-				if (appsStarting.size() > 1) {
-					if (i == appsStarting.size() - 1) {
-						// Final item
-						startingAppsBuilder.append("and ").append(appName);
-					}
-					else {
-						startingAppsBuilder.append(appName).append(", ");
-					}
-				}
-			}
-		}
-
-		String appsStartingMsg = "The following projects exist but are not running: " +
-				startingAppsBuilder.toString() +
-				"\nPlease wait a few seconds and then refresh the projects list " +
-				"if you wish to link one of these applications.\n" +
-				"If the project never starts, make sure it isn't Disabled.";
-
-		MCLogger.log("Apps still starting: " + startingAppsBuilder.toString());
-
-		MCUtil.openDialog(false, "Applications still starting", appsStartingMsg);
 	}
 
 	// Getters for our project state fields
+
+	/**
+	 * Can return null if this project hasn't started yet (ie httpPort == -1)
+	 */
+	public URL getBaseUrl() {
+		return baseUrl;
+	}
 
 	public Set<IPath> getLogFilePaths() {
 		return logPaths;
@@ -234,10 +221,15 @@ public class MicroclimateApplication {
 	}
 
 	public MicroclimateServerBehaviour getLinkedServer() {
-		if (linkedServer == null) {
-			MCLogger.logError("Linked server requested for unlinked project " + name);
-		}
 		return linkedServer;
+	}
+
+	public boolean isRunning() {
+		return baseUrl != null;
+	}
+
+	public boolean isLibertyProject() {
+		return MCConstants.PROJECT_TYPE_LIBERTY.equals(projectType);
 	}
 
 	/**
@@ -250,12 +242,17 @@ public class MicroclimateApplication {
 	}
 
 	public synchronized void setHttpPort(int httpPort) {
-		MCLogger.log("Set HTTP port for " + rootUrl.toString() + " to " + httpPort);
+		MCLogger.log("Set HTTP port for " + baseUrl + " to " + httpPort);
 		this.httpPort = httpPort;
+		try {
+			setBaseUrl();
+		} catch (MalformedURLException e) {
+			MCLogger.logError(e);
+		}
 	}
 
 	public synchronized void setDebugPort(int debugPort) {
-		MCLogger.log("Set debug port for " + rootUrl.toString() + " to " + debugPort);
+		MCLogger.log("Set debug port for " + baseUrl + " to " + debugPort);
 		this.debugPort = debugPort;
 	}
 
@@ -266,7 +263,7 @@ public class MicroclimateApplication {
 	 * set to something other than -1 before trying to connect.
 	 */
 	public synchronized void invalidatePorts() {
-		MCLogger.log("Invalidate ports for " + rootUrl.toString());
+		MCLogger.log("Invalidate ports for " + baseUrl.toString());
 		httpPort = -1;
 		debugPort = -1;
 	}
@@ -274,7 +271,7 @@ public class MicroclimateApplication {
 	@Override
 	public String toString() {
 		return String.format("%s@%s id=%s name=%s type=%s loc=%s",
-				MicroclimateApplication.class.getSimpleName(), rootUrl.toString(),
+				MicroclimateApplication.class.getSimpleName(), baseUrl.toString(),
 				projectID, name, projectType, fullLocalPath.toOSString());
 	}
 }

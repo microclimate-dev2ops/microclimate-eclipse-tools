@@ -20,7 +20,7 @@ public class MCUtil {
 	public static void openDialog(boolean isError, String title, String msg) {
 		final int kind = isError ? MessageDialog.ERROR : MessageDialog.INFORMATION;
 
-		Display.getDefault().syncExec(new Runnable() {
+		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
 				MessageDialog.open(kind, Display.getDefault().getActiveShell(), title, msg, 0);

@@ -200,33 +200,41 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		}
 
 		// Cache the mcApps here so that we can be sure the contents of mcApps match the contents of the table
-		mcApps = mcConnection.refreshApps(true);
+		mcApps = mcConnection.getApps();
 
-		for(MicroclimateApplication mcApp : mcApps) {
+		for(MicroclimateApplication app : mcApps) {
 			TableItem ti = new TableItem(projectsTable, SWT.NONE);
 
-			String type = mcApp.projectType;
+			String type = app.projectType;
 			// uppercase the first letter because it looks nicer
 			type = type.substring(0, 1).toUpperCase() + type.substring(1);
 
-			ti.setText(new String[] { mcApp.name, type, mcApp.rootUrl.toString() });
+			String baseUrlStr;
+			if (app.isRunning()) {
+				baseUrlStr = app.getBaseUrl().toString();
+			}
+			else {
+				baseUrlStr = "Not Running";
+			}
+
+			ti.setText(new String[] { app.name, type, baseUrlStr });
 
 			// Gray out invalid projects
-			if (!isAppLinkable(mcApp)) {
+			if (!isAppLinkable(app)) {
 				ti.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY));
 			}
 		}
 	}
 
 	private static boolean isAppLinkable(MicroclimateApplication app) {
-		return app != null && "liberty".equals(app.projectType);
+		return app != null && app.isRunning() && app.isLibertyProject();
 	}
 
 	private void showNoConnectionsMsg() {
 		MessageDialog.openError(getShell(), "No Active Microclimate Connections",
 				"You must create and select a Microclimate connection "
 				+ "in order to import projects from Microclimate. "
-				+ "Click \"Managed Connections\" to add a new connection.");
+				+ "Click \"Manage Connections\" to add a new connection.");
 	}
 
 	MicroclimateApplication getSelectedApp() {
@@ -245,9 +253,20 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				setErrorMessage(null);
 				return true;
 			}
-			else {
+			else if (!selectedApp.isRunning()) {
+				// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
+				// but then we'd have to give them a way to start the project from Eclipse.
+				setErrorMessage("Invalid project selected - This project is not running. "
+						+ "Make sure it is not disabled, wait for it to start, and refresh the list.");
+				return false;
+			}
+			else if (!selectedApp.isLibertyProject()) {
 				setErrorMessage("Invalid project selected - Only Liberty projects are supported at this time.");
 				return false;
+			}
+			else {
+				// should never happen
+				setErrorMessage("Invalid project selected");
 			}
 		}
 

@@ -49,7 +49,7 @@ public class MicroclimateConnection {
 
 		mcSocket = new MicroclimateSocket(this);
 
-		refreshApps(false);
+		refreshApps();
 	}
 
 	/**
@@ -79,12 +79,8 @@ public class MicroclimateConnection {
 
 	/**
 	 * Refresh this connection's list of apps from the Microclimate project list endpoint.
-	 *
-	 * @param isInLinkWizard
-	 * 		- If this is being invoked by the Link Project Wizard -
-	 * 		in this case we might have to display an 'apps still starting' dialog
 	 */
-	public void refreshApps(boolean isInLinkWizard) {
+	public void refreshApps() {
 
 		final String projectsUrl = baseUrl + PROJECTS_LIST_PATH;
 
@@ -102,12 +98,17 @@ public class MicroclimateConnection {
 		}
 
 		try {
-			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse, isInLinkWizard);
+			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse);
 			MCLogger.log("App list update success");
 		}
 		catch(Exception e) {
 			MCUtil.openDialog(true, "Error getting list of projects", e.getMessage());
 		}
+	}
+
+	public List<MicroclimateApplication> getApps() {
+		refreshApps();
+		return apps;
 	}
 
 	public List<MicroclimateApplication> getLinkedApps() {
@@ -129,7 +130,7 @@ public class MicroclimateConnection {
 	}
 
 	private MicroclimateApplication getAppByID(String projectID, boolean retry) {
-		refreshApps(false);
+		refreshApps();
 		for (MicroclimateApplication app : apps) {
 			if (app.projectID.equals(projectID)) {
 				return app;
@@ -156,7 +157,7 @@ public class MicroclimateConnection {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
 			if (server != null) {
 				// All linked apps should have getLinkedServer return non-null.
-				server.setSuffix("Connection to Microclimate at " + baseUrl + " lost", true);
+				server.onMicroclimateDisconnect(baseUrl);
 			}
 		}
 
@@ -169,6 +170,14 @@ public class MicroclimateConnection {
 	 * Called by the MicroclimateSocket when the socket.io connection is working.
 	 */
 	public synchronized void clearConnectionError() {
+		for (MicroclimateApplication app : getLinkedApps()) {
+			MicroclimateServerBehaviour server = app.getLinkedServer();
+			if (server != null) {
+				// All linked apps should have getLinkedServer return non-null.
+				server.onMicroclimateReconnect();
+			}
+		}
+
 		connectionFailedTimestamp = -1;
 	}
 

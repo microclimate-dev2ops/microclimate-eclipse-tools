@@ -1,6 +1,5 @@
 	package com.ibm.microclimate.core.server;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.CoreException;
@@ -26,7 +25,6 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 	// Attributes
 	public static final String
 			// Root URL of this particular project
-			ATTR_APP_URL  	= "appRootUrl",
 			ATTR_PROJ_ID	= "projectID",
 			// Base URL of the corresponding MicroclimateConnection
 			ATTR_MCC_URL	= "mcBaseUrl",
@@ -69,20 +67,7 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public URL getModuleRootURL(IModule arg0) {
-		String rootUrl = getServer().getAttribute(ATTR_APP_URL, "");
-		if(rootUrl.isEmpty()) {
-			MCLogger.logError("No rootUrl attribute");
-			return null;
-		}
-
-		URL url = null;
-		try {
-			url = new URL(rootUrl);
-		} catch (MalformedURLException e) {
-			MCLogger.logError(e);
-		}
-
-		return url;
+		return behaviour.getApp().getBaseUrl();
 	}
 
 	@Override

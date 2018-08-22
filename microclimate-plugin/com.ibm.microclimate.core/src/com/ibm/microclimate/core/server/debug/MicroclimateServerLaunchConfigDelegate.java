@@ -54,11 +54,13 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         	MCUtil.openDialog(true, "Server cannot be started",
         			serverBehaviour.getServer().getName() + " cannot be restarted: " +
 					serverBehaviour.getSuffix());
+        	monitor.setCanceled(true);
         }
         else if (serverBehaviour.getApp() == null) {
 			MCUtil.openDialog(true, "Server Error",
 					"There was an error initializing " + server.getName() +
 					". Please delete and re-create the server.");
+			monitor.setCanceled(true);
         }
         else {
             serverBehaviour.doRestart(config, launchMode, launch, monitor);

@@ -43,7 +43,6 @@ public class MicroclimateServerFactory {
 
 		// We can't pass Objects to the server attribute framework - only primitives
 		// so we provide the info needed for the Server to look up the relevant Microclimate app
-		newServerWc.setAttribute(MicroclimateServer.ATTR_APP_URL, app.rootUrl.toString());
 		newServerWc.setAttribute(MicroclimateServer.ATTR_PROJ_ID, app.projectID);
 
 		// The server will determine the corresponding MCConnection from the baseUrl
