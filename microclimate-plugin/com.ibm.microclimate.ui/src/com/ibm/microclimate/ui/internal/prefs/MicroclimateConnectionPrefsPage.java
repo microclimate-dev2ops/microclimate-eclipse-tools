@@ -2,6 +2,7 @@ package com.ibm.microclimate.ui.internal.prefs;
 
 import java.util.List;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
@@ -17,6 +18,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -24,8 +26,10 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.Activator;
@@ -115,29 +119,53 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 
-				boolean connectionIsInUse = false;
-
 				int[] selected = connectionsTable.getSelectionIndices();
 				for(int i : selected) {
 					MicroclimateConnection connection = connections.get(i);
-					if (connection.hasLinkedApp()) {
-						// You cannot remove it in this case.
-						connectionIsInUse = true;
+					List<MicroclimateApplication> linkedApps = connection.getLinkedApps();
+
+					if (linkedApps.isEmpty()) {
+						MicroclimateConnectionManager.remove(connection);
 					}
 					else {
-						// Do the remove.
-						if(!MicroclimateConnectionManager.remove(connection)) {
-							MCLogger.logError("Connection with index " + i + " was already removed");
+						String[] buttons = new String[] { "Delete Servers", "Cancel" };
+						final int deleteBtnIndex = 0;
+
+						String message =
+								"The following Microclimate applications have linked servers in the workspace: " +
+								getLinkedAppsForConnection(connection) + "\n\n" +
+								"If you still wish to delete the connection to " + connection.baseUrl + ", " +
+								"ALL these servers will be DELETED from your Eclipse workspace.\n" +
+								"Are you sure you want to proceed?";
+
+						MessageDialog dialog = new MessageDialog(
+								getShell(), "Connection has active servers",
+								Display.getDefault().getSystemImage(SWT.ICON_WARNING),
+								message, MessageDialog.WARNING, buttons, 1);	// Select "Cancel" by default
+
+						boolean delete = dialog.open() == deleteBtnIndex;
+
+						if (delete) {
+							boolean deletionSuccess = true;
+							for (MicroclimateApplication app : linkedApps) {
+								IServer server = app.getLinkedServer().getServer();
+								try {
+									server.delete();
+								} catch (CoreException e) {
+									MCLogger.logError("Error deleting server when deleting MCConnection", e);
+									MessageDialog.openError(getShell(),
+											"Error deleting server " + server.getName(),
+											e.getMessage());
+
+									deletionSuccess = false;
+								}
+							}
+
+							if (deletionSuccess) {
+								MicroclimateConnectionManager.remove(connection);
+							}
 						}
 					}
-				}
-
-				if (connectionIsInUse) {
-					// TODO give them the option to delete the servers for them
-					MessageDialog.openError(getShell(), "Could not remove connection",
-							"At least one of the selected connections has projects linked in the workspace.\n"
-									+ "Unlink any projects by deleting the corresponding servers "
-									+ "before removing the Microclimate Connection.");
 				}
 
 				refreshConnectionsList();

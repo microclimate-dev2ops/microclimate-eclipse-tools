@@ -223,6 +223,10 @@ public class MicroclimateApplication {
 		return linkedServer;
 	}
 
+	public boolean isLinkable() {
+		return isRunning() && isLibertyProject();
+	}
+
 	public boolean isRunning() {
 		return baseUrl != null;
 	}

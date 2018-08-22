@@ -45,11 +45,8 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		createHostnameAndPortFields(shell);
 
 		setControl(shell);
-
 	}
 
-	// TODO in the Local case, the user can only create one connection,
-	// so we should just tell them that if they have one already.
 	private void createHostnameAndPortFields(Composite shell) {
 		Composite hostPortGroup = new Composite(shell, SWT.BORDER);
 		//gridData.verticalSpan = 2;
@@ -62,11 +59,17 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		hostnameLabel.setText("Hostname:");
 		hostnameLabel.setLayoutData(hostnamePortLabelData);
 
-		// TODO grey this out (for now) because it's only ever localhost anyway
 		hostnameText = new Text(hostPortGroup, SWT.BORDER);
 		GridData hostnamePortTextData = new GridData(GridData.FILL, GridData.BEGINNING, true, false, 2, 1);
 		hostnameText.setLayoutData(hostnamePortTextData);
 		hostnameText.setText("localhost");
+
+		// grey this out (for now) because it's only ever localhost anyway
+		final String localhostOnly = "Only localhost is supported at this time";
+		hostnameText.setEnabled(false);
+		hostnameLabel.setToolTipText(localhostOnly);
+		// Doesn't work if hostnameText is disabled
+		hostnameText.setToolTipText(localhostOnly);
 
 		/*
 		// Invalidate the wizard when the host or port are changed so that the user has to test the connection again.
@@ -90,15 +93,24 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 		// portText.addModifyListener(modifyListener);
 
-		Button testConnectionBtn = new Button(hostPortGroup, SWT.NONE);
-		testConnectionBtn.setText("Add Connection");
-		testConnectionBtn.addSelectionListener(new SelectionAdapter() {
+		Button addConnectionBtn = new Button(hostPortGroup, SWT.NONE);
+		addConnectionBtn.setText("Add Connection");
+		addConnectionBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				testConnection();
 			}
 		});
-		testConnectionBtn.setLayoutData(new GridData(GridData.CENTER, GridData.CENTER, false, false));
+		addConnectionBtn.setLayoutData(new GridData(GridData.CENTER, GridData.CENTER, false, false));
+
+		// In the Local case, the user can only create one connection,
+		// so if they have one already, block the Add button.
+		if (MicroclimateConnectionManager.connectionsCount() > 0) {
+			addConnectionBtn.setEnabled(false);
+			String existingConnectionUrl = MicroclimateConnectionManager.connections().get(0).baseUrl;
+			setErrorMessage("You already have an existing Microclimate connection at " + existingConnectionUrl +
+					"\nAt this time, only one Microclimate connection is permitted.");
+		}
 	}
 
 	void testConnection() {

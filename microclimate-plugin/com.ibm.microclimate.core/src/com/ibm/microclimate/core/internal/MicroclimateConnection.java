@@ -122,6 +122,7 @@ public class MicroclimateConnection {
 				.collect(Collectors.toList());
 	}
 
+	/*
 	public boolean hasLinkedApp() {
 		if (apps == null) {
 			return false;
@@ -129,7 +130,7 @@ public class MicroclimateConnection {
 
 		return apps.stream()
 				.anyMatch(app -> app.isLinked());
-	}
+	}*/
 
 	/**
 	 * @return The app with the given ID, if it exists in this Microclimate instance, else null.
