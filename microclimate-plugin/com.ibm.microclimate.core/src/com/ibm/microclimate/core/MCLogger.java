@@ -1,51 +1,49 @@
 package com.ibm.microclimate.core;
 
-import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 
 /**
  * @author timetchells@ibm.com
  */
 public class MCLogger {
 
-	private static final SimpleDateFormat TIME_SDF = new SimpleDateFormat("k:mm:ss");
+	// private static final SimpleDateFormat TIME_SDF = new SimpleDateFormat("k:mm:ss");
 
-	private static PrintStream outStream = System.out;
-	private static PrintStream errStream = System.err;
+	private static final ILog logger = com.ibm.microclimate.core.Activator.getDefault().getLog();
 
 	private MCLogger() {}
 
 	public static void log(String msg) {
-		log(msg, false);
+		writeLog(msg, false, null);
 	}
 
 	public static void logError(String msg) {
-		log(msg, true);
+		writeLog(msg, true, null);
 	}
 
 	public static void logError(Throwable t) {
-		logError("Exception occurred:");
-		t.printStackTrace(errStream);
+		logError("Exception occurred:", t);
 	}
 
-	public static void logError(String msg, Throwable cause) {
-		logError(msg);
-		cause.printStackTrace(errStream);
+	public static void logError(String msg, Throwable t) {
+		writeLog(msg, true, t);
 	}
 
 	/**
 	 * Log the given message to stdout or stderr, depending on isError.
 	 * The message is prepended with a timestamp, as well as the caller's class name, method name, and line number.
 	 */
-	private static void log(String msg, boolean isError) {
+	private static void writeLog(String msg, boolean isError, Throwable t) {
 		StackTraceElement[] ste = Thread.currentThread().getStackTrace();
 		StackTraceElement callingMethod = null;
 		for (int x = 0; x < ste.length; x++) {
-			if (ste[x].getMethodName().equals("log")) {
+			if (ste[x].getMethodName().equals("writeLog")) {
 				callingMethod = ste[x++];
-				// Skip over other logging methods, we want to print their callers.
-				while (callingMethod.getMethodName().equals("log")
+				// Skip over logging methods, we want to print their callers.
+				while (callingMethod.getMethodName().equals("writeLog")
+						|| callingMethod.getMethodName().equals("log")
 						|| callingMethod.getMethodName().equals("logError")) {
 					callingMethod = ste[x++];
 				}
@@ -53,12 +51,8 @@ public class MCLogger {
 			}
 		}
 
-		String time = TIME_SDF.format(Calendar.getInstance().getTime());
+		// String time = TIME_SDF.format(Calendar.getInstance().getTime());
 
-		final String level = isError ? "ERROR" : "INFO ";
-
-		@SuppressWarnings("resource")
-		final PrintStream stream = isError ? errStream : outStream;
 		String callerInfo = "unknown";
 
 		if (callingMethod != null) {
@@ -69,8 +63,18 @@ public class MCLogger {
 					simpleClassName, callingMethod.getMethodName(), callingMethod.getLineNumber());
 		}
 
-		String message = String.format("[%s %s %s] %s", level, time, callerInfo, msg);
+		String fullMessage = String.format("[%s] %s", callerInfo, msg);
 
-		stream.println(message);
+		int level = isError ? IStatus.ERROR : IStatus.INFO;
+		IStatus status;
+
+		if (t != null) {
+			status = new Status(level, Activator.PLUGIN_ID, fullMessage, t);
+		}
+		else {
+			status = new Status(level, Activator.PLUGIN_ID, fullMessage);
+		}
+
+		logger.log(status);
 	}
 }
