@@ -12,10 +12,10 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
 
-import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
-import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 
 /**
  *
@@ -104,7 +104,8 @@ public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 	 * Loop over Microclimate Servers, and see if any of them has its project attribute
 	 * set to the same name as this project. In this case there's no point in running the wizard.
 	 *
-	 * TODO will anything funky happen if the user renames the project?
+	 * If the user renames the project after creating the server, this will fail and return null, but
+	 * they will still be blocked from linking when they try to Finish this wizard, so I think that is acceptable.
 	 *
 	 * @return
 	 * 	The name of the server that the given project is already linked to,

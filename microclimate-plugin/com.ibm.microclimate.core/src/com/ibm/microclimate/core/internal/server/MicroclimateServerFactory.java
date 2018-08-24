@@ -8,6 +8,7 @@ import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
 
+import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
@@ -57,6 +58,6 @@ public class MicroclimateServerFactory {
 	}
 
 	private static String getServerNameFor(MicroclimateApplication app) {
-		return "Microclimate Application: " + app.name;
+		return MCConstants.MC_SERVER_BASE_NAME + app.name;
 	}
 }
