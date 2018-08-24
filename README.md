@@ -15,5 +15,5 @@ Provides tools for working with Microclimate\u00ae applications in Eclipse
     
     ```./gradlew```
  
- 4. Test the driver built from Step. 2
+ 4. Test the driver built from Step. 3
     ```microclimate-eclipse-plugin_build/dev/ant_build/artifacts/microclimate-eclipse-plugin-[Version].vYYYY-MM-DD_hhmm.zip```
