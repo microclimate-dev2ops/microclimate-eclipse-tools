@@ -12,6 +12,8 @@ public class MCConstants {
 
 			PROJECT_TYPE_LIBERTY = "liberty",
 
+			MC_SERVER_BASE_NAME = "Microclimate Project: ",
+
 			// Portal API endpoints
 			APIPATH_PROJECT_LIST = "api/v1/projects",
 			APIPATH_ENV = "api/v1/environment",

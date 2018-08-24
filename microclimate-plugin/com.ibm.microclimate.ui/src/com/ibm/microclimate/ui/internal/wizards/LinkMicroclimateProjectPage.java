@@ -42,13 +42,17 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	// List of Applications from the current mcConnection
 	private List<MicroclimateApplication> mcApps;
 
+	private final String selectedProjectName;
+
 	private Combo connectionsCombo;
 	private Table projectsTable;
 
-	protected LinkMicroclimateProjectPage() {
+	protected LinkMicroclimateProjectPage(String selectedProjectName) {
 		super("Link Microclimate Project");
 		setTitle("Link Microclimate Project Title");
 		setDescription("Link Microclimate Project Description");
+
+		this.selectedProjectName = selectedProjectName;
 	}
 
 	@Override
@@ -131,6 +135,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		// Since we called buildConnectionsCombo already, mcConnection must be set
 		populateProjectsTable();
+
 
 		new Label(shell, SWT.NONE);
 
@@ -245,6 +250,21 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				ti.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY));
 			}
 		}
+
+		// Help the user by selecting a project initially
+		TableItem[] items = projectsTable.getItems();
+		// Select the first one by default
+		if (items.length > 0) {
+			projectsTable.select(0);
+		}
+		// Select the project in the table whose name matches the project that was used to launch this wizard
+		for (int i = 0; i < items.length; i++) {
+			TableItem ti = items[i];
+			if (ti.getText(0).equals(selectedProjectName)) {
+				projectsTable.select(i);
+				break;
+			}
+		}
 	}
 
 	private void showNoConnectionsMsg() {
@@ -270,19 +290,23 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				setErrorMessage(null);
 				return true;
 			}
+			// Check out MicroclimateApplication.isLinkable for reasons why this project is not valid,
+			// and give messages for each possible reason.
+			else if (selectedApp.isLinked()) {
+				setErrorMessage("Invalid project selected - This project is already linked to server \""
+						+ selectedApp.getLinkedServer().getServer().getName() + "\".");
+			}
 			else if (!selectedApp.isRunning()) {
 				// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
 				// but then we'd have to give them a way to start the project from Eclipse.
 				setErrorMessage("Invalid project selected - This project is not running. "
 						+ "Make sure it is not disabled, wait for it to start, and refresh the list.");
-				return false;
 			}
 			else if (!selectedApp.isLibertyProject()) {
 				setErrorMessage("Invalid project selected - Only Liberty projects are supported at this time.");
-				return false;
 			}
 			else {
-				// should never happen
+				// should never happen - handle all possible reasons for invalidity above
 				setErrorMessage("Invalid project selected");
 			}
 		}
