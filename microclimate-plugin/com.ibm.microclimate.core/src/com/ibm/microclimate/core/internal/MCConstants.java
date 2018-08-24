@@ -12,7 +12,8 @@ public class MCConstants {
 
 			PROJECT_TYPE_LIBERTY = "liberty",
 
-			PROJECTS_LIST_PATH = "api/v1/projects",
+			PROJECTS_LIST_APIPATH = "api/v1/projects",
+			ENVIRONMENT_APIPATH = "api/v1/environment",
 
 			// App statuses
 			APPSTATE_STARTED = "started",
@@ -40,6 +41,8 @@ public class MCConstants {
 			KEY_PORTS = "ports",
 			KEY_EXPOSED_PORT = "exposedPort",
 			KEY_EXPOSED_DEBUG_PORT = "exposedDebugPort",
+
+			KEY_ENV_WORKSPACE_LOC = "workspace_location",
 
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success",

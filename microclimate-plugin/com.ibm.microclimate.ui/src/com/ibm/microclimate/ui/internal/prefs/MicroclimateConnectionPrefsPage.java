@@ -128,47 +128,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 						MicroclimateConnectionManager.remove(connection);
 					}
 					else {
-						String[] buttons = new String[] { "Cancel", "Delete Servers"  };
-						final int deleteBtnIndex = 1;
-
-						String message =
-								"The following Microclimate applications have linked servers in the workspace: " +
-								getLinkedAppsForConnection(connection) + "\n\n" +
-								"If you still wish to delete the connection to " + connection.baseUrl + ", " +
-								"ALL these servers will be DELETED from your Eclipse workspace.\n" +
-								"Are you sure you want to proceed?";
-
-						MessageDialog dialog = new MessageDialog(
-								getShell(), "Connection has active servers",
-								Display.getDefault().getSystemImage(SWT.ICON_WARNING),
-								message, MessageDialog.WARNING, buttons,
-								// Below is the index of the initially selected button - This unfortunately is always
-								// the rightmost button in the dialog. So it's not possible to have the normal order
-								// (ie Cancel to the left of OK) but also have Cancel selected initially.
-								deleteBtnIndex);
-
-						boolean delete = dialog.open() == deleteBtnIndex;
-
-						if (delete) {
-							boolean deletionSuccess = true;
-							for (MicroclimateApplication app : linkedApps) {
-								IServer server = app.getLinkedServer().getServer();
-								try {
-									server.delete();
-								} catch (CoreException e) {
-									MCLogger.logError("Error deleting server when deleting MCConnection", e);
-									MessageDialog.openError(getShell(),
-											"Error deleting server " + server.getName(),
-											e.getMessage());
-
-									deletionSuccess = false;
-								}
-							}
-
-							if (deletionSuccess) {
-								MicroclimateConnectionManager.remove(connection);
-							}
-						}
+						handleDeleteActiveConnection(connection, linkedApps);
 					}
 				}
 
@@ -220,7 +180,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			try {
 				TableItem ti = new TableItem(connectionsTable, SWT.NONE);
 
-				ti.setText(new String[] { mcc.baseUrl, getLinkedAppsForConnection(mcc) });
+				ti.setText(new String[] { mcc.baseUrl, getLinkedAppNamesForConnection(mcc) });
 			}
 			catch(SWTException e) {
 				// suppress widget disposed exception - It gets thrown if the window is out of focus,
@@ -232,7 +192,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		}
 	}
 
-	private static String getLinkedAppsForConnection(MicroclimateConnection mcc) {
+	private static String getLinkedAppNamesForConnection(MicroclimateConnection mcc) {
 		StringBuilder linkedAppsBuilder = new StringBuilder();
 		final String separator = ", ";
 
@@ -245,5 +205,55 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		}
 
 		return linkedAppsBuilder.length() > 0 ? linkedAppsBuilder.toString() : "none";
+	}
+
+	/**
+	 * Proceeding with deleting this connection will delete all its linked servers too.
+	 * Make this clear to the user, then delete the servers if they still wish to delete the connection.
+	 */
+	private void handleDeleteActiveConnection(MicroclimateConnection connection,
+			List<MicroclimateApplication> linkedApps) {
+
+		String[] buttons = new String[] { "Cancel", "Delete Servers"  };
+		final int deleteBtnIndex = 1;
+
+		String message =
+				"The following Microclimate applications have linked servers in the workspace: " +
+				getLinkedAppNamesForConnection(connection) + "\n\n" +
+				"If you still wish to delete the connection to " + connection.baseUrl + ", " +
+				"ALL these servers will be DELETED from your Eclipse workspace.\n" +
+				"Are you sure you want to proceed?";
+
+		MessageDialog dialog = new MessageDialog(
+				getShell(), "Connection has active servers",
+				Display.getDefault().getSystemImage(SWT.ICON_WARNING),
+				message, MessageDialog.WARNING, buttons,
+				// Below is the index of the initially selected button - This unfortunately is always
+				// the rightmost button in the dialog. So it's not possible to have the normal order
+				// (ie Cancel to the left of OK) but also have Cancel selected initially.
+				deleteBtnIndex);
+
+		boolean delete = dialog.open() == deleteBtnIndex;
+
+		if (delete) {
+			boolean deletionSuccess = true;
+			for (MicroclimateApplication app : linkedApps) {
+				IServer server = app.getLinkedServer().getServer();
+				try {
+					server.delete();
+				} catch (CoreException e) {
+					MCLogger.logError("Error deleting server when deleting MCConnection", e);
+					MessageDialog.openError(getShell(),
+							"Error deleting server " + server.getName(),
+							e.getMessage());
+
+					deletionSuccess = false;
+				}
+			}
+
+			if (deletionSuccess) {
+				MicroclimateConnectionManager.remove(connection);
+			}
+		}
 	}
 }

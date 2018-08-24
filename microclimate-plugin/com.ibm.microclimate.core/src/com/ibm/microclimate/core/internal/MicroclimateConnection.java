@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -28,7 +30,7 @@ public class MicroclimateConnection {
 
 	private List<MicroclimateApplication> apps;
 
-	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException {
+	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException, JSONException {
 		String baseUrl_ = buildUrl(host, port);
 
 		if(!test(baseUrl_)) {
@@ -40,8 +42,6 @@ public class MicroclimateConnection {
 		this.host = host;
 		this.port = port;
 		this.baseUrl = baseUrl_;
-		// TODO - Requires Portal API for getting user's workspace on their machine.
-		this.localWorkspacePath = new Path("/Users/tim/programs/microclimate/");
 
 		// Must set host field before doing this
 		mcSocket = new MicroclimateSocket(this);
@@ -50,6 +50,11 @@ public class MicroclimateConnection {
 			throw new ConnectException(
 					String.format("Connecting to Microclimate Socket at \"%s\" failed", mcSocket.socketUri.toString()));
 		}
+
+		this.localWorkspacePath = getWorkspacePath(this.baseUrl);
+		MCLogger.log(String.format("Created MCConnection with the following info: "
+				+ "host=%s port=%d baseUrl=%s workspacePath=%s",
+				host, port, baseUrl, localWorkspacePath));
 
 		refreshApps();
 	}
@@ -78,22 +83,35 @@ public class MicroclimateConnection {
 		return getResult != null && getResult.contains("Microclimate");
 	}
 
+	private static Path getWorkspacePath(String baseUrl) throws JSONException {
+		final String envUrl = baseUrl + MCConstants.ENVIRONMENT_APIPATH;
+
+		String envResponse = null;
+		try {
+			envResponse = HttpUtil.get(envUrl).response;
+		} catch (IOException e) {
+			MCLogger.logError("Received null response from Environment endpoint", e);
+			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + envUrl);
+			return null;
+		}
+
+		JSONObject env = new JSONObject(envResponse);
+		String workspaceLoc = env.getString(MCConstants.KEY_ENV_WORKSPACE_LOC);
+		return new Path(workspaceLoc);
+	}
+
 	/**
 	 * Refresh this connection's list of apps from the Microclimate project list endpoint.
 	 */
 	public void refreshApps() {
 
-		final String projectsUrl = baseUrl + MCConstants.PROJECTS_LIST_PATH;
+		final String projectsUrl = baseUrl + MCConstants.PROJECTS_LIST_APIPATH;
 
 		String projectsResponse = null;
 		try {
 			projectsResponse = HttpUtil.get(projectsUrl).response;
 		} catch (IOException e) {
-			MCLogger.logError(e);
-		}
-
-		if(projectsResponse == null) {
-			MCLogger.logError("Received null response from projects endpoint");
+			MCLogger.logError("Received null response from projects endpoint", e);
 			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
 			return;
 		}
@@ -199,7 +217,8 @@ public class MicroclimateConnection {
 	}
 
 	public static MicroclimateConnection fromString(String str)
-			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException, URISyntaxException {
+			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException,
+			URISyntaxException, JSONException {
 
 		int hostIndex = str.indexOf(HOST_KEY);
 		String afterHostKey = str.substring(hostIndex + HOST_KEY.length() + 1);

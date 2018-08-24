@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.json.JSONException;
 
 /**
  * Singleton class to keep track of the list of current Microclimate Connections,
@@ -56,7 +57,9 @@ public class MicroclimateConnectionManager {
 	 * @throws ConnectException if the connection fails, or if the connection already exists.
 	 * @return The new connection if it succeeds.
 	 */
-	public static MicroclimateConnection create(String host, int port) throws ConnectException, URISyntaxException {
+	public static MicroclimateConnection create(String host, int port)
+			throws ConnectException, URISyntaxException, JSONException {
+
 		// Will throw an exception if connection fails
 		MicroclimateConnection newConnection = new MicroclimateConnection(host, port);
 		// Connection succeeded
@@ -158,16 +161,16 @@ public class MicroclimateConnectionManager {
 			try {
 				add(MicroclimateConnection.fromString(line));
 			}
-			catch(ConnectException | URISyntaxException e) {
+			catch(StringIndexOutOfBoundsException | NumberFormatException e) {
+				MCLogger.logError(e);
+				MCLogger.logError("Stored MCConnection preference line did not match expected format:\n" + line);
+			}
+			catch(Exception e) {
 				// TODO Probably we should keep the connection info, but mark it as 'inactive' or similar
 				// right now it will just be deleted (because it's never added back to the connections list)
 				MCLogger.logError(e);
 
 				failedConnectionsBuilder.append(e.getMessage()).append('\n');
-			}
-			catch(StringIndexOutOfBoundsException | NumberFormatException e) {
-				MCLogger.logError(e);
-				MCLogger.logError("Stored MCConnection preference line did not match expected format:\n" + line);
 			}
 		}
 

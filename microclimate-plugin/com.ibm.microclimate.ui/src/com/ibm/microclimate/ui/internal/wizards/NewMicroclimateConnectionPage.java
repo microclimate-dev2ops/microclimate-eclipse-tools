@@ -1,8 +1,5 @@
 package com.ibm.microclimate.ui.internal.wizards;
 
-import java.net.ConnectException;
-import java.net.URISyntaxException;
-
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -135,11 +132,11 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 				setMessage("Connecting to " + mcConnection.baseUrl + " succeeded");
 			}
 		}
-		catch(ConnectException | URISyntaxException e) {
-			setErrorMessage(e.getMessage());
-		}
 		catch(NumberFormatException e) {
 			setErrorMessage(String.format("\"%s\" is not a valid port number", portStr));
+		}
+		catch(Exception e) {
+			setErrorMessage(e.getMessage());
 		}
 
 		getWizard().getContainer().updateButtons();
