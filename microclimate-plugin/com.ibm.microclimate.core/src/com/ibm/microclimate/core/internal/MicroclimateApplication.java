@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
 import org.json.JSONArray;
@@ -42,7 +43,7 @@ public class MicroclimateApplication {
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, String projectType, String pathWithinWorkspace,
+			String id, String name, String projectType, String path,
 			int httpPort, String contextRoot)
 					throws MalformedURLException {
 
@@ -50,11 +51,18 @@ public class MicroclimateApplication {
 		this.projectID = id;
 		this.name = name;
 		this.projectType = projectType;
-		this.fullLocalPath = mcConnection.localWorkspacePath.append(pathWithinWorkspace);
 		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.host;
 		this.logPaths = new HashSet<>();
+
+		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
+		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
+		IPath pathWithinWorkspace = new Path(path);
+		if (pathWithinWorkspace.segment(0).equals(mcConnection.localWorkspacePath.lastSegment())) {
+			pathWithinWorkspace = pathWithinWorkspace.removeFirstSegments(1);
+		}
+		this.fullLocalPath = mcConnection.localWorkspacePath.append(pathWithinWorkspace);
 
 		setBaseUrl();
 
@@ -100,6 +108,8 @@ public class MicroclimateApplication {
 					type = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
 				}
 				catch(JSONException e) {
+					// Sometimes (seems to be when project is disabled) this value is missing -
+					// see https://github.ibm.com/dev-ex/portal/issues/425
 					MCLogger.logError("Error getting project type from: " + appJso, e);
 				}
 				String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
@@ -120,6 +130,12 @@ public class MicroclimateApplication {
 						// Indicates the app is not started
 						MCLogger.log(name + " has not bound to a port");
 					}
+					catch(NumberFormatException e) {
+						MCLogger.logError("Error parsing port from " + appJso, e);
+					}
+				}
+				else {
+					MCLogger.log(name + " is not running");
 				}
 
 				String contextRoot = null;
