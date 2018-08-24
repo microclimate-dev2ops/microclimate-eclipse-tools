@@ -9,9 +9,11 @@ import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
@@ -83,7 +85,7 @@ public class MicroclimateConnection {
 	}
 
 	private static Path getWorkspacePath(String baseUrl) throws JSONException {
-		final String envUrl = baseUrl + MCConstants.ENVIRONMENT_APIPATH;
+		final String envUrl = baseUrl + MCConstants.APIPATH_ENV;
 
 		String envResponse = null;
 		try {
@@ -104,7 +106,7 @@ public class MicroclimateConnection {
 	 */
 	public void refreshApps() {
 
-		final String projectsUrl = baseUrl + MCConstants.PROJECTS_LIST_APIPATH;
+		final String projectsUrl = baseUrl + MCConstants.APIPATH_PROJECT_LIST;
 
 		String projectsResponse = null;
 		try {
@@ -161,6 +163,59 @@ public class MicroclimateConnection {
 		}
 
 		MCLogger.logError("No project found with ID " + projectID);
+		return null;
+	}
+
+	public void requestProjectRestart(MicroclimateApplication app, String launchMode)
+			throws JSONException, IOException {
+
+		// TODO hardcoded filewatcher port.
+        String url = "http://localhost:9091/" + MCConstants.APIPATH_PROJECT_ACTION;
+
+		JSONObject restartProjectPayload = new JSONObject();
+		restartProjectPayload
+				.put(MCConstants.KEY_ACTION, MCConstants.ACTION_RESTART)
+				//.put(MCConstants.KEY_START_MODE, launchMode)
+				// TODO switch back to above once erin's PR is in
+				.put("mode", launchMode)
+				.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+
+		// This initiates the restart
+		HttpUtil.post(url, restartProjectPayload);
+		app.invalidatePorts();
+	}
+
+	/**
+	 * Get the project status endpoint, and filter the response for the JSON corresponding to the given project.
+	 * @return
+	 * 	The JSON containing the status info for the given project,
+	 * 	or null if the project is not found in the status info.
+	 */
+	public JSONObject requestProjectStatus(MicroclimateApplication app) throws IOException, JSONException {
+		final String statusUrl = baseUrl + MCConstants.APIPATH_PROJECT_LIST;
+
+		HttpResult result = HttpUtil.get(statusUrl);
+
+		if (!result.isGoodResponse) {
+			final String msg = String.format("Received bad response from server %d with error message %s",
+					result.responseCode, result.error);
+			throw new IOException(msg);
+		}
+		else if (result.response == null) {
+			// I don't think this will ever happen.
+			throw new IOException("Server returned good response code, but null response when getting initial state");
+		}
+
+		JSONArray allProjectStatuses = new JSONArray(result.response);
+		for (int i = 0; i < allProjectStatuses.length(); i++) {
+			JSONObject projectStatus = allProjectStatuses.getJSONObject(i);
+			if (projectStatus.getString(MCConstants.KEY_PROJECT_ID).equals(app.projectID)) {
+				// Success - found the project of interest
+				return projectStatus;
+			}
+		}
+
+		MCLogger.log("Didn't find status info for project " + app.name);
 		return null;
 	}
 

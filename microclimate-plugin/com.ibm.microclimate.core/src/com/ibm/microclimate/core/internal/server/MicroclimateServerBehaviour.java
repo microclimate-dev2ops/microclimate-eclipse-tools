@@ -18,13 +18,10 @@ import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.Activator;
-import com.ibm.microclimate.core.internal.HttpUtil;
-import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
@@ -143,63 +140,32 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private void setInitialState() {
-		final String statusUrl = app.mcConnection.baseUrl + MCConstants.PROJECTS_LIST_APIPATH;
-
-		HttpResult result;
 		try {
-			result = HttpUtil.get(statusUrl);
-		}
-		catch (IOException e) {
-			MCLogger.logError(e);
-			setServerState(IServer.STATE_UNKNOWN);
-			return;
-		}
+			JSONObject projectStatus = app.mcConnection.requestProjectStatus(app);
 
-		if (!result.isGoodResponse) {
-			MCLogger.logError("Received bad response from server: " + result.responseCode);
-			MCLogger.logError("Error message: " + result.error);
-		}
-		else if (result.response == null) {
-			MCLogger.logError("Good response code, but null response when getting initial state");
-		}
-		else {
-			try {
-				JSONArray allProjectStatuses = new JSONArray(result.response);
-				boolean foundProject = false;
-				for (int i = 0; i < allProjectStatuses.length(); i++) {
-					JSONObject projectStatus = allProjectStatuses.getJSONObject(i);
-					if (projectStatus.getString(MCConstants.KEY_PROJECT_ID).equals(app.projectID)) {
-						// Found the project of interest
+			if (projectStatus == null) {
+				onProjectDisableOrDelete();
+			}
 
-						// Check if the project is open
-						if (projectStatus.has(MCConstants.KEY_OPEN_STATE) &&
-								projectStatus.getString(MCConstants.KEY_OPEN_STATE)
-									.equals(MCConstants.VALUE_STATE_CLOSED)) {
+			// Check if the project is open
+			if (projectStatus.has(MCConstants.KEY_OPEN_STATE) &&
+					projectStatus.getString(MCConstants.KEY_OPEN_STATE)
+						.equals(MCConstants.VALUE_STATE_CLOSED)) {
 
-							// Project has been disabled
-							onProjectDisableOrDelete();
-						}
-						else {
-							// Project is running
-							// Pass this off to the regular server state updater
-							updateServerState(projectStatus);
-							foundProject = true;
-						}
-
-						break;
-					}
-				}
-
-				if (!foundProject) {
-					MCLogger.log("Didn't find status info for project " + app.name);
-					onProjectDisableOrDelete();
-				}
-				return;
-			} catch (JSONException e) {
-				MCLogger.logError("JSON exception when getting initial state", e);
+				// Project has been disabled
+				onProjectDisableOrDelete();
+			}
+			else {
+				// Project is running
+				// Pass this off to the regular server state updater
+				updateServerState(projectStatus);
 			}
 		}
-		setServerState(IServer.STATE_UNKNOWN);
+		catch(IOException | JSONException e) {
+			MCLogger.logError("Error setting project initial state", e);
+			MCUtil.openDialog(true, "Error setting server initial state", e.getMessage());
+			setServerState(IServer.STATE_UNKNOWN);
+		}
 	}
 
 	public void updateServerState(JSONObject projectChangedEvent)
@@ -320,28 +286,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	public void doRestart(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch,
 			IProgressMonitor monitor) {
 
-		// TODO hardcoded filewatcher port.
-        String url = "http://localhost:9091/api/v1/projects/action";
-
-		JSONObject restartProjectPayload = new JSONObject();
 		try {
-			restartProjectPayload
-					.put("action", "restart")
-					.put("mode", launchMode)
-					.put("projectID", app.projectID);
-
-		} catch (JSONException e) {
-			MCLogger.logError(e);
-			return;
-		}
-
-		try {
-			// This initiates the restart
-			HttpUtil.post(url, restartProjectPayload);
-			app.invalidatePorts();
-		} catch (IOException e) {
-			// TODO handle better
-			MCLogger.logError("Error POSTing restart request", e);
+			app.mcConnection.requestProjectRestart(app, launchMode);
+		} catch (JSONException | IOException e) {
+			MCLogger.logError("Error initiating project restart", e);
+			MCUtil.openDialog(true, "Error initiating project restart", e.getMessage());
 			return;
 		}
 
@@ -414,8 +363,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			}
 
 			try {
-				MCLogger.log("Waiting for server to be: " + desiredStatesStr + ", is currently " +
-						MCConstants.serverStateToAppStatus(getServer().getServerState()));
+				MCLogger.log("Waiting for " + getServer().getName() + " to be: " + desiredStatesStr + ", is currently "
+						+ MCConstants.serverStateToAppStatus(getServer().getServerState()));
 
 				Thread.sleep(pollRateMs);
 			}
