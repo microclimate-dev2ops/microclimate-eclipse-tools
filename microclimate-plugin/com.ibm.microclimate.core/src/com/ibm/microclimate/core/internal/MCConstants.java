@@ -13,8 +13,9 @@ public class MCConstants {
 			PROJECT_TYPE_LIBERTY = "liberty",
 
 			// Portal API endpoints
-			PROJECTS_LIST_APIPATH = "api/v1/projects",
-			ENVIRONMENT_APIPATH = "api/v1/environment",
+			APIPATH_PROJECT_LIST = "api/v1/projects",
+			APIPATH_ENV = "api/v1/environment",
+			APIPATH_PROJECT_ACTION = "api/v1/projects/action",
 
 			// App statuses
 			APPSTATE_STARTED = "started",
@@ -49,13 +50,18 @@ public class MCConstants {
 
 			KEY_ENV_WORKSPACE_LOC = "workspace_location",
 
+			KEY_ACTION = "action",
+			KEY_START_MODE = "startMode",
+
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success",
 
 			BUILD_STATUS_INPROGRESS = "inProgress",
 			BUILD_STATUS_SUCCESS = "success",
 			BUILD_STATUS_FAILED = "failed",
-			BUILD_STATUS_UNKNOWN = "unknown"
+			BUILD_STATUS_UNKNOWN = "unknown",
+
+			ACTION_RESTART = "restart"
 			;
 
 	/**
