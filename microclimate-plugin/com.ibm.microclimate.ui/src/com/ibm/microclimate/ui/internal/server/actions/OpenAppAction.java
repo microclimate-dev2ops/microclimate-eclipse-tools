@@ -20,8 +20,7 @@ import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 public class OpenAppAction implements IObjectActionDelegate {
 
-
-    protected IServer server;
+    protected MicroclimateServerBehaviour mcServer;
 
     @Override
     public void selectionChanged(IAction action, ISelection selection) {
@@ -34,9 +33,8 @@ public class OpenAppAction implements IObjectActionDelegate {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof IServer) {
-                server = (IServer) obj;
-                MicroclimateServerBehaviour mcServer = (MicroclimateServerBehaviour)
-                		server.loadAdapter(MicroclimateServerBehaviour.class, null);
+            	IServer srv = (IServer) obj;
+            	mcServer = (MicroclimateServerBehaviour) srv.loadAdapter(MicroclimateServerBehaviour.class, null);
 
                 action.setEnabled(mcServer != null && mcServer.isStarted());
                 return;
@@ -47,14 +45,15 @@ public class OpenAppAction implements IObjectActionDelegate {
 
     @Override
     public void run(IAction action) {
-        if (server == null) {
+        if (mcServer == null) {
+        	// should not be possible
+        	MCLogger.logError("OpenAppAction ran but no MCServer was selected");
 			return;
 		}
 
-        MicroclimateServerBehaviour mcServer = (MicroclimateServerBehaviour)
-        		server.loadAdapter(MicroclimateServerBehaviour.class, null);
         MicroclimateApplication app = mcServer.getApp();
-        if (app == null || mcServer.getServer().getServerState() != IServer.STATE_STARTED) {
+        // Shouldn't happen because the action is disabled for non-started servers, but just in case:
+        if (app == null || !mcServer.isStarted() || app.getBaseUrl() == null) {
         	MCUtil.openDialog(true, "Can't open an app that isn't running",
         			"This server's project is not found or not running. "
         			+ "Please make sure the project is [Started] before trying to open the application.");
