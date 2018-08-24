@@ -31,9 +31,36 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
             return;
         }
 
-		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode");
-
         final MicroclimateServerBehaviour serverBehaviour = server.getAdapter(MicroclimateServerBehaviour.class);
+
+        // Validate here that the server can actually be restarted.
+        String errorTitle = "Error Starting Server";
+        String errorMsg = "";
+        if (serverBehaviour.getSuffix() != null) {
+        	// It's possible that in the future there will be non-error suffixes, but for now a suffix implies
+        	// that the server is stopped and cannot be started - the user has to take some action in microclimate.
+        	errorTitle = "Server cannot be started";
+        	errorMsg = serverBehaviour.getServer().getName() + " cannot be started: " + serverBehaviour.getSuffix();
+        }
+        else if (!serverBehaviour.isStarted()) {
+        	errorTitle = "Can only restart a Started server";
+        	errorMsg = "You can only restart a server if it is in the Started state. " +
+        			"Wait for the server to be Started and then try again.";
+        }
+        else if (serverBehaviour.getApp() == null) {
+			errorTitle = "Server Error";
+			errorMsg = "There was an error initializing " + server.getName() +
+				". Please delete and re-create the server.";
+        }
+
+        if (!errorMsg.isEmpty()) {
+        	MCUtil.openDialog(true, errorTitle, errorMsg);
+
+        	monitor.setCanceled(true);
+        	return;
+        }
+
+		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode");
 
         final String projectName = server.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, "");
         if (projectName.isEmpty()) {
@@ -50,21 +77,7 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         setDefaultSourceLocator(launch, config);
         serverBehaviour.setLaunch(launch);
 
-        if (serverBehaviour.getSuffix() != null) {
-        	MCUtil.openDialog(true, "Server cannot be started",
-        			serverBehaviour.getServer().getName() + " cannot be restarted: " +
-					serverBehaviour.getSuffix());
-        	monitor.setCanceled(true);
-        }
-        else if (serverBehaviour.getApp() == null) {
-			MCUtil.openDialog(true, "Server Error",
-					"There was an error initializing " + server.getName() +
-					". Please delete and re-create the server.");
-			monitor.setCanceled(true);
-        }
-        else {
-            serverBehaviour.doRestart(config, launchMode, launch, monitor);
-        }
+        serverBehaviour.doRestart(config, launchMode, launch, monitor);
         monitor.done();
 	}
 

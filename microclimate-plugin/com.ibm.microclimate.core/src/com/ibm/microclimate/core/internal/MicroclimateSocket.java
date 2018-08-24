@@ -190,7 +190,7 @@ public class MicroclimateSocket {
 			return;
 		}
 
-		serverBehaviour.onProjectDeletion();
+		serverBehaviour.onProjectDisableOrDelete();
 	}
 
 	private MicroclimateServerBehaviour getServerForEvent(JSONObject event) throws JSONException {

@@ -1,6 +1,5 @@
 package com.ibm.microclimate.core.internal.server;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.Map;
@@ -19,6 +18,7 @@ import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -71,7 +71,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getConnection(mcConnectionBaseUrl);
 		if (mcConnection == null) {
-			onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl);
+			onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl +
+					", try re-creating the connection.");
 			return;
 		}
 
@@ -81,7 +82,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			onInitializeFailure("Couldn't find project with ID " + projectID + " on Microclimate at "
 					+ mcConnection.baseUrl + ". Make sure the project has not been deleted or disabled.");
 			// getServer().delete();
-			onProjectDeletion();
+			onProjectDisableOrDelete();
 			return;
 		}
 		// Set unlinked in dispose()
@@ -133,23 +134,20 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 	}
 
+	public boolean isStarted() {
+		return getServer().getServerState() == IServer.STATE_STARTED;
+	}
+
 	public MicroclimateApplication getApp() {
 		return app;
 	}
 
 	private void setInitialState() {
-		// TODO hardcoded filewatcher port
-		String statusUrl = "http://localhost:9091/api/v1/projects/status/?type=appState&projectID=%s";
-		statusUrl = String.format(statusUrl, app.projectID);
+		final String statusUrl = app.mcConnection.baseUrl + MCConstants.PROJECTS_LIST_APIPATH;
 
 		HttpResult result;
 		try {
 			result = HttpUtil.get(statusUrl);
-		}
-		catch(FileNotFoundException e) {
-			// This happens if the project has been disabled or deleted
-			onProjectDeletion();
-			return;
 		}
 		catch (IOException e) {
 			MCLogger.logError(e);
@@ -166,9 +164,36 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		else {
 			try {
-				JSONObject appStateJso = new JSONObject(result.response);
-				// Pass this off to the regular server state updater
-				updateServerState(appStateJso);
+				JSONArray allProjectStatuses = new JSONArray(result.response);
+				boolean foundProject = false;
+				for (int i = 0; i < allProjectStatuses.length(); i++) {
+					JSONObject projectStatus = allProjectStatuses.getJSONObject(i);
+					if (projectStatus.getString(MCConstants.KEY_PROJECT_ID).equals(app.projectID)) {
+						// Found the project of interest
+
+						// Check if the project is open
+						if (projectStatus.has(MCConstants.KEY_OPEN_STATE) &&
+								projectStatus.getString(MCConstants.KEY_OPEN_STATE)
+									.equals(MCConstants.VALUE_STATE_CLOSED)) {
+
+							// Project has been disabled
+							onProjectDisableOrDelete();
+						}
+						else {
+							// Project is running
+							// Pass this off to the regular server state updater
+							updateServerState(projectStatus);
+							foundProject = true;
+						}
+
+						break;
+					}
+				}
+
+				if (!foundProject) {
+					MCLogger.log("Didn't find status info for project " + app.name);
+					onProjectDisableOrDelete();
+				}
 				return;
 			} catch (JSONException e) {
 				MCLogger.logError("JSON exception when getting initial state", e);
@@ -210,7 +235,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		setSuffix(status, IServer.STATE_STOPPED);
 	}
 
-	public void onProjectDeletion() {
+	public void onProjectDisableOrDelete() {
 		setSuffix("Project has been deleted or disabled in Microclimate", IServer.STATE_STOPPED);
 	}
 

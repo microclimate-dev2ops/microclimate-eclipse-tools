@@ -38,7 +38,7 @@ public class OpenAppAction implements IObjectActionDelegate {
                 MicroclimateServerBehaviour mcServer = (MicroclimateServerBehaviour)
                 		server.loadAdapter(MicroclimateServerBehaviour.class, null);
 
-                action.setEnabled(mcServer != null);
+                action.setEnabled(mcServer != null && mcServer.isStarted());
                 return;
             }
         }
@@ -58,6 +58,7 @@ public class OpenAppAction implements IObjectActionDelegate {
         	MCUtil.openDialog(true, "Can't open an app that isn't running",
         			"This server's project is not found or not running. "
         			+ "Please make sure the project is [Started] before trying to open the application.");
+        	return;
         }
 
         URL appRootUrl = app.getBaseUrl();

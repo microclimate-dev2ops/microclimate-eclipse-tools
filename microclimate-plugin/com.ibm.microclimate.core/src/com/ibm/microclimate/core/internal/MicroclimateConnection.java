@@ -28,7 +28,7 @@ public class MicroclimateConnection {
 
 	private final MicroclimateSocket mcSocket;
 
-	private List<MicroclimateApplication> apps;
+	private List<MicroclimateApplication> apps = Collections.emptyList();
 
 	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException, JSONException {
 		String baseUrl_ = buildUrl(host, port);
@@ -52,11 +52,10 @@ public class MicroclimateConnection {
 		}
 
 		this.localWorkspacePath = getWorkspacePath(this.baseUrl);
-		MCLogger.log(String.format("Created MCConnection with the following info: "
-				+ "host=%s port=%d baseUrl=%s workspacePath=%s",
-				host, port, baseUrl, localWorkspacePath));
 
 		refreshApps();
+
+		MCLogger.log(String.format("Created " + this));
 	}
 
 	/**
@@ -90,7 +89,7 @@ public class MicroclimateConnection {
 		try {
 			envResponse = HttpUtil.get(envUrl).response;
 		} catch (IOException e) {
-			MCLogger.logError("Received null response from Environment endpoint", e);
+			MCLogger.logError("Error contacting Environment endpoint", e);
 			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + envUrl);
 			return null;
 		}
@@ -111,7 +110,7 @@ public class MicroclimateConnection {
 		try {
 			projectsResponse = HttpUtil.get(projectsUrl).response;
 		} catch (IOException e) {
-			MCLogger.logError("Received null response from projects endpoint", e);
+			MCLogger.logError("Error contacting Projects endpoint", e);
 			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
 			return;
 		}
@@ -205,18 +204,25 @@ public class MicroclimateConnection {
 		return otherMcc.baseUrl.equals(baseUrl);
 	}
 
-	// Note that toString and fromString are used to save and load connections from the preferences store
+	@Override
+	public String toString() {
+		return String.format("%s host=%s port=%d baseUrl=%s workspacePath=%s numApps=%d",
+				MicroclimateConnection.class.getSimpleName(), host, port, baseUrl, localWorkspacePath, apps.size());
+	}
+
+	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
 	// in MicroclimateConnectionManager, so be careful modifying these.
 
 	private static final String HOST_KEY = "$host", PORT_KEY = "$port";
 
-	@Override
-	public String toString() {
+	public String toPrefsString() {
+		// No newlines allowed!
+
 		return String.format("%s %s=%s %s=%s", MicroclimateConnection.class.getSimpleName(),
 				HOST_KEY, host, PORT_KEY, port);
 	}
 
-	public static MicroclimateConnection fromString(String str)
+	public static MicroclimateConnection fromPrefsString(String str)
 			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException,
 			URISyntaxException, JSONException {
 

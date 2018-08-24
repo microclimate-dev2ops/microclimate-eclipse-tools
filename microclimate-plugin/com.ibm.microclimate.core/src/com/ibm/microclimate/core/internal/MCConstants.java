@@ -12,6 +12,7 @@ public class MCConstants {
 
 			PROJECT_TYPE_LIBERTY = "liberty",
 
+			// Portal API endpoints
 			PROJECTS_LIST_APIPATH = "api/v1/projects",
 			ENVIRONMENT_APIPATH = "api/v1/environment",
 
@@ -33,6 +34,10 @@ public class MCConstants {
 			KEY_LOG_BUILD = "build",
 			KEY_LOG_APP = "app",
 			KEY_LOG_FILE = "file",
+
+			KEY_OPEN_STATE = "state",
+			// VALUE_STATE_OPEN = "open",
+			VALUE_STATE_CLOSED = "closed",
 
 			KEY_STATUS = "status",
 			KEY_APP_STATUS = "appStatus",

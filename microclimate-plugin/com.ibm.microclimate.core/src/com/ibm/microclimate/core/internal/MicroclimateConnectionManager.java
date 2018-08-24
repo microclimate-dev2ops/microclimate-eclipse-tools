@@ -111,7 +111,7 @@ public class MicroclimateConnectionManager {
 	 * Try to remove the given connection. Removal will fail if the connection is still in use (ie. has a linked app).
 	 * @return
 	 * 	true if the connection was removed,
-	 * 	false if not - either because the connection is still in use and wasn't removed, or because it didnt' exist.
+	 * 	false if not because it didn't exist.
 	 */
 	public static boolean remove(MicroclimateConnection connection) {
 		connection.disconnect();
@@ -123,6 +123,9 @@ public class MicroclimateConnectionManager {
 		return removeResult;
 	}
 
+	/**
+	 * Deletes all of the instance's connections. Does NOT write to preferences after doing so.
+	 */
 	public static void clear() {
 		MCLogger.log("Clearing " + instance().connections.size() + " connections");
 		instance().connections.clear();
@@ -134,8 +137,7 @@ public class MicroclimateConnectionManager {
 		StringBuilder prefsBuilder = new StringBuilder();
 
 		for(MicroclimateConnection mcc : connections()) {
-			// This is safe so long as there are no newlines in mcc.toString().
-			prefsBuilder.append(mcc.toString()).append('\n');
+			prefsBuilder.append(mcc.toPrefsString()).append('\n');
 		}
 		MCLogger.log("Writing connections to preferences: " + prefsBuilder.toString());
 
@@ -159,7 +161,7 @@ public class MicroclimateConnectionManager {
 			}
 
 			try {
-				add(MicroclimateConnection.fromString(line));
+				add(MicroclimateConnection.fromPrefsString(line));
 			}
 			catch(StringIndexOutOfBoundsException | NumberFormatException e) {
 				MCLogger.logError(e);
