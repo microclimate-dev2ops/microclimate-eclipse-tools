@@ -21,6 +21,8 @@ import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
  * @author timetchells@ibm.com
  */
 public class MicroclimateConnection {
+	
+	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace";
 
 	public final String host;
 	public final int port;
@@ -85,6 +87,12 @@ public class MicroclimateConnection {
 	}
 
 	private static Path getWorkspacePath(String baseUrl) throws JSONException {
+		// Try the internal system property first
+		String path = System.getProperty(MICROCLIMATE_WORKSPACE_PROPERTY, null);
+		if (path != null && !path.isEmpty()) {
+			return new Path(path);
+		}
+		
 		final String envUrl = baseUrl + MCConstants.APIPATH_ENV;
 
 		String envResponse = null;
@@ -177,7 +185,7 @@ public class MicroclimateConnection {
 				.put(MCConstants.KEY_ACTION, MCConstants.ACTION_RESTART)
 				//.put(MCConstants.KEY_START_MODE, launchMode)
 				// TODO switch back to above once erin's PR is in
-				.put("mode", launchMode)
+				.put("startMode", launchMode)
 				.put(MCConstants.KEY_PROJECT_ID, app.projectID);
 
 		// This initiates the restart
