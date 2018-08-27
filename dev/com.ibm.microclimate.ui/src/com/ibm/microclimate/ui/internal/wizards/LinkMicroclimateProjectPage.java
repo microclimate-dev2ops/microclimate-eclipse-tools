@@ -8,6 +8,8 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -20,7 +22,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PreferencesUtil;
+import org.eclipse.ui.dialogs.SearchPattern;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
@@ -46,26 +50,33 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 	private Combo connectionsCombo;
 	private Table projectsTable;
+	private Text filterText;
+	
+	protected SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
 
 	protected LinkMicroclimateProjectPage(String selectedProjectName) {
-		super("Link Microclimate Project");
-		setTitle("Link Microclimate Project Title");
-		setDescription("Link Microclimate Project Description");
+		super("Link to Microclimate Project");
+		setTitle("Link to Microclimate Project");
+		setDescription("Link to a project in Microclimate");
 
 		this.selectedProjectName = selectedProjectName;
 	}
 
 	@Override
 	public void createControl(Composite parent) {
-		Composite shell = new Composite(parent, SWT.NULL);
-		shell.setLayout(new GridLayout(4, false));
+		Composite composite = new Composite(parent, SWT.NULL);
+		composite.setLayout(new GridLayout(3, false));
+		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		composite.setLayoutData(gridData);
 
-		Label connectionsLabel = new Label(shell, SWT.BORDER);
+		Label connectionsLabel = new Label(composite, SWT.NONE);
 		connectionsLabel.setText("Microclimate Connection:");
-		connectionsLabel.setLayoutData(new GridData(GridData.END, GridData.BEGINNING, false, false));
+		gridData = new GridData(SWT.FILL, SWT.CENTER, false, false);
+		connectionsLabel.setLayoutData(gridData);
 
-		connectionsCombo = new Combo(shell, SWT.READ_ONLY);
-		connectionsCombo.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, false, false));
+		connectionsCombo = new Combo(composite, SWT.READ_ONLY);
+		gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		connectionsCombo.setLayoutData(gridData);
 
 		connectionsCombo.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -75,25 +86,10 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		});
 
-		populateConnectionsCombo();
-		// Initially select the first mcConnection
-		connectionsCombo.select(0);
-		setMCConnection();
-
-		Button refreshProjectsBtn = new Button(shell, SWT.NONE);
-		refreshProjectsBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-		refreshProjectsBtn.setText("Refresh Projects");
-
-		refreshProjectsBtn.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent se) {
-				populateProjectsTable();
-			}
-		});
-
-		Button manageConnectionsBtn = new Button(shell, SWT.BORDER);
-		manageConnectionsBtn.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		Button manageConnectionsBtn = new Button(composite, SWT.PUSH);
 		manageConnectionsBtn.setText("Manage Connections");
+		gridData = new GridData(SWT.FILL, SWT.FILL, false, false);
+		manageConnectionsBtn.setLayoutData(gridData);
 
 		manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -104,15 +100,42 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				prefsDialog.open();
 			}
 		});
+		
+		populateConnectionsCombo();
+		// Initially select the first mcConnection
+		connectionsCombo.select(0);
+		setMCConnection();
+		
+		// Add spacing
+		Label spacer = new Label(composite, SWT.NONE);
+		gridData = new GridData(GridData.FILL, GridData.FILL, false, false, 3, 1);
+		spacer.setLayoutData(gridData);
+		
+		Label projectsLabel = new Label(composite, SWT.NONE);
+		projectsLabel.setText("Select project:");
+		gridData = new GridData(GridData.FILL, GridData.CENTER, false, false, 3, 1);
+		projectsLabel.setLayoutData(gridData);
+		
+		Composite projectsComposite = new Composite(composite, SWT.NONE);
+		projectsComposite.setLayout(new GridLayout(2, false));
+		gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
+		projectsComposite.setLayoutData(gridData);
+		
+        filterText = new Text(projectsComposite, SWT.SEARCH);
+        gridData = new GridData(GridData.FILL, GridData.CENTER, true, false, 1, 1);
+        filterText.setLayoutData(gridData);
+        filterText.setMessage("type filter text");
+        
+        // Use up the second column
+        new Label(projectsComposite, SWT.NONE);
 
-		// just for spacing
-		new Label(shell, SWT.NONE);
-
-		projectsTable = new Table(shell, SWT.BORDER | SWT.SINGLE);
-		GridData tableLayout = new GridData(GridData.BEGINNING, GridData.CENTER, true, true, 4, 1);
-		tableLayout.minimumWidth = 600;
-		tableLayout.minimumHeight = 200;
-		projectsTable.setLayoutData(tableLayout);
+		projectsTable = new Table(projectsComposite, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
+		projectsTable.setLinesVisible(true);
+		projectsTable.setHeaderVisible(true);
+		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
+		gridData.minimumWidth = 600;
+		gridData.minimumHeight = 200;
+		projectsTable.setLayoutData(gridData);
 		projectsTable.setHeaderVisible(true);
 		projectsTable.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -125,19 +148,35 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		TableColumn nameColumn = new TableColumn(projectsTable, SWT.BORDER);
 		nameColumn.setText("Project Name");
-		nameColumn.setWidth((int)(tableLayout.minimumWidth / 2.75));
+		nameColumn.setWidth((int)(gridData.minimumWidth / 2.75));
 		TableColumn typeColumn = new TableColumn(projectsTable, SWT.BORDER);
 		typeColumn.setText("Type");
 		typeColumn.setWidth(nameColumn.getWidth() / 2);
 		TableColumn urlColumn = new TableColumn(projectsTable, SWT.BORDER);
 		urlColumn.setText("URL");
-		urlColumn.setWidth(tableLayout.minimumWidth - nameColumn.getWidth() - typeColumn.getWidth());
+		urlColumn.setWidth(gridData.minimumWidth - nameColumn.getWidth() - typeColumn.getWidth());
+		
+		Button refreshProjectsBtn = new Button(projectsComposite, SWT.PUSH);
+		refreshProjectsBtn.setText("Refresh Projects");
+		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
+		refreshProjectsBtn.setLayoutData(gridData);
 
+		refreshProjectsBtn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent se) {
+				populateProjectsTable();
+			}
+		});
+		
+        filterText.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent event) {
+                populateProjectsTable();
+            }
+        });
+		
 		// Since we called buildConnectionsCombo already, mcConnection must be set
 		populateProjectsTable();
-
-
-		new Label(shell, SWT.NONE);
 
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
 		.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -151,8 +190,8 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		});
 
-		shell.pack();
-		setControl(shell);
+		composite.pack();
+		setControl(composite);
 	}
 
 	private void populateConnectionsCombo() {
@@ -227,8 +266,16 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				return 0;
 			}
 		});
+		
+		String filter = filterText.isDisposed() ? null : filterText.getText();
 
+		if (filter != null && !filter.isEmpty()) {
+			pattern.setPattern("*" + filter + "*");
+		}
 		for(MicroclimateApplication app : mcApps) {
+			if (filter != null && !filter.isEmpty() && !pattern.matches(app.name)) {
+				continue;
+			}
 			TableItem ti = new TableItem(projectsTable, SWT.NONE);
 
 			String type = app.projectType;
