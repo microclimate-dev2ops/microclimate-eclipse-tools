@@ -83,7 +83,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1);
 		existingConnections.setLayoutData(gridData);
 
-		connectionsTable = new Table(composite, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
+		connectionsTable = new Table(composite, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
 		connectionsTable.setLinesVisible(true);
 		connectionsTable.setHeaderVisible(true);
 		gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2);

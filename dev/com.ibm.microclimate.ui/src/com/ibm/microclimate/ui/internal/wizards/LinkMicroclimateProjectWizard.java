@@ -41,7 +41,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	@Override
 	public void addPages() {
-		setWindowTitle("Link Microclimate Project Wizard Window Title");
+		setWindowTitle("Link to Microclimate Project");
 
 		newProjectPage = new LinkMicroclimateProjectPage(selectedProject.getName());
 		// newConnectionPage.setProject(project);
