@@ -183,9 +183,7 @@ public class MicroclimateConnection {
 		JSONObject restartProjectPayload = new JSONObject();
 		restartProjectPayload
 				.put(MCConstants.KEY_ACTION, MCConstants.ACTION_RESTART)
-				//.put(MCConstants.KEY_START_MODE, launchMode)
-				// TODO switch back to above once erin's PR is in
-				.put("startMode", launchMode)
+				.put(MCConstants.KEY_START_MODE, launchMode)
 				.put(MCConstants.KEY_PROJECT_ID, app.projectID);
 
 		// This initiates the restart
