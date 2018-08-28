@@ -13,11 +13,13 @@ public class MCConstants {
 			PROJECT_TYPE_LIBERTY = "liberty",
 
 			MC_SERVER_BASE_NAME = "Microclimate Project: ",
-
+			
 			// Portal API endpoints
+			APIPATH_PROJECTS_BASE = "api/v1/projects",
 			APIPATH_PROJECT_LIST = "api/v1/projects",
 			APIPATH_ENV = "api/v1/environment",
 			APIPATH_PROJECT_ACTION = "api/v1/projects/action",
+			APIPATH_RESTART = "restart",
 
 			// App statuses
 			APPSTATE_STARTED = "started",
