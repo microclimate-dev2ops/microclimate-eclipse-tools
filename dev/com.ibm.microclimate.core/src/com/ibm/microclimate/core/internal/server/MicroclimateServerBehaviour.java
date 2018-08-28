@@ -312,7 +312,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			try {
 				IDebugTarget debugTarget = connectDebugger(launch, monitor);
 				if (debugTarget != null) {
-					// TODO how to set 'Debugging' state ?
+					setMode(ILaunchManager.DEBUG_MODE);
 					MCLogger.log("Debugger connect success");
 				}
 				else {
