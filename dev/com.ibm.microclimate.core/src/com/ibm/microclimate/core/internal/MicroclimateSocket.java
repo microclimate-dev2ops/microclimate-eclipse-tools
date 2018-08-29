@@ -43,10 +43,8 @@ public class MicroclimateSocket {
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 
-		socketUri = new URI("http", null, mcConnection.host, 9091, null, null, null);
+		socketUri = new URI("http", null, mcConnection.host, mcConnection.port, null, null, null);
 
-		// TODO hardcoded filewatcher port
-		// socketUri = "http://" + mcConnection.host + ':' + "9091";
 		socket = IO.socket(socketUri);
 
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {

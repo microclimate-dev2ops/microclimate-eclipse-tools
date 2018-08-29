@@ -177,14 +177,10 @@ public class MicroclimateConnection {
 	public void requestProjectRestart(MicroclimateApplication app, String launchMode)
 			throws JSONException, IOException {
 
-		// TODO hardcoded filewatcher port.
-        String url = "http://localhost:9091/" + MCConstants.APIPATH_PROJECT_ACTION;
+        String url = baseUrl + MCConstants.APIPATH_PROJECTS_BASE + "/" + app.projectID + "/" + MCConstants.APIPATH_RESTART;
 
 		JSONObject restartProjectPayload = new JSONObject();
-		restartProjectPayload
-				.put(MCConstants.KEY_ACTION, MCConstants.ACTION_RESTART)
-				.put(MCConstants.KEY_START_MODE, launchMode)
-				.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+		restartProjectPayload.put(MCConstants.KEY_START_MODE, launchMode);
 
 		// This initiates the restart
 		HttpUtil.post(url, restartProjectPayload);
