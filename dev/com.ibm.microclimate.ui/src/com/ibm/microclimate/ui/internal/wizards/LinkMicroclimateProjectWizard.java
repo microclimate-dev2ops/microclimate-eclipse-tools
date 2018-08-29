@@ -64,6 +64,11 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		String eclipseProjPathStr = eclipseProjPath.toOSString();
 
 		boolean isSamePath = mcAppPath.equals(eclipseProjPath);
+		// Eclipse's IPath.equal() above doesn't seem to handle path case differences properly 
+		// on Windows so do a further check
+		if ( System.getProperty("os.name").startsWith("Windows")) {
+			isSamePath = mcAppPathStr.equalsIgnoreCase(eclipseProjPathStr);
+		}
 
 		MCLogger.log(String.format("Link %s to %s - same? %b\n",
 				mcAppPathStr, eclipseProjPathStr,  isSamePath));
