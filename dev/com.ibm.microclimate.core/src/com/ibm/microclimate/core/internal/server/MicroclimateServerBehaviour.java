@@ -256,6 +256,15 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	@Override
 	public void restart(String launchMode) throws CoreException {
+		if (!isStarted()) {
+			MCLogger.logError("Cannot restart because server is not in started state");
+			String errorTitle = "Can only restart a Started server";
+			String errorMsg = "You can only restart a server if it is in the Started state. " +
+        			"Wait for the server to be Started and then try again.";
+			MCUtil.openDialog(true, errorTitle, errorMsg);
+			return;
+        }
+		
 		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode");
 
 		int currentState = getServer().getServerState();
@@ -265,26 +274,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			waitForStarted(null);
 			// throw new CoreException "Wait for Started before restarting?"
 		}
-
-		ILaunchConfiguration launchConfig = getServer().getLaunchConfiguration(true, null);
-		if (launchConfig == null) {
-			MCLogger.logError("LaunchConfig was null!");
-			return;
-		}
-
-		// TODO progress mon?
-		// See com.ibm.microclimate.core.internal.server.MicroclimateServerLaunchConfigDelegate
-		launchConfig.launch(launchMode, null);
-	}
-
-	/**
-	 * Request the MC server to restart in the given mode. Then wait for it to stop and start again, and attach
-	 * the debugger if restarting into debug mode.
-	 *
-	 * This is called by the MicroclimateServerLaunchConfigDelegate
-	 */
-	public void doRestart(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch,
-			IProgressMonitor monitor) {
 
 		try {
 			app.mcConnection.requestProjectRestart(app, launchMode);
@@ -297,17 +286,35 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		// Restarts are only valid if the server is Started. So, we go from Started -> Stopped -> Starting,
 		// then connect the debugger if required (Liberty won't leave 'Starting' state until the debugger is connected),
 		// then go from Starting -> Started.
-		waitForState(getStopTimeoutMs(), monitor, IServer.STATE_STOPPED, IServer.STATE_STARTING);
+		// TODO: progress monitor
+		waitForState(getStopTimeoutMs(), null, IServer.STATE_STOPPED, IServer.STATE_STARTING);
 
-		boolean starting = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING);
-		if (!starting) {
-			// TODO I haven't seen this happen, but we should probably display something to the user in this case.
-			// What could cause this to happen?
-			MCLogger.logError("Server did not enter Starting state");
+		ILaunchConfiguration launchConfig = getServer().getLaunchConfiguration(true, null);
+		if (launchConfig == null) {
+			MCLogger.logError("LaunchConfig was null!");
 			return;
 		}
+		
+		launchConfig.launch(launchMode, null);
+	}
 
+	/**
+	 * Request the MC server to restart in the given mode. Then wait for it to stop and start again, and attach
+	 * the debugger if restarting into debug mode.
+	 *
+	 * This is called by the MicroclimateServerLaunchConfigDelegate
+	 */
+	public void doLaunch(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch,
+			IProgressMonitor monitor) {
 		if (ILaunchManager.DEBUG_MODE.equals(launchMode)) {
+			boolean starting = waitForState(getStartTimeoutMs(), null, IServer.STATE_STARTING);
+			if (!starting) {
+				// TODO I haven't seen this happen, but we should probably display something to the user in this case.
+				// What could cause this to happen?
+				MCLogger.logError("Server did not enter Starting state");
+				return;
+			}
+
 			MCLogger.log("Preparing for debug mode");
 			try {
 				IDebugTarget debugTarget = connectDebugger(launch, monitor);
@@ -321,6 +328,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			} catch (IllegalConnectorArgumentsException | CoreException | IOException e) {
 				MCLogger.logError(e);
 			}
+		} else {
+			setMode(ILaunchManager.RUN_MODE);
 		}
 
 		if (waitForStarted(monitor)) {
@@ -328,6 +337,20 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		else {
 			MCLogger.logError("Server reached Starting state, but did not Start in time.");
+		}
+	}
+	
+	public void reconnectDebug(IProgressMonitor monitor) {
+		ILaunchConfiguration launchConfig;
+		try {
+			launchConfig = getServer().getLaunchConfiguration(true, null);
+			if (launchConfig == null) {
+				MCLogger.logError("LaunchConfig was null!");
+				return;
+			}
+			launchConfig.launch(ILaunchManager.DEBUG_MODE, null);
+		} catch (CoreException e) {
+			MCLogger.logError("Launch config is null", e);
 		}
 	}
 

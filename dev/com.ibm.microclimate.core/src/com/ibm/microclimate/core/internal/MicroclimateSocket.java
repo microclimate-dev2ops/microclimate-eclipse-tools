@@ -3,6 +3,8 @@ package com.ibm.microclimate.core.internal;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.wst.server.core.IServer;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,8 +39,10 @@ public class MicroclimateSocket {
 
 	// SocketIO Event names
 	private static final String
+			EVENT_PROJECT_CHANGED = "projectChanged",
 			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged",
 			EVENT_PROJECT_RESTART = "projectRestartResult",
+			EVENT_PROJECT_CLOSED = "projectClosed",
 			EVENT_PROJECT_DELETION = "projectDeletion";
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
@@ -91,7 +95,19 @@ public class MicroclimateSocket {
 				MCLogger.log("SocketIO EVENT_MESSAGE " + arg0[0].toString());
 			}
 		})
-		// Below are Filewatcher-specific events
+		.on(EVENT_PROJECT_CHANGED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				MCLogger.log(EVENT_PROJECT_CHANGED + ": " + arg0[0].toString());
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onProjectChanged(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e);
+				}
+			}
+		})
 		.on(EVENT_PROJECT_STATUS_CHANGE, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
@@ -118,6 +134,19 @@ public class MicroclimateSocket {
 				}
 			}
 		})
+		.on(EVENT_PROJECT_CLOSED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				MCLogger.log(EVENT_PROJECT_CLOSED + ": " + arg0[0].toString());
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onProjectDeletion(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e);
+				}
+			}
+		})
 		.on(EVENT_PROJECT_DELETION, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
@@ -135,6 +164,38 @@ public class MicroclimateSocket {
 		socket.connect();
 
 		MCLogger.log("Created MicroclimateSocket connected to " + socketUri);
+	}
+	
+	private void onProjectChanged(JSONObject event) throws JSONException {
+		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
+		if (serverBehaviour == null) {
+			// This is OK. It will happen if the project that's changed is not linked to a server.
+			return;
+		}
+        MicroclimateApplication app = serverBehaviour.getApp();
+        
+        // Update ports
+        JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
+
+		// Ports object should always have an http port
+		int port = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
+		if (port != -1) {
+			app.setHttpPort(port);
+		}
+
+		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
+			int debugPort = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
+			app.setDebugPort(debugPort);
+			if (serverBehaviour.getServer().getMode() == ILaunchManager.DEBUG_MODE && debugPort != -1) {
+				// If the debug connection is lost then reconnect
+				ILaunch launch = serverBehaviour.getServer().getLaunch();
+				if (launch == null || launch.getLaunchMode() != ILaunchManager.DEBUG_MODE) {
+					serverBehaviour.reconnectDebug(null);
+				}
+			}
+		} else {
+			app.setDebugPort(-1);
+		}
 	}
 
 	private void onProjectStatusChanged(JSONObject event) throws JSONException {
