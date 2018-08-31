@@ -42,11 +42,6 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         	errorTitle = "Server cannot be started";
         	errorMsg = serverBehaviour.getServer().getName() + " cannot be started: " + serverBehaviour.getSuffix();
         }
-        else if (!serverBehaviour.isStarted()) {
-        	errorTitle = "Can only restart a Started server";
-        	errorMsg = "You can only restart a server if it is in the Started state. " +
-        			"Wait for the server to be Started and then try again.";
-        }
         else if (serverBehaviour.getApp() == null) {
 			errorTitle = "Server Error";
 			errorMsg = "There was an error initializing " + server.getName() +
@@ -77,7 +72,7 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         setDefaultSourceLocator(launch, config);
         serverBehaviour.setLaunch(launch);
 
-        serverBehaviour.doRestart(config, launchMode, launch, monitor);
+        serverBehaviour.doLaunch(config, launchMode, launch, monitor);
         monitor.done();
 	}
 
