@@ -1,17 +1,22 @@
 package com.ibm.microclimate.ui.internal.wizards;
 
+import java.util.List;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.Activator;
 
@@ -27,6 +32,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	private IProject selectedProject;
 
+	private NewMicroclimateConnectionPage newConnectionPage;
 	private LinkMicroclimateProjectPage newProjectPage;
 
 	@Override
@@ -42,9 +48,13 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	@Override
 	public void addPages() {
 		setWindowTitle("Link to Microclimate Project");
+		
+		if (MicroclimateConnectionManager.connectionsCount() < 1 ) {
+			newConnectionPage = new NewMicroclimateConnectionPage();
+			addPage(newConnectionPage);
+		}
 
 		newProjectPage = new LinkMicroclimateProjectPage(selectedProject.getName());
-		// newConnectionPage.setProject(project);
 		addPage(newProjectPage);
 	}
 
@@ -109,4 +119,5 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 		MessageDialog.openInformation(getShell(), "Linking Complete", successMsg);
 	}
+
 }

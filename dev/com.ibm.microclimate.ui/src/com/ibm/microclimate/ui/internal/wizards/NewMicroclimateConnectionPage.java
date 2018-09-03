@@ -30,8 +30,8 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 	protected NewMicroclimateConnectionPage() {
 		super("New Microclimate Connection");
-		setTitle("New Microclimate Connection Title");
-		setDescription("New Microclimate Connection Description");
+		setTitle("Create a Microclimate Connection");
+		setDescription("Create a connection to a Microclimate instance");
 	}
 
 	@Override
@@ -45,14 +45,14 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	}
 
 	private void createHostnameAndPortFields(Composite shell) {
-		Composite hostPortGroup = new Composite(shell, SWT.BORDER);
+		Composite hostPortGroup = new Composite(shell, SWT.NONE);
 		//gridData.verticalSpan = 2;
 		hostPortGroup.setLayout(new GridLayout(3, false));
 		hostPortGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 
-		GridData hostnamePortLabelData = new GridData(GridData.FILL, GridData.BEGINNING, false, false);
+		GridData hostnamePortLabelData = new GridData(GridData.FILL, GridData.FILL, false, false);
 
-		Label hostnameLabel = new Label(hostPortGroup, SWT.BORDER);
+		Label hostnameLabel = new Label(hostPortGroup, SWT.NONE);
 		hostnameLabel.setText("Hostname:");
 		hostnameLabel.setLayoutData(hostnamePortLabelData);
 
@@ -80,7 +80,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 		// hostnameText.addModifyListener(modifyListener);
 
-		Label portLabel = new Label(hostPortGroup, SWT.BORDER);
+		Label portLabel = new Label(hostPortGroup, SWT.NONE);
 		portLabel.setText("Port:");
 		portLabel.setLayoutData(hostnamePortLabelData);
 
@@ -90,7 +90,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 		// portText.addModifyListener(modifyListener);
 
-		Button addConnectionBtn = new Button(hostPortGroup, SWT.NONE);
+		Button addConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
 		addConnectionBtn.setText("Add Connection");
 		addConnectionBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -98,7 +98,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 				testConnection();
 			}
 		});
-		addConnectionBtn.setLayoutData(new GridData(GridData.CENTER, GridData.CENTER, false, false));
+		addConnectionBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 
 		// In the Local case, the user can only create one connection,
 		// so if they have one already, block the Add button.
@@ -143,12 +143,11 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	}
 
 	boolean canFinish() {
-		// MCLogger.log("NewConnectionPage canFinish= " + isFinished);
 		return mcConnection != null;
 	}
 
 	@Override
 	public boolean canFlipToNextPage() {
-		return canFinish();
+		return mcConnection != null;
 	}
 }
