@@ -106,7 +106,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
-				Wizard wizard = new NewMicroclimateConnectionWizard(false);
+				Wizard wizard = new NewMicroclimateConnectionWizard();
 				WizardLauncher.launchWizardWithoutSelection(wizard);
 			}
 		});

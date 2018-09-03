@@ -16,23 +16,13 @@ import com.ibm.microclimate.ui.Activator;
  */
 public class NewMicroclimateConnectionWizard extends Wizard implements INewWizard {
 
-	// private IProject project;
 	private NewMicroclimateConnectionPage newConnectionPage;
 
-	private IStructuredSelection selection;
-	private IWorkbench workbench;
-
-	private boolean runLinkProjectWizardOnFinish;
-
-	public NewMicroclimateConnectionWizard(boolean runLinkProjectWizardOnFinish) {
-		this.runLinkProjectWizardOnFinish = runLinkProjectWizardOnFinish;
+	public NewMicroclimateConnectionWizard() {
 	}
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		this.workbench = workbench;
-		this.selection = selection;
-
 		setDefaultPageImageDescriptor(Activator.getDefaultIcon());
 
 		// TODO help
@@ -43,15 +33,7 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 	public void addPages() {
 		setWindowTitle("New Microclimate Connection Wizard Window Title");
 		newConnectionPage = new NewMicroclimateConnectionPage();
-		// newConnectionPage.setProject(project);
 		addPage(newConnectionPage);
-
-		if (runLinkProjectWizardOnFinish) {
-			// This means that the user did not launch this wizard directly, but that this wizard was
-			// launched as a prerequisite to the Link project wizard.
-			// So, we should tell them why they got this wizard and not the Link wizard.
-			newConnectionPage.setMessage("You must connect to a Microclimate instance before you can Link a project.");
-		}
 	}
 
 	@Override
@@ -63,13 +45,6 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 	public boolean performFinish() {
 		if(!newConnectionPage.canFinish()) {
 			return false;
-		}
-
-		if(runLinkProjectWizardOnFinish) {
-			getShell().close();
-
-			WizardLauncher.launchWizard(new LinkMicroclimateProjectWizard(),
-					selection, workbench, workbench.getActiveWorkbenchWindow().getShell());
 		}
 
 		return true;

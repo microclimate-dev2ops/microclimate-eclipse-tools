@@ -50,14 +50,8 @@ public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 			return;
 		}
 
-		// If there is not an existing connection, we must create one before a project can be linked
-		if(MicroclimateConnectionManager.connectionsCount() < 1) {
-			wizard = new NewMicroclimateConnectionWizard(true);
-		}
-		else {
-			wizard = new LinkMicroclimateProjectWizard();
-		}
-
+		wizard = new LinkMicroclimateProjectWizard();
+		
 		WizardLauncher.launchWizard(wizard,
 				selection,
 				part.getSite().getWorkbenchWindow().getWorkbench(),
