@@ -1,7 +1,6 @@
 package com.ibm.microclimate.core.internal.server.console;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -39,13 +38,7 @@ public class MicroclimateServerConsole extends IOConsole {
 			}
 
 			String consoleName = app.name + " - " + fileName;
-
-			try {
-				consoles.add(new MicroclimateServerConsole(consoleName, logFile));
-			}
-			catch(FileNotFoundException e) {
-				MCLogger.logError("FileNotFound when creating console " + consoleName, e);
-			}
+			consoles.add(new MicroclimateServerConsole(consoleName, logFile));
 		}
 
 		return consoles;
@@ -54,7 +47,7 @@ public class MicroclimateServerConsole extends IOConsole {
 	private final MicroclimateServerLogMonitorThread logMonitorThread;
 	private final IOConsoleOutputStream outputStream;
 
-	public MicroclimateServerConsole(String consoleName, File logFile) throws FileNotFoundException {
+	public MicroclimateServerConsole(String consoleName, File logFile) {
 		super(consoleName, MC_CONSOLE_TYPE,
 				com.ibm.microclimate.core.Activator.getIcon(Activator.DEFAULT_ICON_PATH),
 				true);

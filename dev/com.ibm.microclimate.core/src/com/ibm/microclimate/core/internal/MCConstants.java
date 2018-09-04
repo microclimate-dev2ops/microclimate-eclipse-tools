@@ -13,7 +13,7 @@ public class MCConstants {
 			PROJECT_TYPE_LIBERTY = "liberty",
 
 			MC_SERVER_BASE_NAME = "Microclimate Project: ",
-			
+
 			// Portal API endpoints
 			APIPATH_PROJECTS_BASE = "api/v1/projects",
 			APIPATH_PROJECT_LIST = "api/v1/projects",
@@ -53,6 +53,7 @@ public class MCConstants {
 			KEY_EXPOSED_DEBUG_PORT = "exposedDebugPort",
 
 			KEY_ENV_WORKSPACE_LOC = "workspace_location",
+			KEY_ENV_MC_VERSION = "microclimate_version",
 
 			KEY_ACTION = "action",
 			KEY_START_MODE = "startMode",
@@ -67,6 +68,10 @@ public class MCConstants {
 
 			ACTION_RESTART = "restart"
 			;
+
+	// Microclimate 18.09 is required
+	// otherwise we will be missing the Workspace ENV data and the project restart endpoint.
+	public static final int REQUIRED_MC_VERSION = 1809;
 
 	/**
 	* Convert a Microclimate App State string into the corresponding IServer.STATE constant.

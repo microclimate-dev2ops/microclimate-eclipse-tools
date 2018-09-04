@@ -165,7 +165,7 @@ public class MicroclimateSocket {
 
 		MCLogger.log("Created MicroclimateSocket connected to " + socketUri);
 	}
-	
+
 	private void onProjectChanged(JSONObject event) throws JSONException {
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
@@ -173,7 +173,7 @@ public class MicroclimateSocket {
 			return;
 		}
         MicroclimateApplication app = serverBehaviour.getApp();
-        
+
         // Update ports
         JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
@@ -283,8 +283,12 @@ public class MicroclimateSocket {
 		while(!hasConnected && waited < timeout) {
 			try {
 				Thread.sleep(delay);
-				MCLogger.log("Waiting for MicroclimateSocket initial connection");
 				waited += delay;
+
+				// only log every 10 ticks
+				if (waited % (10 * delay) == 0) {
+					MCLogger.log("Waiting for MicroclimateSocket initial connection");
+				}
 			}
 			catch(InterruptedException e) {
 				MCLogger.logError(e);

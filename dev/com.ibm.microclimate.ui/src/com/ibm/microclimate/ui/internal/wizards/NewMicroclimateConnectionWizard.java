@@ -31,7 +31,7 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 	@Override
 	public void addPages() {
-		setWindowTitle("New Microclimate Connection Wizard Window Title");
+		setWindowTitle("New Microclimate Connection");
 		newConnectionPage = new NewMicroclimateConnectionPage();
 		addPage(newConnectionPage);
 	}
