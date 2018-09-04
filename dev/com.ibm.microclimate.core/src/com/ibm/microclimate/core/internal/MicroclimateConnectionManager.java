@@ -4,6 +4,7 @@ import java.net.ConnectException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -60,13 +61,10 @@ public class MicroclimateConnectionManager {
 	public static MicroclimateConnection create(String host, int port)
 			throws ConnectException, URISyntaxException, JSONException {
 
-		// Will throw an exception if connection fails
+		// Will throw an exception if connection fails, or if connection already exists
 		MicroclimateConnection newConnection = new MicroclimateConnection(host, port);
 		// Connection succeeded
-		boolean added = instance().add(newConnection);
-		if (!added) {
-			throw new ConnectException("Microclimate Connection at " + newConnection.baseUrl + " already exists.");
-		}
+		instance().add(newConnection);
 		return newConnection;
 	}
 
@@ -114,7 +112,7 @@ public class MicroclimateConnectionManager {
 	 * 	false if not because it didn't exist.
 	 */
 	public static boolean remove(MicroclimateConnection connection) {
-		connection.disconnect();
+		connection.close();
 		boolean removeResult = instance().connections.remove(connection);
 		if (!removeResult) {
 			MCLogger.logError("Tried to remove MCConnection " + connection.baseUrl + ", but it didn't exist");
@@ -128,7 +126,14 @@ public class MicroclimateConnectionManager {
 	 */
 	public static void clear() {
 		MCLogger.log("Clearing " + instance().connections.size() + " connections");
-		instance().connections.clear();
+
+		Iterator<MicroclimateConnection> it = instance().connections.iterator();
+
+		while(it.hasNext()) {
+			MicroclimateConnection connection = it.next();
+			connection.close();
+			it.remove();
+		}
 	}
 
 	// Preferences serialization
@@ -178,8 +183,7 @@ public class MicroclimateConnectionManager {
 
 		String failedConnections = failedConnectionsBuilder.toString();
 		if (!failedConnections.isEmpty()) {
-			MCUtil.openDialog(true, "Failed to connect to Microclimate instance(s)",
-					"The following Microclimate instances could not be connected to:\n" + failedConnections);
+			MCUtil.openDialog(true, "Failed to connect to Microclimate instance(s)", failedConnections);
 		}
 
 		// writeToPreferences();

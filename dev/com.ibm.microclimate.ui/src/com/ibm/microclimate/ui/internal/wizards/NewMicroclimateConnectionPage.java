@@ -90,12 +90,15 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 		// portText.addModifyListener(modifyListener);
 
-		Button addConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
+		final Button addConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
 		addConnectionBtn.setText("Add Connection");
 		addConnectionBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
+				// Block the Add Connection button while we test it
+				addConnectionBtn.setEnabled(false);
 				testConnection();
+				addConnectionBtn.setEnabled(true);
 			}
 		});
 		addConnectionBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));

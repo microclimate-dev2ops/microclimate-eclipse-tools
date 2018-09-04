@@ -1,5 +1,6 @@
 package com.ibm.microclimate.core.internal;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
@@ -20,9 +21,10 @@ import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
  *
  * @author timetchells@ibm.com
  */
-public class MicroclimateConnection {
-	
+public class MicroclimateConnection implements Closeable {
+
 	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace";
+	private static final String UNKNOWN_VERSION = "unknown";
 
 	public final String host;
 	public final int port;
@@ -37,10 +39,13 @@ public class MicroclimateConnection {
 	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException, JSONException {
 		String baseUrl_ = buildUrl(host, port);
 
+		if (MicroclimateConnectionManager.getConnection(baseUrl_) != null) {
+			onInitFail("Microclimate Connection at " + baseUrl_ + " already exists.");
+		}
+
 		if(!test(baseUrl_)) {
 			// Note this message is displayed directly to the user, so we have to localize it.
-			throw new ConnectException(
-					String.format("Connecting to Microclimate instance at \"%s\" failed", baseUrl_));
+			onInitFail(String.format("Connecting to Microclimate instance at \"%s\" failed", baseUrl_));
 		}
 
 		this.host = host;
@@ -51,23 +56,53 @@ public class MicroclimateConnection {
 		mcSocket = new MicroclimateSocket(this);
 		if(!mcSocket.blockUntilFirstConnection()) {
 			// Note this message is displayed directly to the user, so we have to localize it.
-			throw new ConnectException(
-					String.format("Connecting to Microclimate Socket at \"%s\" failed", mcSocket.socketUri.toString()));
+			onInitFail(String.format(
+					"Connecting to Microclimate Socket at \"%s\" failed",
+					mcSocket.socketUri.toString()));
 		}
 
-		this.localWorkspacePath = getWorkspacePath(this.baseUrl);
+		JSONObject env = getEnvData(this.baseUrl);
+
+		String version = getMCVersion(env);
+
+		if (UNKNOWN_VERSION.equals(version)) {
+			onInitFail(String.format("Your version of Microclimate could not be determined. "
+					+ "At least version %s is required.",
+					MCConstants.REQUIRED_MC_VERSION));
+		}
+		else if (!isSupportedVersion(version)) {
+			onInitFail(String.format("Your version of Microclimate is not supported. "
+					+ "You are running version %s but at least version %s is required.",
+					version, MCConstants.REQUIRED_MC_VERSION));
+		}
+
+		this.localWorkspacePath = getWorkspacePath(env);
+		if (localWorkspacePath == null) {
+			// Can't recover from this
+			// This should never happen since we have already determined it is a supported version of microclimate.
+			onInitFail("Could not determine the location of your Microclimate workspace.");
+		}
 
 		refreshApps();
 
-		MCLogger.log(String.format("Created " + this));
+		MCLogger.log("Created " + this);
+	}
+
+	private void onInitFail(String msg) throws ConnectException {
+		MCLogger.log("Initializing MicroclimateConnection failed: " + msg);
+		close();
+		throw new ConnectException(msg);
 	}
 
 	/**
 	 * Call this when the connection is removed.
 	 */
-	void disconnect() {
-		MCLogger.log("Disposing of MCConnection " + this);
-		mcSocket.socket.disconnect();
+	@Override
+	public void close() {
+		MCLogger.log("Disposing of " + this);
+		if (mcSocket.socket.connected()) {
+			mcSocket.socket.disconnect();
+		}
 	}
 
 	private static String buildUrl(String host, int port) {
@@ -86,13 +121,7 @@ public class MicroclimateConnection {
 		return getResult != null && getResult.contains("Microclimate");
 	}
 
-	private static Path getWorkspacePath(String baseUrl) throws JSONException {
-		// Try the internal system property first
-		String path = System.getProperty(MICROCLIMATE_WORKSPACE_PROPERTY, null);
-		if (path != null && !path.isEmpty()) {
-			return new Path(path);
-		}
-		
+	private static JSONObject getEnvData(String baseUrl) throws JSONException {
 		final String envUrl = baseUrl + MCConstants.APIPATH_ENV;
 
 		String envResponse = null;
@@ -104,7 +133,58 @@ public class MicroclimateConnection {
 			return null;
 		}
 
-		JSONObject env = new JSONObject(envResponse);
+		return new JSONObject(envResponse);
+	}
+
+	private static String getMCVersion(JSONObject env) {
+		if (!env.has(MCConstants.KEY_ENV_MC_VERSION)) {
+			MCLogger.logError("Missing version from env data");
+			return UNKNOWN_VERSION;
+		}
+
+		try {
+			String versionStr = env.getString(MCConstants.KEY_ENV_MC_VERSION);
+			MCLogger.log("Microclimate Version is: " + versionStr);
+			return versionStr;
+		} catch (JSONException e) {
+			// we already checked for this key so I'm not sure what could cause this.
+			MCLogger.logError(e);
+			return UNKNOWN_VERSION;
+		}
+	}
+
+	private static boolean isSupportedVersion(String versionStr) {
+		if (UNKNOWN_VERSION.equals(versionStr)) {
+			return false;
+		}
+
+		if ("latest".equals(versionStr)) {
+			// Development build - possible other values to check for?
+			return true;
+		}
+
+		// The version will have a format like '1809', which corresponds to v18.09
+		try {
+			int version = Integer.parseInt(versionStr);
+			return version >= MCConstants.REQUIRED_MC_VERSION;
+		}
+		catch(NumberFormatException e) {
+			MCLogger.logError("Couldn't parse version number from " + versionStr);
+			return false;
+		}
+	}
+
+	private static Path getWorkspacePath(JSONObject env) throws JSONException {
+		// Try the internal system property first
+		String path = System.getProperty(MICROCLIMATE_WORKSPACE_PROPERTY, null);
+		if (path != null && !path.isEmpty()) {
+			return new Path(path);
+		}
+
+		if (!env.has(MCConstants.KEY_ENV_WORKSPACE_LOC)) {
+			MCLogger.logError("Missing workspace location from env data");
+			return null;
+		}
 		String workspaceLoc = env.getString(MCConstants.KEY_ENV_WORKSPACE_LOC);
 		return new Path(workspaceLoc);
 	}
@@ -249,16 +329,6 @@ public class MicroclimateConnection {
 				server.onMicroclimateReconnect();
 			}
 		}
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if(!(other instanceof MicroclimateConnection)) {
-			return false;
-		}
-
-		MicroclimateConnection otherMcc = (MicroclimateConnection) other;
-		return otherMcc.baseUrl.equals(baseUrl);
 	}
 
 	@Override
