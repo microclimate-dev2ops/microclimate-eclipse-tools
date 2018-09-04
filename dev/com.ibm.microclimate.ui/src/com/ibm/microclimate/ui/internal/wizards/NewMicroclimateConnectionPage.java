@@ -2,6 +2,8 @@ package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -31,7 +33,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	protected NewMicroclimateConnectionPage() {
 		super("New Microclimate Connection");
 		setTitle("Create a Microclimate Connection");
-		setDescription("Create a connection to a Microclimate instance");
+		setDescription("Create a connection to a Microclimate instance.");
 	}
 
 	@Override
@@ -68,17 +70,19 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		// Doesn't work if hostnameText is disabled
 		hostnameText.setToolTipText(localhostOnly);
 
-		/*
 		// Invalidate the wizard when the host or port are changed so that the user has to test the connection again.
 		ModifyListener modifyListener = new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent arg0) {
-				mcConnection = null;
+				removePreviousMCConnection();
+
+				setErrorMessage(null);
+				setMessage("Test your new connection to proceed");
 				getWizard().getContainer().updateButtons();
 			}
-		};*/
+		};
 
-		// hostnameText.addModifyListener(modifyListener);
+		hostnameText.addModifyListener(modifyListener);
 
 		Label portLabel = new Label(hostPortGroup, SWT.NONE);
 		portLabel.setText("Port:");
@@ -88,33 +92,40 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		portText.setLayoutData(hostnamePortTextData);
 		portText.setText("9090");
 
-		// portText.addModifyListener(modifyListener);
+		portText.addModifyListener(modifyListener);
 
-		final Button addConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
-		addConnectionBtn.setText("Add Connection");
-		addConnectionBtn.addSelectionListener(new SelectionAdapter() {
+		final Button testConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
+		testConnectionBtn.setText("Test Connection");
+		testConnectionBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				// Block the Add Connection button while we test it
-				addConnectionBtn.setEnabled(false);
+				// Block the Test Connection button while we test it
+				testConnectionBtn.setEnabled(false);
 				testConnection();
-				addConnectionBtn.setEnabled(true);
+				testConnectionBtn.setEnabled(true);
 			}
 		});
-		addConnectionBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		testConnectionBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 
 		// In the Local case, the user can only create one connection,
 		// so if they have one already, block the Add button.
 		if (MicroclimateConnectionManager.connectionsCount() > 0) {
-			addConnectionBtn.setEnabled(false);
+			testConnectionBtn.setEnabled(false);
 			String existingConnectionUrl = MicroclimateConnectionManager.connections().get(0).baseUrl;
 			setErrorMessage("You already have an existing Microclimate connection at " + existingConnectionUrl +
 					"\nAt this time, only one Microclimate connection is permitted.");
 		}
 	}
 
-	void testConnection() {
+	void removePreviousMCConnection() {
+		if (mcConnection != null) {
+			mcConnection.close();
+		}
 		mcConnection = null;
+	}
+
+	void testConnection() {
+		removePreviousMCConnection();
 
 		// Try to connect to Microclimate at the given hostname:port
 		String hostname = hostnameText.getText().trim();
@@ -128,7 +139,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 			MCLogger.log("Validating connection: " + hostPortAddr);
 
 			// Will throw a ConnectException if fails
-			mcConnection = MicroclimateConnectionManager.create(hostname, port);
+			mcConnection = new MicroclimateConnection(hostname, port);
 
 			if(mcConnection != null) {
 				setErrorMessage(null);
@@ -139,10 +150,23 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 			setErrorMessage(String.format("\"%s\" is not a valid port number", portStr));
 		}
 		catch(Exception e) {
-			setErrorMessage(e.getMessage());
+			String msg = e.getMessage();
+			if (msg == null) {
+				// The exceptions we expect to get here should have good messages for the user.
+				MCLogger.logError("Unexpected exception", e);
+				msg = e.getClass().getSimpleName() + ": Could not connect to Microclimate at " + hostPortAddr;
+			}
+			setErrorMessage(msg);
 		}
 
 		getWizard().getContainer().updateButtons();
+	}
+
+	/**
+	 * Test canFinish before calling this to make sure it will never return null.
+	 */
+	MicroclimateConnection getMCConnection() {
+		return mcConnection;
 	}
 
 	boolean canFinish() {
@@ -151,6 +175,6 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 	@Override
 	public boolean canFlipToNextPage() {
-		return mcConnection != null;
+		return canFinish();
 	}
 }

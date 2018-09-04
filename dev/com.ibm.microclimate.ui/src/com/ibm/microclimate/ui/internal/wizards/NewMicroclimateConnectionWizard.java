@@ -5,6 +5,8 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
+import com.ibm.microclimate.core.internal.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.Activator;
 
 /**
@@ -42,11 +44,21 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 	}
 
 	@Override
+	public boolean performCancel() {
+		MicroclimateConnection connection = newConnectionPage.getMCConnection();
+		if (connection != null) {
+			connection.close();
+		}
+		return true;
+	}
+
+	@Override
 	public boolean performFinish() {
 		if(!newConnectionPage.canFinish()) {
 			return false;
 		}
 
+		MicroclimateConnectionManager.add(newConnectionPage.getMCConnection());
 		return true;
 	}
 }

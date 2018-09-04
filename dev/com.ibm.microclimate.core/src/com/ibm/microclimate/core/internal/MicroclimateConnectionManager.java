@@ -1,7 +1,5 @@
 package com.ibm.microclimate.core.internal;
 
-import java.net.ConnectException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -9,7 +7,6 @@ import java.util.List;
 
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.json.JSONException;
 
 /**
  * Singleton class to keep track of the list of current Microclimate Connections,
@@ -54,35 +51,17 @@ public class MicroclimateConnectionManager {
 	}
 
 	/**
-	 * Try to connect to Microclimate at the given host:port.
-	 * @throws ConnectException if the connection fails, or if the connection already exists.
-	 * @return The new connection if it succeeds.
-	 */
-	public static MicroclimateConnection create(String host, int port)
-			throws ConnectException, URISyntaxException, JSONException {
-
-		// Will throw an exception if connection fails, or if connection already exists
-		MicroclimateConnection newConnection = new MicroclimateConnection(host, port);
-		// Connection succeeded
-		instance().add(newConnection);
-		return newConnection;
-	}
-
-	/**
 	 * Adds the given connection to the list of connections.
-	 * @return true if added, false if the connection already existed.
 	 */
-	private boolean add(MicroclimateConnection connection) {
-		if(!connections.contains(connection)) {
-			connections.add(connection);
-			MCLogger.log("Added a new MCConnection: " + connection.baseUrl);
-			writeToPreferences();
-			return true;
+	public static void add(MicroclimateConnection connection) {
+		if (connection == null) {
+			MCLogger.logError("Null connection passed to be added");
+			return;
 		}
-		else {
-			MCLogger.log("MCConnection " + connection.baseUrl + " already exists");
-			return false;
-		}
+
+		instance().connections.add(connection);
+		MCLogger.log("Added a new MCConnection: " + connection.baseUrl);
+		instance().writeToPreferences();
 	}
 
 	/**

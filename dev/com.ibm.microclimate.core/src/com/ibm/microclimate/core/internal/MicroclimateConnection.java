@@ -36,7 +36,7 @@ public class MicroclimateConnection implements Closeable {
 
 	private List<MicroclimateApplication> apps = Collections.emptyList();
 
-	MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException, JSONException {
+	public MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException, JSONException {
 		String baseUrl_ = buildUrl(host, port);
 
 		if (MicroclimateConnectionManager.getConnection(baseUrl_) != null) {
@@ -99,8 +99,8 @@ public class MicroclimateConnection implements Closeable {
 	 */
 	@Override
 	public void close() {
-		MCLogger.log("Disposing of " + this);
-		if (mcSocket.socket.connected()) {
+		MCLogger.log("Closing " + this);
+		if (mcSocket != null && mcSocket.socket != null && mcSocket.socket.connected()) {
 			mcSocket.socket.disconnect();
 		}
 	}

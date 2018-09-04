@@ -99,7 +99,7 @@ public class MicroclimateApplication {
 		for(int i = 0; i < appArray.length(); i++) {
 			JSONObject appJso = appArray.getJSONObject(i);
 			try {
-				MCLogger.log("app: " + appJso.toString());
+				// MCLogger.log("app: " + appJso.toString());
 				String name = appJso.getString(MCConstants.KEY_NAME);
 				String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
 
