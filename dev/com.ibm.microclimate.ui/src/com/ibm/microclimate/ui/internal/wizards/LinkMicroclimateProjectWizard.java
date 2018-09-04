@@ -11,6 +11,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.Activator;
@@ -62,12 +63,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		IPath eclipseProjPath = selectedProject.getLocation();
 		String eclipseProjPathStr = eclipseProjPath.toOSString();
 
-		boolean isSamePath = mcAppPath.equals(eclipseProjPath);
-		// Eclipse's IPath.equal() above doesn't seem to handle path case differences properly
-		// on Windows so do a further check
-		if ( System.getProperty("os.name").startsWith("Windows")) {
-			isSamePath = mcAppPathStr.equalsIgnoreCase(eclipseProjPathStr);
-		}
+		boolean isSamePath = MCUtil.pathEquals(mcAppPath, eclipseProjPath);
 
 		MCLogger.log(String.format("Link %s to %s - same? %b\n",
 				mcAppPathStr, eclipseProjPathStr,  isSamePath));

@@ -122,6 +122,8 @@ public class MCConstants {
 	 * Convert a raw buildStatus to a user-friendly one.
 	 */
 	public static String buildStateToUserFriendly(String buildStatus, String detailedBuildStatus) {
+		detailedBuildStatus = detailedBuildStatus.trim();
+
 		if (MCConstants.BUILD_STATUS_INPROGRESS.equals(buildStatus)) {
 			String inProgress = "Build In Progress";
 			if (detailedBuildStatus != null && !detailedBuildStatus.isEmpty()) {

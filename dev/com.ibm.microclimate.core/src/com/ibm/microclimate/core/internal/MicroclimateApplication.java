@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
 import org.json.JSONArray;
@@ -43,7 +42,7 @@ public class MicroclimateApplication {
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, String projectType, String path,
+			String id, String name, String projectType, String pathInWorkspace,
 			int httpPort, String contextRoot)
 					throws MalformedURLException {
 
@@ -58,11 +57,7 @@ public class MicroclimateApplication {
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
 		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
-		IPath pathWithinWorkspace = new Path(path);
-		if (pathWithinWorkspace.segment(0).equals(mcConnection.localWorkspacePath.lastSegment())) {
-			pathWithinWorkspace = pathWithinWorkspace.removeFirstSegments(1);
-		}
-		this.fullLocalPath = mcConnection.localWorkspacePath.append(pathWithinWorkspace);
+		this.fullLocalPath = MCUtil.appendPathWithoutDupe(mcConnection.localWorkspacePath, pathInWorkspace);
 
 		setBaseUrl();
 
@@ -256,7 +251,7 @@ public class MicroclimateApplication {
 	 * @param pathStr - The log path as extracted from the JSON, ie starting with /microclimate-workspace/
 	 */
 	private void addLogPath(String pathStr) {
-		IPath path = mcConnection.localWorkspacePath.append(pathStr);
+		IPath path = MCUtil.appendPathWithoutDupe(mcConnection.localWorkspacePath, pathStr);
 		// MCLogger.log("Add log path " + path);
 		logPaths.add(path);
 	}

@@ -28,6 +28,11 @@ public class MicroclimateServerConsole extends IOConsole {
 		for (IPath logPath : app.getLogFilePaths()) {
 			File logFile = new File(logPath.toOSString());
 
+			if (!logFile.exists()) {
+				MCLogger.logError("Log file not found at: " + logPath.toOSString());
+				continue;
+			}
+
 			// We want the console name to be "myApp build.log" or "myApp messages.log".
 			// the build.log has a different structure - it's mc-$projectId-$uuid.build.log, but we just want build.log
 
@@ -68,6 +73,7 @@ public class MicroclimateServerConsole extends IOConsole {
 			}
 		}
 
+		MCLogger.log("Creating new server console: " + getName());
 		consoleManager.addConsoles(new IConsole[] { this });
 	}
 
