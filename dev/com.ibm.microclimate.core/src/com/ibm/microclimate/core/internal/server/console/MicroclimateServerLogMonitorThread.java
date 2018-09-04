@@ -2,7 +2,6 @@ package com.ibm.microclimate.core.internal.server.console;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -26,8 +25,7 @@ public class MicroclimateServerLogMonitorThread extends Thread {
 
 	private volatile boolean run = true;
 
-	public MicroclimateServerLogMonitorThread(String consoleName, File inputFile, IOConsoleOutputStream output)
-			throws FileNotFoundException {
+	public MicroclimateServerLogMonitorThread(String consoleName, File inputFile, IOConsoleOutputStream output) {
 
 		this.inputFile = inputFile;
 		this.output = output;
