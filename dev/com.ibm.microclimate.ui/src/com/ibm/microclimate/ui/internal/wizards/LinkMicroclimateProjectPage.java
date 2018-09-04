@@ -186,6 +186,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			    		&& !connectionsCombo.isDisposed()) {
 			    	populateConnectionsCombo();
 			    	populateProjectsTable();
+			    	getWizard().getContainer().updateButtons();
 			    }
 			}
 		});
