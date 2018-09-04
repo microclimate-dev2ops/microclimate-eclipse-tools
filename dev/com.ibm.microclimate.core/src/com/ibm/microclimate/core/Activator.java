@@ -3,8 +3,11 @@ package com.ibm.microclimate.core;
 import java.net.URL;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+
+import com.ibm.microclimate.core.internal.MCLogger;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -33,6 +36,7 @@ public class Activator extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		context.registerService(DebugOptionsListener.class, MCLogger.instance(), null);
 	}
 
 	/*

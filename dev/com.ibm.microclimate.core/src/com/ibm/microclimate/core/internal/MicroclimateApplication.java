@@ -91,7 +91,7 @@ public class MicroclimateApplication {
 			String projectsJson)
 					throws JSONException, NumberFormatException, MalformedURLException {
 
-		List<MicroclimateApplication> runningApps = new ArrayList<>();
+		List<MicroclimateApplication> apps = new ArrayList<>();
 
 		MCLogger.log(projectsJson);
 		JSONArray appArray = new JSONArray(projectsJson);
@@ -110,8 +110,9 @@ public class MicroclimateApplication {
 				catch(JSONException e) {
 					// Sometimes (seems to be when project is disabled) this value is missing -
 					// see https://github.ibm.com/dev-ex/portal/issues/425
-					MCLogger.logError("Error getting project type from: " + appJso, e);
+					MCLogger.logError(e.getMessage() + " in: " + appJso);
 				}
+
 				String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
 
 				int httpPort = -1;
@@ -145,7 +146,7 @@ public class MicroclimateApplication {
 
 				MicroclimateApplication mcApp =
 						new MicroclimateApplication(mcConnection, id, name, type, loc, httpPort, contextRoot);
-				runningApps.add(mcApp);
+				apps.add(mcApp);
 
 				if (appJso.has(MCConstants.KEY_LOGS)) {
 					JSONObject logsJso = appJso.getJSONObject(MCConstants.KEY_LOGS);
@@ -176,7 +177,7 @@ public class MicroclimateApplication {
 			}
 		}
 
-		return runningApps;
+		return apps;
 	}
 
 	private void setBaseUrl() throws MalformedURLException {

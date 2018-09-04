@@ -2,6 +2,7 @@ package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -20,12 +21,19 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 	private NewMicroclimateConnectionPage newConnectionPage;
 
-	public NewMicroclimateConnectionWizard() {
+	private IWorkbench workbench;
+	private IStructuredSelection selection;
+
+	private final boolean launchLinkWizardOnFinish;
+
+	public NewMicroclimateConnectionWizard(boolean launchLinkWizardOnFinish) {
+		this.launchLinkWizardOnFinish = launchLinkWizardOnFinish;
 	}
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		setDefaultPageImageDescriptor(Activator.getDefaultIcon());
+		this.selection = selection;
 
 		// TODO help
 		setHelpAvailable(false);
@@ -59,6 +67,14 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 		}
 
 		MicroclimateConnectionManager.add(newConnectionPage.getMCConnection());
+
+		if (launchLinkWizardOnFinish) {
+			getShell().close();
+
+			WizardLauncher.launchWizard(new LinkMicroclimateProjectWizard(), selection, workbench,
+					Display.getDefault().getActiveShell());
+		}
+
 		return true;
 	}
 }
