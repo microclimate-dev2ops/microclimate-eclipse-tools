@@ -236,15 +236,19 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isLinkable() {
-		return isRunning() && isLibertyProject() && !isLinked();
+		return isRunning() && isMicroprofileProject() && !isLinked();
 	}
 
 	public boolean isRunning() {
 		return baseUrl != null;
 	}
 
-	public boolean isLibertyProject() {
+	public boolean isMicroprofileProject() {
 		return MCConstants.PROJECT_TYPE_LIBERTY.equals(projectType);
+	}
+
+	public String getUserFriendlyType() {
+		return MCConstants.projectTypeToUserFriendly(projectType);
 	}
 
 	/**

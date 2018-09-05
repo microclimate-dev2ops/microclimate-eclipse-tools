@@ -2,31 +2,28 @@ package com.ibm.microclimate.ui.internal.wizards;
 
 import java.util.List;
 
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PreferencesUtil;
-import org.eclipse.ui.dialogs.SearchPattern;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
@@ -43,39 +40,54 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 	// User's currently selected Microclimate Connection - can be null
 	private MicroclimateConnection mcConnection;
-	// List of Applications from the current mcConnection
-	private List<MicroclimateApplication> mcApps;
+	private MicroclimateApplication appToLink;
 
-	private final String selectedProjectName;
+	private IProject selectedProject;
 
 	private Combo connectionsCombo;
-	private Table projectsTable;
-	private Text filterText;
+	private Combo projectsCombo;
 
-	protected SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
+	private Composite projToLinkInfoParent;
 
-	protected LinkMicroclimateProjectPage(String selectedProjectName) {
-		super("Link " + selectedProjectName + " to Microclimate Project");
-		setTitle("Link " + selectedProjectName + " to Microclimate Project");
-		setDescription("Link your Eclipse project to a project in Microclimate");
+	private Label mcProjInfoTitle;
+	private Button refreshProjectsBtn;
 
-		this.selectedProjectName = selectedProjectName;
+	private Label projInfoName;
+	private Label projInfoType;
+	private Label projInfoUrl;
+	private Label projInfoPath;
+
+	protected LinkMicroclimateProjectPage(IProject selectedProject) {
+		super("Link to Microclimate Project");
+
+		this.selectedProject = selectedProject;
+		setCustomTitle();
+
+		setDescription("Select the Eclipse project you wish to link to a Microclimate project.");
+	}
+
+	private void setCustomTitle() {
+		setTitle("Link " + selectedProject.getName() + " to Microclimate Project");
 	}
 
 	@Override
 	public void createControl(Composite parent) {
-		Composite composite = new Composite(parent, SWT.NULL);
-		composite.setLayout(new GridLayout(3, false));
+		// getShell().setSize(600, 400);
+
+		final int parentGridWidth = 3;
+		final int firstColWidth = 100;
+
+		parent.setLayout(new GridLayout(parentGridWidth, false));
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		composite.setLayoutData(gridData);
+		gridData.minimumWidth = firstColWidth;
+		parent.setLayoutData(gridData);
 
-		Label connectionsLabel = new Label(composite, SWT.NONE);
+		Label connectionsLabel = new Label(parent, SWT.NONE);
 		connectionsLabel.setText("Microclimate Connection:");
-		gridData = new GridData(SWT.FILL, SWT.CENTER, false, false);
-		connectionsLabel.setLayoutData(gridData);
+		connectionsLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
-		connectionsCombo = new Combo(composite, SWT.READ_ONLY);
-		gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		connectionsCombo = new Combo(parent, SWT.READ_ONLY);
+		gridData = new GridData(GridData.FILL, GridData.FILL, true, false);
 		connectionsCombo.setLayoutData(gridData);
 
 		connectionsCombo.addSelectionListener(new SelectionAdapter() {
@@ -86,10 +98,15 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		});
 
-		Button manageConnectionsBtn = new Button(composite, SWT.PUSH);
+		populateConnectionsCombo();
+		// Initially select the first mcConnection
+		connectionsCombo.select(0);
+		setMCConnection();
+
+		Button manageConnectionsBtn = new Button(parent, SWT.PUSH);
 		manageConnectionsBtn.setText("Manage Connections");
-		gridData = new GridData(SWT.FILL, SWT.FILL, false, false);
-		manageConnectionsBtn.setLayoutData(gridData);
+		GridData buttonData = new GridData(GridData.FILL, GridData.CENTER, true, false);
+		manageConnectionsBtn.setLayoutData(buttonData);
 
 		manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -101,98 +118,118 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		});
 
-		populateConnectionsCombo();
-		// Initially select the first mcConnection
-		connectionsCombo.select(0);
-		setMCConnection();
+		Label eclipseProj = new Label(parent, SWT.NONE);
+		eclipseProj.setText("Eclipse Project:");
 
-		// Add spacing
-		Label spacer = new Label(composite, SWT.NONE);
-		gridData = new GridData(GridData.FILL, GridData.FILL, false, false, 3, 1);
-		spacer.setLayoutData(gridData);
-
-		Label projectsLabel = new Label(composite, SWT.NONE);
-		projectsLabel.setText("Select project:");
-		gridData = new GridData(GridData.FILL, GridData.CENTER, false, false, 3, 1);
-		projectsLabel.setLayoutData(gridData);
-
-		Composite projectsComposite = new Composite(composite, SWT.NONE);
-		projectsComposite.setLayout(new GridLayout(2, false));
-		gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
-		projectsComposite.setLayoutData(gridData);
-
-        filterText = new Text(projectsComposite, SWT.SEARCH);
-        gridData = new GridData(GridData.FILL, GridData.CENTER, true, false, 1, 1);
-        filterText.setLayoutData(gridData);
-        filterText.setMessage("type filter text");
-
-        // Use up the second column
-        new Label(projectsComposite, SWT.NONE);
-
-		projectsTable = new Table(projectsComposite, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
-		projectsTable.setLinesVisible(true);
-		projectsTable.setHeaderVisible(true);
-		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
-		gridData.minimumWidth = 600;
-		gridData.minimumHeight = 200;
-		projectsTable.setLayoutData(gridData);
-		projectsTable.setHeaderVisible(true);
-		projectsTable.addSelectionListener(new SelectionAdapter() {
+		projectsCombo = new Combo(parent, SWT.READ_ONLY);
+		projectsCombo.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		projectsCombo.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
-				// Selecting a project allows the user to proceed in the wizard.
-				getWizard().getContainer().updateButtons();
-				// MCLogger.log("Now selected project #" + projectsTable.getSelectionIndex());
+				// user has selected a different project
+				String projectName = projectsCombo.getText();
+
+				selectedProject = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+				MCLogger.log("New selected project is " + selectedProject.getName());
+				if (selectedProject == null) {
+					MCLogger.logError("Eclipse project with name " + projectName + " not found!");
+				}
+				else {
+					setCustomTitle();
+					populateAppToLinkDetails();
+				}
 			}
 		});
 
-		TableColumn nameColumn = new TableColumn(projectsTable, SWT.BORDER);
-		nameColumn.setText("Project Name");
-		nameColumn.setWidth((int)(gridData.minimumWidth / 2.75));
-		TableColumn typeColumn = new TableColumn(projectsTable, SWT.BORDER);
-		typeColumn.setText("Type");
-		typeColumn.setWidth(nameColumn.getWidth() / 2);
-		TableColumn urlColumn = new TableColumn(projectsTable, SWT.BORDER);
-		urlColumn.setText("URL");
-		urlColumn.setWidth(gridData.minimumWidth - nameColumn.getWidth() - typeColumn.getWidth());
+		populateProjectsCombo();
 
-		Button refreshProjectsBtn = new Button(projectsComposite, SWT.PUSH);
-		refreshProjectsBtn.setText("Refresh Projects");
-		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
-		refreshProjectsBtn.setLayoutData(gridData);
+		// Initially select the project used to launch this wizard.
+		if (projectsCombo.getItemCount() > 0) {
+			projectsCombo.select(0);
+			for (int i = 0; i < projectsCombo.getItemCount(); i++) {
+				if (projectsCombo.getItem(i).equals(selectedProject.getName())) {
+					projectsCombo.select(i);
+				}
+			}
+		}
+
+		Label spacer = new Label(parent, SWT.NONE);
+		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 1, 1));;
+
+		// new row
+		mcProjInfoTitle = new Label(parent, SWT.NONE);
+		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false, 2, 1));
+
+		refreshProjectsBtn = new Button(parent, SWT.PUSH);
+		refreshProjectsBtn.setText("Refresh Project Info");
+		refreshProjectsBtn.setLayoutData(buttonData);
 
 		refreshProjectsBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
-				populateProjectsTable();
+				populateAppToLinkDetails();
 			}
 		});
 
-        filterText.addModifyListener(new ModifyListener() {
-            @Override
-            public void modifyText(ModifyEvent event) {
-                populateProjectsTable();
-            }
-        });
+		// Create the bottom part of the wizard which contains info about the selected project,
+		// if the project has a corresponding project in Microclimate.
+		projToLinkInfoParent = new Composite(parent, SWT.NONE);
+		projToLinkInfoParent.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, parentGridWidth, 1));
+		projToLinkInfoParent.setLayout(new GridLayout(parentGridWidth, false));
 
-		// Since we called buildConnectionsCombo already, mcConnection must be set
-		populateProjectsTable();
+		final Font boldFont = FontDescriptor.createFrom(getFont())
+				.setStyle(SWT.BOLD)
+				.createFont(parent.getDisplay());
+
+		createProjInfoLabel("Name:", firstColWidth, boldFont);
+		projInfoName = new Label(projToLinkInfoParent, SWT.NONE);
+		GridData infoData = new GridData(GridData.BEGINNING, GridData.FILL, true, false, 2, 1);
+		projInfoName.setLayoutData(infoData);
+
+		createProjInfoLabel("Type:", firstColWidth, boldFont);
+		projInfoType = new Label(projToLinkInfoParent, SWT.NONE);
+		projInfoType.setLayoutData(infoData);
+
+		createProjInfoLabel("URL:", firstColWidth, boldFont);
+		projInfoUrl = new Label(projToLinkInfoParent, SWT.NONE);
+		projInfoUrl.setLayoutData(infoData);
+
+		createProjInfoLabel("Path:", firstColWidth, boldFont);
+		projInfoPath = new Label(projToLinkInfoParent, SWT.NONE);
+		projInfoPath.setLayoutData(infoData);
+
+		populateAppToLinkDetails();
 
 		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
 		.addPropertyChangeListener(new IPropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent event) {
-			    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY
+			    if (event.getProperty().equals(MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY)
 			    		&& !connectionsCombo.isDisposed()) {
 			    	populateConnectionsCombo();
-			    	populateProjectsTable();
-			    	getWizard().getContainer().updateButtons();
+			    	populateAppToLinkDetails();
 			    }
 			}
 		});
 
-		composite.pack();
-		setControl(composite);
+		parent.pack();
+		setControl(parent);
+	}
+
+	/**
+	 * Create a project info label with the given text. These all have the same style.
+	 */
+	private Label createProjInfoLabel(String text, int width, Font font) {
+		Label label = new Label(projToLinkInfoParent, SWT.NONE);
+		label.setText(text);
+		label.setAlignment(SWT.RIGHT);
+		label.setFont(font);
+
+		GridData gridData = new GridData(GridData.END, GridData.FILL, true, false);
+		gridData.minimumWidth = width;
+		label.setLayoutData(gridData);
+
+		return label;
 	}
 
 	private void populateConnectionsCombo() {
@@ -209,8 +246,8 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			connectionsCombo.add(mcc.baseUrl);
 		}
 
-		if(previousCount == 0) {
-			// Previously it was empty. Now, it is not empty. So we should automatically select the first item.
+		if(previousCount == 0 || connectionsCombo.getItemCount() == 1) {
+			// automatically select the first item.
 			connectionsCombo.select(0);
 			setMCConnection();
 		}
@@ -223,142 +260,128 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		String selected = connectionsCombo.getText();
 		MicroclimateConnection connection = MicroclimateConnectionManager.getConnection(selected);
 
-		if(connection == null) {
+		if (connection == null) {
 			MCLogger.logError("Failed to get MCConnection object from selected URL: " + selected);
 		}
 		mcConnection = connection;
 	}
 
-	/**
-	 * Using the existing mcConnection, populate the projects table with a list of projects from that connection
-	 */
-	private void populateProjectsTable() {
-		projectsTable.removeAll();
+	private void populateProjectsCombo() {
+		projectsCombo.removeAll();
 
-		if(mcConnection == null) {
-			// Don't display this if the Preferences page is already open - ie only display it
-			// if this wizard is the active shell.
-			if (Display.getDefault().getActiveShell().equals(getShell())) {
-				showNoConnectionsMsg();
-			}
+		for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
+			projectsCombo.add(project.getName());
+		}
+	}
+
+	private void populateAppToLinkDetails() {
+		if (selectedProject == null) {
+			MCLogger.logError("Null selectedProject");
+			// should never happen?
+			setErrorMessage("There was an error getting the selected project. Please re-launch the wizard.");
 			return;
 		}
 
-		// Cache the mcApps here so that we can be sure the contents of mcApps match the contents of the table
-		mcApps = mcConnection.getApps();
-		// Sort the apps so that unlinkable apps show up at the bottom of the table.
-		mcApps.sort((app1, app2) -> {
-			if (app1.isLinkable()) {
-				if (app2.isLinkable()) {
-					// both are linkable
-					return 0;
-				}
-				else {
-					// app1 should be sorted first
-					return -1;
-				}
-			}
-			else if(app2.isLinkable()) {
-				// app2 should be sorted first
-				return 1;
-			}
-			else {
-				// neither are linkable
-				return 0;
-			}
-		});
+		appToLink = findAppToLink();
 
-		String filter = filterText.isDisposed() ? null : filterText.getText();
+		// Hide the App Info area if no app matches.
+		boolean hasApp = appToLink != null;
+		projToLinkInfoParent.setVisible(hasApp);
+		refreshProjectsBtn.setEnabled(hasApp);
 
-		if (filter != null && !filter.isEmpty()) {
-			pattern.setPattern("*" + filter + "*");
+		if (hasApp) {
+			// Populate the app info label
+
+			MCLogger.log("Found app with matching path " + appToLink.name);
+
+			mcProjInfoTitle.setText(selectedProject.getName() +
+					" will be linked to the following Microclimate project:");
+
+			String baseUrl = "Not running";
+			if (appToLink.getBaseUrl() != null) {
+				baseUrl = appToLink.getBaseUrl().toString();
+			}
+
+			projInfoName.setText(appToLink.name);
+			projInfoType.setText(appToLink.getUserFriendlyType());
+			projInfoUrl.setText(baseUrl);
+			projInfoPath.setText(appToLink.fullLocalPath.toString());
 		}
-		for(MicroclimateApplication app : mcApps) {
-			if (filter != null && !filter.isEmpty() && !pattern.matches(app.name)) {
-				continue;
-			}
-			TableItem ti = new TableItem(projectsTable, SWT.NONE);
-
-			String type = app.projectType;
-			// uppercase the first letter because it looks nicer
-			type = type.substring(0, 1).toUpperCase() + type.substring(1);
-
-			String baseUrlStr;
-			if (app.isRunning()) {
-				baseUrlStr = app.getBaseUrl().toString();
-			}
-			else {
-				baseUrlStr = "Not Running";
-			}
-
-			ti.setText(new String[] { app.name, type, baseUrlStr });
-
-			// Gray out invalid projects
-			if (!app.isLinkable()) {
-				ti.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY));
-			}
+		else {
+			// There is no corresponding project in Microclimate.
+			mcProjInfoTitle.setText("");
 		}
 
-		// Help the user by selecting a project initially
-		TableItem[] items = projectsTable.getItems();
-		// Select the first one by default
-		if (items.length > 0) {
-			projectsTable.select(0);
-		}
-		// Select the project in the table whose name matches the project that was used to launch this wizard
-		for (int i = 0; i < items.length; i++) {
-			TableItem ti = items[i];
-			if (ti.getText(0).equals(selectedProjectName)) {
-				projectsTable.select(i);
-				break;
-			}
-		}
+		projToLinkInfoParent.layout();
+
+		// Refresh the error message and wizard buttons
+		String notLinkableReason = getAppNotLinkableMsg(appToLink, selectedProject);
+		setErrorMessage(notLinkableReason);
+
+		getWizard().getContainer().updateButtons();
 	}
 
-	private void showNoConnectionsMsg() {
-		MessageDialog.openError(getShell(), "No Active Microclimate Connections",
-				"You must create and select a Microclimate connection "
-				+ "in order to import projects from Microclimate. "
-				+ "Click \"Manage Connections\" to add a new connection.");
-	}
-
-	MicroclimateApplication getSelectedApp() {
-		int selectionIndex = projectsTable.getSelectionIndex();
-		if(selectionIndex != -1) {
-			return mcApps.get(selectionIndex);
+	private MicroclimateApplication findAppToLink() {
+		if (mcConnection == null) {
+			return null;
 		}
+
+		IPath eclipseProjPath = selectedProject.getLocation();
+		List<MicroclimateApplication> apps = mcConnection.getApps();
+		for (MicroclimateApplication app : apps) {
+			if (MCUtil.pathEquals(eclipseProjPath, app.fullLocalPath)) {
+				return app;
+			}
+		}
+		MCLogger.log("No MC project found matching Eclipse project path: " + eclipseProjPath);
 		return null;
 	}
 
 	boolean canFinish() {
-		// Can finish if any valid project is selected
-		MicroclimateApplication selectedApp = getSelectedApp();
-		if (selectedApp != null) {
-			if (selectedApp.isLinkable()) {
-				setErrorMessage(null);
-				return true;
-			}
-			// Check out MicroclimateApplication.isLinkable for reasons why this project is not valid,
-			// and give messages for each possible reason.
-			else if (selectedApp.isLinked()) {
-				setErrorMessage("Invalid project selected - This project is already linked to server \""
-						+ selectedApp.getLinkedServer().getServer().getName() + "\".");
-			}
-			else if (!selectedApp.isRunning()) {
-				// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
-				// but then we'd have to give them a way to start the project from Eclipse.
-				setErrorMessage("Invalid project selected - This project is not running. "
-						+ "Make sure it is not disabled, wait for it to start, and refresh the list.");
-			}
-			else if (!selectedApp.isLibertyProject()) {
-				setErrorMessage("Invalid project selected - Only Liberty projects are supported at this time.");
-			}
-			else {
-				// should never happen - handle all possible reasons for invalidity above
-				setErrorMessage("Invalid project selected");
-			}
-		}
+		// the error message is set by populateAppToLinkDetails
+		return getErrorMessage() == null;
+	}
 
-		return false;
+	/**
+	 * Check if the given app is linkable. If it is, return null.
+	 * If not, return a user-friendly string describing why it can't be linked.
+	 */
+	private String getAppNotLinkableMsg(MicroclimateApplication app, IProject project) {
+		if (mcConnection == null) {
+			return "No Microclimate Connection. Click \"Manage Connections\" to add a new connection.";
+		}
+		else if (app == null) {
+			return "No Microclimate project matching Eclipse project location\n" + project.getLocation();
+		}
+		else if (app.isLinkable()) {
+			return null;
+		}
+		// Check out MicroclimateApplication.isLinkable for reasons why this project is not valid,
+		// and give messages for each possible reason.
+		else if (app.isLinked()) {
+			return "Invalid project selected - This project is already linked to server \""
+					+ app.getLinkedServer().getServer().getName() + "\".";
+		}
+		else if (!app.isRunning()) {
+			// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
+			// but then we'd have to give them a way to start the project from Eclipse.
+			return "Invalid project selected - This project is not running. "
+					+ "\n Make sure it is enabled and started, then refresh the project info.";
+		}
+		else if (!app.isMicroprofileProject()) {
+			return "Invalid project selected - Only Microprofile projects are supported at this time.";
+		}
+		else {
+			// should never happen - handle all possible reasons for invalidity above
+			return "Invalid project selected";
+		}
+	}
+
+	public MicroclimateApplication getAppToLink() {
+		return appToLink;
+	}
+
+	public IProject getSelectedProject() {
+		return selectedProject;
 	}
 }
