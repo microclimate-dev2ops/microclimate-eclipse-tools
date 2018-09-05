@@ -32,8 +32,6 @@ public class MicroclimateApplication {
 
 	private final Set<IPath> logPaths;
 
-	private MicroclimateServerBehaviour linkedServer;
-
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
 
@@ -61,19 +59,14 @@ public class MicroclimateApplication {
 
 		setBaseUrl();
 
-		IServer linkedServer = getServerWithProjectID(projectID);
-		if (linkedServer != null) {
-			linkTo(linkedServer);
-		}
-
 		//MCLogger.log("Created mcApp:");
 		//MCLogger.log(toString());
 	}
 
-	public static IServer getServerWithProjectID(String projectID) {
+	public static MicroclimateServerBehaviour getServerWithProjectID(String projectID) {
 		for (IServer server : ServerCore.getServers()) {
 			if (projectID.equals(server.getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""))) {
-				return server;
+				return server.getAdapter(MicroclimateServerBehaviour.class);
 			}
 		}
 		return null;
@@ -211,28 +204,14 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isLinked() {
-		return linkedServer != null;
-	}
-
-	public void linkTo(IServer server) {
-		MCLogger.log("App " + name + " is now linked to: " + server.getName());
-
-		MicroclimateServerBehaviour serverBehaviour = server.getAdapter(MicroclimateServerBehaviour.class);
-		if (serverBehaviour == null) {
-			// should never happen because we already verified this is a microclimate server
-			MCLogger.logError("Couldn't adapt to MicroclimateServerBehaviour for server " + server.getName());
-		}
-
-		linkedServer = serverBehaviour;
-	}
-
-	public void unlink() {
-		MCLogger.log("App " + name + " is now unlinked");
-		linkedServer = null;
+		return getLinkedServer() != null;
 	}
 
 	public MicroclimateServerBehaviour getLinkedServer() {
-		return linkedServer;
+		// Before, we kept a reference to the linked IServer, which was set by the ServerBehaviour on initialize,
+		// and unset on dispose. This new approach removes bugs associated with errors in that state,
+		// but means re-acquiring the server each time it is requested, which is not efficient.
+		return getServerWithProjectID(projectID);
 	}
 
 	public boolean isLinkable() {

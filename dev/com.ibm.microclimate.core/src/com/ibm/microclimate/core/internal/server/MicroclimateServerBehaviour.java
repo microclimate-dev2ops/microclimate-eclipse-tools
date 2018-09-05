@@ -82,8 +82,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			onProjectDisableOrDelete();
 			return;
 		}
-		// Set unlinked in dispose()
-		app.linkTo(getServer());
 
 		setInitialState();
 
@@ -117,7 +115,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void dispose() {
 		MCLogger.log("Dispose " + getServer().getName());
-		
+
 		if (ILaunchManager.DEBUG_MODE.equals(getServer().getMode()) && getServer().getServerState() == IServer.STATE_STARTED) {
 			MicroclimateApplication app = getApp();
 			MCUtil.openDialog(false, "Deleting Microclimate Server: " + getServer().getName(), "The server is in debug mode.  It will be restarted in run mode and then deleted.");
@@ -126,10 +124,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			} catch (Exception e) {
 				MCLogger.logError("Restart in run mode for the " + app.name + " application failed.", e);
 			}
-		}
-		
-		if (app != null) {
-			app.unlink();
 		}
 
 		// required to stop the auto publish thread
@@ -563,5 +557,5 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	private int getStopTimeoutMs() {
 		return getServer().getStopTimeout() * 1000;
 	}
-	
+
 }
