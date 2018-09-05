@@ -424,12 +424,10 @@ task cleanBuilds(type: Delete) {
 // Delete all prereq files, downloaded artifacts and build output
 task clean(type: Delete) {
     doLast {
-      /* Temporarily commented out
         println 'Delete ' + eclipseSdkArchive
         file(eclipseSdkArchive).delete()
         println 'Delete ' + eclipseTargetPlatformArchive
         file(eclipseTargetPlatformArchive).delete()
-        */
     }
 
     onlyIf {
@@ -437,6 +435,4 @@ task clean(type: Delete) {
     }
 }
 
-//Temporarily commented out
 clean.dependsOn cleanBuilds, cleanPrereqs
-//clean.dependsOn cleanBuilds
