@@ -117,6 +117,17 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public void dispose() {
 		MCLogger.log("Dispose " + getServer().getName());
+		
+		if (ILaunchManager.DEBUG_MODE.equals(getServer().getMode()) && getServer().getServerState() == IServer.STATE_STARTED) {
+			MicroclimateApplication app = getApp();
+			MCUtil.openDialog(false, "Deleting Microclimate Server: " + getServer().getName(), "The server is in debug mode.  It will be restarted in run mode and then deleted.");
+			try {
+				app.mcConnection.requestProjectRestart(app, ILaunchManager.RUN_MODE);
+			} catch (Exception e) {
+				MCLogger.logError("Restart in run mode for the " + app.name + " application failed.", e);
+			}
+		}
+		
 		if (app != null) {
 			app.unlink();
 		}
@@ -552,4 +563,5 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	private int getStopTimeoutMs() {
 		return getServer().getStopTimeout() * 1000;
 	}
+	
 }
