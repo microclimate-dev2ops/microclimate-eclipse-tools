@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.wst.server.core.IServer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -255,7 +254,7 @@ public class MicroclimateSocket {
 	private MicroclimateServerBehaviour getServerForEvent(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 
-		IServer server = MicroclimateApplication.getServerWithProjectID(projectID);
+		MicroclimateServerBehaviour server = MicroclimateApplication.getServerWithProjectID(projectID);
 		if (server == null) {
 			// can't recover from this
 			// This is normal if the project has been deleted or disabled
@@ -263,7 +262,7 @@ public class MicroclimateSocket {
 			return null;
 		}
 
-		return server.getAdapter(MicroclimateServerBehaviour.class);
+		return server;
 	}
 
 	private int parsePort(String portStr) {
