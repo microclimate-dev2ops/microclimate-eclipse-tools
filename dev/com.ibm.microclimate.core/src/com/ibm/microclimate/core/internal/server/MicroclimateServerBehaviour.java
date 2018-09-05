@@ -145,6 +145,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 			if (projectStatus == null) {
 				onProjectDisableOrDelete();
+				return;
 			}
 
 			// Check if the project is open
@@ -172,17 +173,22 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			throws JSONException {
 
 		clearSuffix();
+		String appStatus = "";
 		if (projectChangedEvent.has(MCConstants.KEY_APP_STATUS)) {
-			onAppStateUpdate(projectChangedEvent.getString(MCConstants.KEY_APP_STATUS));
+			appStatus = projectChangedEvent.getString(MCConstants.KEY_APP_STATUS);
+			onAppStateUpdate(appStatus);
 		}
-		// These are mutually exclusive - it won't have both an app status and a build status.
-		else if (projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
-			onBuildStateUpdate(
-					projectChangedEvent.getString(MCConstants.KEY_BUILD_STATUS),
-					projectChangedEvent.getString(MCConstants.KEY_DETAILED_BUILD_STATUS));
-		}
-		else {
-			MCLogger.log("No state of interest to update");
+
+		// Update build status if the project is not started or starting.
+		if (!appStatus.equals(MCConstants.APPSTATE_STARTED) && !appStatus.equals(MCConstants.APPSTATE_STARTING) &&
+				projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
+
+			String detail = "";
+			if (projectChangedEvent.has(MCConstants.KEY_DETAILED_BUILD_STATUS)) {
+				detail = projectChangedEvent.getString(MCConstants.KEY_DETAILED_BUILD_STATUS);
+			}
+
+			onBuildStateUpdate(projectChangedEvent.getString(MCConstants.KEY_BUILD_STATUS), detail);
 		}
 	}
 
@@ -264,7 +270,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCUtil.openDialog(true, errorTitle, errorMsg);
 			return;
         }
-		
+
 		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode");
 
 		int currentState = getServer().getServerState();
@@ -294,7 +300,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCLogger.logError("LaunchConfig was null!");
 			return;
 		}
-		
+
 		launchConfig.launch(launchMode, null);
 	}
 
@@ -339,7 +345,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCLogger.logError("Server reached Starting state, but did not Start in time.");
 		}
 	}
-	
+
 	public void reconnectDebug(IProgressMonitor monitor) {
 		ILaunchConfiguration launchConfig;
 		try {

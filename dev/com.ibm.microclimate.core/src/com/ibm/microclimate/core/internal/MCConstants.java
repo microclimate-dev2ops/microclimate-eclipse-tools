@@ -64,6 +64,7 @@ public class MCConstants {
 			BUILD_STATUS_INPROGRESS = "inProgress",
 			BUILD_STATUS_SUCCESS = "success",
 			BUILD_STATUS_FAILED = "failed",
+			BUILD_STATUS_QUEUED = "queued",
 			BUILD_STATUS_UNKNOWN = "unknown",
 
 			ACTION_RESTART = "restart"
@@ -136,6 +137,9 @@ public class MCConstants {
 		}
 		else if (MCConstants.BUILD_STATUS_FAILED.equals(buildStatus)) {
 			return "Build Failed - Please check " + MCConstants.BUILD_LOG_SHORTNAME;
+		}
+		else if (MCConstants.BUILD_STATUS_QUEUED.equals(buildStatus)) {
+			return "Build Queued";
 		}
 		else {
 			// could be "unknown", or could be something else
