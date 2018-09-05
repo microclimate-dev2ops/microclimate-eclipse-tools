@@ -337,13 +337,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		} else {
 			setMode(ILaunchManager.RUN_MODE);
 		}
-
-		if (waitForStarted(monitor)) {
-			MCLogger.log("Server is done restarting into " + launchMode + " mode");
-		}
-		else {
-			MCLogger.logError("Server reached Starting state, but did not Start in time.");
-		}
 	}
 
 	public void reconnectDebug(IProgressMonitor monitor) {
