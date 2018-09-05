@@ -33,7 +33,7 @@ dependencies {
     antScp 'org.apache.ant:ant-jsch:1.7.1', 'jsch:jsch:0.1.29'
 }
 
-defaultTasks 'clean', 'compile', 'generateOpenLTUpdateSite', 'deployDHE'
+defaultTasks 'clean', 'compile', 'generateOpenLTUpdateSite'
 
 task importAnt {
     ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader
@@ -223,6 +223,13 @@ def createJSONForBuild(version) {
                                             ]))
 }
 
+// deploy build to Artifactory
+task deployArtifactory {
+
+    doLast {
+    }
+}
+
 // deploy build to DHE
 task deployDHE {
 
@@ -265,14 +272,12 @@ task deployDHE {
             println "workingDir : " + file
         }
 
-		/*
         println "Publishing " + ${buildLog} + " to DHE"
 
         copy {
             from "${buildLog}"
             into toPublishDir
         }
-        */
 
         def user = System.getenv("intranet.user")
         def host = System.getenv("dhe_server")
@@ -424,12 +429,10 @@ task cleanBuilds(type: Delete) {
 // Delete all prereq files, downloaded artifacts and build output
 task clean(type: Delete) {
     doLast {
-      /* Temporarily commented out
         println 'Delete ' + eclipseSdkArchive
         file(eclipseSdkArchive).delete()
         println 'Delete ' + eclipseTargetPlatformArchive
         file(eclipseTargetPlatformArchive).delete()
-        */
     }
 
     onlyIf {
@@ -437,6 +440,4 @@ task clean(type: Delete) {
     }
 }
 
-//Temporarily commented out
 clean.dependsOn cleanBuilds, cleanPrereqs
-//clean.dependsOn cleanBuilds
