@@ -61,4 +61,23 @@ public class MCUtil {
 		}
 		return start.append(finishPath);
 	}
+
+	/**
+	 * Splits the given string into separate strings of the given length (except the last one).
+	 */
+	public static String[] splitStringIntoArray(String longString, int lineLength) {
+		int noSubstrings = longString.length() / lineLength + 1;
+		String[] result = new String[noSubstrings];
+
+		int strIndex = 0;
+		int i = 0;
+		while (strIndex + lineLength < longString.length()) {
+			String sub = longString.substring(strIndex, strIndex + lineLength - 1);
+			strIndex += sub.length();
+			result[i++] = sub;
+		}
+		// final line
+		result[i] = longString.substring(strIndex);
+		return result;
+	}
 }
