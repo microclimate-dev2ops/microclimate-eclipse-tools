@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.eclipse.wst.server.core.IServer;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
@@ -155,7 +156,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		addButton.setEnabled(true);
 		removeButton.setEnabled(false);
 
-		com.ibm.microclimate.core.MicroclimateCorePlugin.getDefault().getPreferenceStore()
+		MicroclimateCorePlugin.getDefault().getPreferenceStore()
 			.addPropertyChangeListener(new IPropertyChangeListener() {
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
