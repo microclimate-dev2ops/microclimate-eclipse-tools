@@ -169,12 +169,14 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		return mcConnection;
 	}
 
-	boolean canFinish() {
-		return mcConnection != null;
-	}
-
 	@Override
 	public boolean canFlipToNextPage() {
-		return canFinish();
+		return mcConnection != null;
+	}
+	
+	void performFinish() {
+		if (mcConnection != null) {
+			MicroclimateConnectionManager.add(mcConnection);
+		}
 	}
 }
