@@ -43,6 +43,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private MicroclimateApplication appToLink;
 
 	private IProject selectedProject;
+	private boolean includeConnectionWidgets = false;
 
 	private Composite parent;
 
@@ -64,10 +65,11 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private Text[] projInfoPaths = new Text[0];
 	private Label[] projInfoSpacers = new Label[0];
 
-	protected LinkMicroclimateProjectPage(IProject selectedProject) {
+	protected LinkMicroclimateProjectPage(IProject selectedProject, boolean includeConnectionWidgets) {
 		super("Link to Microclimate Project");
 
 		this.selectedProject = selectedProject;
+		this.includeConnectionWidgets = includeConnectionWidgets;
 		setCustomTitle();
 
 		setDescription("Select the Eclipse project you wish to link to a Microclimate project.");
@@ -81,63 +83,61 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	public void createControl(Composite parent) {
 		// getShell().setSize(600, 400);
 
-		this.parent = parent;
+		final int gridWidth = 3;
 
-		final int parentGridWidth = 3;
+		Composite composite = new Composite(parent, SWT.NONE);
+		composite.setLayout(new GridLayout(gridWidth, false));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		GridLayout parentLayout = new GridLayout(parentGridWidth, false);
-		// parentLayout.horizontalSpacing = SWTUtil.convertHorizontalDLUsToPixels(parent, 4);
-		// parentLayout.verticalSpacing = SWTUtil.convertVerticalDLUsToPixels(parent, 4);
-		// parentLayout.marginWidth = 0;
-		// parentLayout.marginHeight = 0;
-		parent.setLayout(parentLayout);
-		parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		this.parent = composite;
 
-		Label connectionsLabel = new Label(parent, SWT.NONE);
-		connectionsLabel.setText("Microclimate Connection:");
+		if (includeConnectionWidgets) {
+			Label connectionsLabel = new Label(composite, SWT.NONE);
+			connectionsLabel.setText("Microclimate Connection:");
 
-		final GridData labelData = new GridData(GridData.FILL, GridData.CENTER, false, false);
-		connectionsLabel.setLayoutData(labelData);
+			final GridData labelData = new GridData(GridData.FILL, GridData.CENTER, false, false);
+			connectionsLabel.setLayoutData(labelData);
 
-		connectionsCombo = new Combo(parent, SWT.READ_ONLY);
-		final GridData comboData = new GridData(GridData.FILL, GridData.FILL, true, false);
-		connectionsCombo.setLayoutData(comboData);
+			connectionsCombo = new Combo(composite, SWT.READ_ONLY);
+			final GridData comboData = new GridData(GridData.FILL, GridData.FILL, true, false);
+			connectionsCombo.setLayoutData(comboData);
 
-		connectionsCombo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent se) {
-				// Combo combo = (Combo) se.getSource();
-				setMCConnection();
-			}
-		});
+			connectionsCombo.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent se) {
+					// Combo combo = (Combo) se.getSource();
+					setMCConnection();
+				}
+			});
 
-		populateConnectionsCombo();
-		// Initially select the first mcConnection
-		connectionsCombo.select(0);
-		setMCConnection();
+			populateConnectionsCombo();
+			// Initially select the first mcConnection
+			connectionsCombo.select(0);
+			setMCConnection();
 
-		Button manageConnectionsBtn = new Button(parent, SWT.PUSH);
-		manageConnectionsBtn.setText("Manage");
-		final GridData buttonData = new GridData(GridData.CENTER, GridData.CENTER, false, false);
-		buttonData.widthHint = 125;
-		manageConnectionsBtn.setLayoutData(buttonData);
+			Button manageConnectionsBtn = new Button(composite, SWT.PUSH);
+			manageConnectionsBtn.setText("Manage");
+			final GridData buttonData = new GridData(GridData.CENTER, GridData.CENTER, false, false);
+			buttonData.widthHint = 125;
+			manageConnectionsBtn.setLayoutData(buttonData);
 
-		manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent se) {
-				PreferenceDialog prefsDialog = PreferencesUtil
-						.createPreferenceDialogOn(getShell(), MicroclimateConnectionPrefsPage.PAGE_ID, null, null);
-				prefsDialog.setBlockOnOpen(true);
-				prefsDialog.open();
-			}
-		});
+			manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent se) {
+					PreferenceDialog prefsDialog = PreferencesUtil
+							.createPreferenceDialogOn(getShell(), MicroclimateConnectionPrefsPage.PAGE_ID, null, null);
+					prefsDialog.setBlockOnOpen(true);
+					prefsDialog.open();
+				}
+			});
+		}
 
-		Label eclipseProj = new Label(parent, SWT.NONE);
+		Label eclipseProj = new Label(composite, SWT.NONE);
 		eclipseProj.setText("Eclipse Project:");
-		eclipseProj.setLayoutData(labelData);
+		eclipseProj.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
 
-		projectsCombo = new Combo(parent, SWT.READ_ONLY);
-		projectsCombo.setLayoutData(comboData);
+		projectsCombo = new Combo(composite, SWT.READ_ONLY);
+		projectsCombo.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 		projectsCombo.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
@@ -152,6 +152,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				else {
 					setCustomTitle();
 					populateAppToLinkDetails();
+					getWizard().getContainer().updateButtons();
 				}
 			}
 		});
@@ -168,22 +169,25 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		}
 
-		Label spacer = new Label(parent, SWT.NONE);
+		Label spacer = new Label(composite, SWT.NONE);
 		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 1, 1));;
 
 		// new row
-		mcProjInfoTitle = new Label(parent, SWT.NONE);
+		mcProjInfoTitle = new Label(composite, SWT.NONE);
 		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false, 2, 1));
 		mcProjInfoTitle.setText("The selected project will be linked to the following Microclimate project:");
 
-		refreshProjectsBtn = new Button(parent, SWT.PUSH);
+		refreshProjectsBtn = new Button(composite, SWT.PUSH);
 		refreshProjectsBtn.setText("Refresh");
+		final GridData buttonData = new GridData(GridData.CENTER, GridData.CENTER, false, false);
+		buttonData.widthHint = 125;
 		refreshProjectsBtn.setLayoutData(buttonData);
 
 		refreshProjectsBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 				populateAppToLinkDetails();
+				getWizard().getContainer().updateButtons();
 			}
 		});
 
@@ -196,37 +200,44 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				.createFont(parent.getDisplay());
 		*/
 
-		projInfoNameLabel = createProjInfoLabel(parent, "Name:");
-		projInfoName = new Label(parent, SWT.NONE);
+		projInfoNameLabel = createProjInfoLabel(composite, "Name:");
+		projInfoName = new Label(composite, SWT.NONE);
+		projInfoName.setText("");
 		GridData infoData = new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1);
 		projInfoName.setLayoutData(infoData);
 
-		projInfoTypeLabel = createProjInfoLabel(parent, "Type:");
-		projInfoType = new Label(parent, SWT.NONE);
+		projInfoTypeLabel = createProjInfoLabel(composite, "Type:");
+		projInfoType = new Label(composite, SWT.NONE);
+		projInfoType.setText("");
 		projInfoType.setLayoutData(infoData);
 
-		projInfoUrlLabel = createProjInfoLabel(parent, "URL:");
-		projInfoUrl = new Label(parent, SWT.NONE);
+		projInfoUrlLabel = createProjInfoLabel(composite, "URL:");
+		projInfoUrl = new Label(composite, SWT.NONE);
+		projInfoUrl.setText("");
 		projInfoUrl.setLayoutData(infoData);
 
-		projInfoPathLabel = createProjInfoLabel(parent, "Path:");
 
-		populateAppToLinkDetails();
+		projInfoPathLabel = createProjInfoLabel(composite, "Path:");
 
-		MicroclimateCorePlugin.getDefault().getPreferenceStore().addPropertyChangeListener(
-				new IPropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent event) {
-			    if (event.getProperty().equals(MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY)
-			    		&& !connectionsCombo.isDisposed()) {
-			    	populateConnectionsCombo();
-			    	populateAppToLinkDetails();
-			    }
-			}
-		});
+		if (includeConnectionWidgets) {
+			populateAppToLinkDetails();
 
-		parent.pack();
-		setControl(parent);
+			MicroclimateCorePlugin.getDefault().getPreferenceStore().addPropertyChangeListener(
+					new IPropertyChangeListener() {
+				@Override
+				public void propertyChange(PropertyChangeEvent event) {
+				    if (event.getProperty().equals(MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY)
+				    		&& !connectionsCombo.isDisposed()) {
+				    	populateConnectionsCombo();
+				    	populateAppToLinkDetails();
+				    	getWizard().getContainer().updateButtons();
+				    }
+				}
+			});
+		}
+
+		composite.pack();
+		setControl(composite);
 	}
 
 	/**
@@ -263,6 +274,15 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			// automatically select the first item.
 			connectionsCombo.select(0);
 			setMCConnection();
+		}
+	}
+
+	void init(MicroclimateConnection connection) {
+		if (connection != null) {
+			mcConnection = connection;
+		}
+		if (mcConnection != null) {
+			populateAppToLinkDetails();
 		}
 	}
 
@@ -362,8 +382,6 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		// if notLinkableReason is null, the user can finish the wizard.
 		String notLinkableReason = getAppNotLinkableMsg(appToLink, selectedProject);
 		setErrorMessage(notLinkableReason);
-
-		getWizard().getContainer().updateButtons();
 	}
 
 	private void toggleInfoLabels(boolean show) {
@@ -398,7 +416,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 	boolean canFinish() {
 		// the error message is set by populateAppToLinkDetails
-		return getErrorMessage() == null;
+		return mcConnection != null && getErrorMessage() == null;
 	}
 
 	/**

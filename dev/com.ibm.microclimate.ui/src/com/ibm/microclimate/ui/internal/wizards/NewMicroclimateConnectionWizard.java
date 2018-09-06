@@ -48,7 +48,7 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 	@Override
 	public boolean canFinish() {
-		return newConnectionPage.canFinish();
+		return newConnectionPage.getMCConnection() != null;
 	}
 
 	@Override
@@ -62,11 +62,11 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 	@Override
 	public boolean performFinish() {
-		if(!newConnectionPage.canFinish()) {
+		if(!canFinish()) {
 			return false;
 		}
 
-		MicroclimateConnectionManager.add(newConnectionPage.getMCConnection());
+		newConnectionPage.performFinish();
 
 		if (launchLinkWizardOnFinish) {
 			getShell().close();

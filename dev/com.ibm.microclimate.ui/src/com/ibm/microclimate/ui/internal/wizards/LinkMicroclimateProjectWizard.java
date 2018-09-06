@@ -6,6 +6,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
@@ -14,6 +15,8 @@ import org.eclipse.wst.server.core.IServer;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 
@@ -29,6 +32,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	private IProject selectedProject;
 
+	private NewMicroclimateConnectionPage newConnectionPage;
 	private LinkMicroclimateProjectPage newProjectPage;
 
 	@Override
@@ -44,9 +48,27 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	@Override
 	public void addPages() {
 		setWindowTitle("Link to Microclimate Project");
+		
+		if (MicroclimateConnectionManager.connectionsCount() < 1) {
+			newConnectionPage = new NewMicroclimateConnectionPage();
+			addPage(newConnectionPage);
+		}
 
-		newProjectPage = new LinkMicroclimateProjectPage(selectedProject);
+		newProjectPage = new LinkMicroclimateProjectPage(selectedProject, newConnectionPage == null);
 		addPage(newProjectPage);
+	}
+	
+	@Override
+	public IWizardPage getNextPage(IWizardPage page) {
+		// Make sure the project link page is initialized
+		MicroclimateConnection connection = null;
+		if (page != null && page.equals(newConnectionPage)) {
+			// Pass the connection specified in the connection page to the project link page
+			connection = newConnectionPage.getMCConnection();
+		}
+		newProjectPage.init(connection);
+		
+		return super.getNextPage(page);
 	}
 
 	@Override
@@ -56,6 +78,11 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	@Override
 	public boolean performFinish() {
+		// Finish the connection page
+		if (newConnectionPage != null) {
+			newConnectionPage.performFinish();
+		}
+		
 		// appToLink must be non-null to finish the wizard page.
 		MicroclimateApplication appToLink = newProjectPage.getAppToLink();
 
