@@ -50,12 +50,7 @@ public class LinkMicroclimateProjectDelegate implements IObjectActionDelegate {
 			return;
 		}
 
-		if (MicroclimateConnectionManager.connectionsCount() < 1 ) {
-			wizard = new NewMicroclimateConnectionWizard(true);
-		}
-		else {
-			wizard = new LinkMicroclimateProjectWizard();
-		}
+		wizard = new LinkMicroclimateProjectWizard();
 
 		WizardLauncher.launchWizard(wizard,
 				selection,
