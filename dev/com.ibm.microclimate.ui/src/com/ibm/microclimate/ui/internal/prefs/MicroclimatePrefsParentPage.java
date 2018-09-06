@@ -31,7 +31,7 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 
 	@Override
 	public void init(IWorkbench arg0) {
-		setDescription("Expand this preferences category to set specific Microclimate preferences.");
+		// setDescription("Expand this preferences category to set specific Microclimate preferences.");
 		setImageDescriptor(MicroclimateUIPlugin.getDefaultIcon());
 
 		prefs = MicroclimateCorePlugin.getDefault().getPreferenceStore();
@@ -39,23 +39,10 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 
 	@Override
 	protected Control createContents(Composite parent) {
-		parent.setLayout(new GridLayout(1, false));
-
-//		final GridData fillRowData = new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1);
-		new Label(parent, SWT.NONE);
-//		spacer.setLayoutData(fillRowData);
-
-		showLinkFinishDialogBtn = new Button(parent, SWT.CHECK);
-		showLinkFinishDialogBtn.setText("Hide Link Project wizard confirmation dialog");
-		showLinkFinishDialogBtn.setSelection(prefs.getBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY));
-//		showLinkFinishDialogBtn.setFont(parent.getFont());
-//		showLinkFinishDialogBtn.setLayoutData(fillRowData);
-
-		new Label(parent, SWT.NONE);
-//		spacer2.setLayoutData(fillRowData);
+		parent.setLayout(new GridLayout(2, false));
 
 		Label debugTimeoutLabel = new Label(parent, SWT.NONE);
-		debugTimeoutLabel.setText("Timeout for Server Debug Connection (seconds): ");
+		debugTimeoutLabel.setText("Timeout for server debug connection (seconds): ");
 
 		debugTimeoutText = new Text(parent, SWT.BORDER);
 		debugTimeoutText.setTextLimit(3);
@@ -72,8 +59,22 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 			}
 		});
 
+
+		final GridData fillRowData = new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1);
+		Label spacer = new Label(parent, SWT.NONE);
+		spacer.setLayoutData(fillRowData);
+
+		showLinkFinishDialogBtn = new Button(parent, SWT.CHECK);
+		showLinkFinishDialogBtn.setText("Hide link project wizard confirmation dialog");
+		showLinkFinishDialogBtn.setSelection(prefs.getBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY));
+//		showLinkFinishDialogBtn.setFont(parent.getFont());
+		showLinkFinishDialogBtn.setLayoutData(fillRowData);
+
+
 		Label endSpacer = new Label(parent, SWT.NONE);
-		endSpacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		endSpacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
+		// this last label just moves the Default and Apply buttons over
+		new Label(parent, SWT.NONE);
 
 		return parent;
 	}
