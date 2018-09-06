@@ -3,16 +3,19 @@ package com.ibm.microclimate.ui.internal.wizards;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.wst.server.core.IServer;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
-import com.ibm.microclimate.ui.Activator;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 
 /**
  * This wizard allows the user to select a Microclimate project, then links it the Eclipse project whose context menu
@@ -32,7 +35,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		selectedProject = LinkMicroclimateProjectDelegate.getProjectFromSelection(selection);
 
-		setDefaultPageImageDescriptor(Activator.getDefaultIcon());
+		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getDefaultIcon());
 
 		// TODO help
 		setHelpAvailable(false);
@@ -74,11 +77,23 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	private void doLink(MicroclimateApplication appToLink, IProject project) throws CoreException {
 		IServer newServer = MicroclimateServerFactory.create(appToLink);
 
-		String successMsg = "Linked project %s with Microclimate application %s.\n"
-				+ "Server \"%s\" is now available in the Servers view, and its logs in the Console view.";
-		successMsg = String.format(successMsg, project.getName(), appToLink.name, newServer.getName());
+		IPreferenceStore prefs = MicroclimateCorePlugin.getDefault().getPreferenceStore();
 
-		MessageDialog.openInformation(getShell(), "Linking Complete", successMsg);
+		// The user can choose to hide this dialog
+		if(!prefs.getBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY)) {
+
+			String successMsg = String.format("Linked project %s with Microclimate application %s.\n"
+					+ "Server \"%s\" is now available in the Servers view, and its logs in the Console view.",
+					project.getName(), appToLink.name, newServer.getName());
+
+			MessageDialogWithToggle dialog = MessageDialogWithToggle
+					.openInformation(getShell(), "Linking Complete", successMsg,
+					"Don't show this again", false,
+					prefs, MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY);
+
+			// The call above is supposed to set this prefs key, but it doesn't seem to work.
+			prefs.setValue(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY, dialog.getToggleState());
+		}
 	}
 
 }

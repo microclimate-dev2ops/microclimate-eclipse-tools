@@ -12,7 +12,7 @@ import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.IOConsole;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 
-import com.ibm.microclimate.core.Activator;
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
@@ -54,7 +54,7 @@ public class MicroclimateServerConsole extends IOConsole {
 
 	public MicroclimateServerConsole(String consoleName, File logFile) {
 		super(consoleName, MC_CONSOLE_TYPE,
-				com.ibm.microclimate.core.Activator.getIcon(Activator.DEFAULT_ICON_PATH),
+				MicroclimateCorePlugin.getIcon(MicroclimateCorePlugin.DEFAULT_ICON_PATH),
 				true);
 
 		outputStream = newOutputStream();

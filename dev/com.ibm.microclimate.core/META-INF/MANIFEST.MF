@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Microclimate Core Plugin
 Bundle-SymbolicName: com.ibm.microclimate.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-Activator: com.ibm.microclimate.core.Activator
+Bundle-Activator: com.ibm.microclimate.core.MicroclimateCorePlugin
 Bundle-Vendor: IBM
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,

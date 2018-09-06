@@ -2,14 +2,17 @@ package com.ibm.microclimate.ui;
 
 import java.net.URL;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
+
 /**
  * The activator class controls the plug-in life cycle
  */
-public class Activator extends AbstractUIPlugin {
+public class MicroclimateUIPlugin extends AbstractUIPlugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.ibm.microclimate.ui"; //$NON-NLS-1$
@@ -20,12 +23,12 @@ public class Activator extends AbstractUIPlugin {
 			ERROR_ICON_PATH = "error.gif";
 
 	// The shared instance
-	private static Activator plugin;
+	private static MicroclimateUIPlugin plugin;
 
 	/**
 	 * The constructor
 	 */
-	public Activator() {
+	public MicroclimateUIPlugin() {
 	}
 
 	/*
@@ -53,17 +56,25 @@ public class Activator extends AbstractUIPlugin {
 	 *
 	 * @return the shared instance
 	 */
-	public static Activator getDefault() {
+	public static MicroclimateUIPlugin getDefault() {
 		return plugin;
 	}
 
 	public static ImageDescriptor getIcon(String path) {
-		final URL url = Activator.getDefault().getBundle().getEntry(ICON_BASE_PATH + path);
+		final URL url = MicroclimateUIPlugin.getDefault().getBundle().getEntry(ICON_BASE_PATH + path);
 		return ImageDescriptor.createFromURL(url);
 	}
 
 	public static ImageDescriptor getDefaultIcon() {
 		return getIcon(DEFAULT_ICON_PATH);
+	}
+
+	@Override
+	/**
+	 * @return The core plugin's preference store - everything should be stored there to prevent confusion.
+	 */
+	public IPreferenceStore getPreferenceStore() {
+		return MicroclimateCorePlugin.getDefault().getPreferenceStore();
 	}
 
 }

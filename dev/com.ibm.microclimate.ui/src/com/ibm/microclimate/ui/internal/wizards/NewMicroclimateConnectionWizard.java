@@ -8,7 +8,7 @@ import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
-import com.ibm.microclimate.ui.Activator;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 
 /**
  * This wizard, which can be launched through the MC Preferences page or as a prerequisite to Linking a project,
@@ -32,7 +32,7 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		setDefaultPageImageDescriptor(Activator.getDefaultIcon());
+		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getDefaultIcon());
 		this.selection = selection;
 
 		// TODO help

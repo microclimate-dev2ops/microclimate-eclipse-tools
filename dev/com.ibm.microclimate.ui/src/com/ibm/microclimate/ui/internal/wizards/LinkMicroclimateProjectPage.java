@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
@@ -212,8 +213,8 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		populateAppToLinkDetails();
 
-		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-		.addPropertyChangeListener(new IPropertyChangeListener() {
+		MicroclimateCorePlugin.getDefault().getPreferenceStore().addPropertyChangeListener(
+				new IPropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 			    if (event.getProperty().equals(MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY)

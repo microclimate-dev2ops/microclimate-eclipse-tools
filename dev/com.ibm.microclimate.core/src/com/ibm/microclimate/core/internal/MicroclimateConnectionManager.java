@@ -31,7 +31,7 @@ public class MicroclimateConnectionManager {
 		loadFromPreferences();
 
 		// Add a preference listener to reload the cached list of connections each time it's modified.
-		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+		com.ibm.microclimate.core.MicroclimateCorePlugin.getDefault().getPreferenceStore()
 			.addPropertyChangeListener(new IPropertyChangeListener() {
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
@@ -125,14 +125,14 @@ public class MicroclimateConnectionManager {
 		}
 		MCLogger.log("Writing connections to preferences: " + prefsBuilder.toString());
 
-		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+		com.ibm.microclimate.core.MicroclimateCorePlugin.getDefault().getPreferenceStore()
 				.setValue(CONNECTION_LIST_PREFSKEY, prefsBuilder.toString());
 	}
 
 	private void loadFromPreferences() {
 		clear();
 
-		String storedConnections = com.ibm.microclimate.core.Activator.getDefault()
+		String storedConnections = com.ibm.microclimate.core.MicroclimateCorePlugin.getDefault()
 				.getPreferenceStore()
 				.getString(CONNECTION_LIST_PREFSKEY).trim();
 

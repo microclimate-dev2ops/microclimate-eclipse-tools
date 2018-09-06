@@ -8,7 +8,7 @@ import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
-import com.ibm.microclimate.ui.Activator;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 
 /**
  * From com.ibm.ws.st.ui.internal.ServerDecorator
@@ -51,7 +51,7 @@ public class MicroclimateServerDecorator extends LabelProvider implements ILight
             if (mcServer != null) {
             	String err = mcServer.getSuffix();
             	if (err != null) {
-            		ImageDescriptor img = Activator.getIcon(Activator.ERROR_ICON_PATH);
+            		ImageDescriptor img = MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.ERROR_ICON_PATH);
             		decoration.addOverlay(img);
             		decoration.addSuffix(" [" + err + "] ");
             	}

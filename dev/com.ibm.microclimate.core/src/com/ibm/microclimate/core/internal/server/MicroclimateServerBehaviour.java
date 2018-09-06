@@ -21,7 +21,7 @@ import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.ibm.microclimate.core.Activator;
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
@@ -45,10 +45,12 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	// Only set these once, in initialize().
 	private MicroclimateApplication app;
-	// private MicroclimateServerMonitorThread monitorThread;
 	private Set<MicroclimateServerConsole> consoles;
 
 	private String suffix = null;
+
+	// in seconds
+	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 3;
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
@@ -98,7 +100,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	@Override
 	public IStatus canStop() {
 		// TODO when FW supports this
-		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Not yet supported", null);
+		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Not yet supported", null);
 	}
 
 	@Override
@@ -109,7 +111,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	@Override
 	public IStatus canPublish() {
-		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Microclimate server does not support publish", null);
+		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Microclimate server does not support publish", null);
 	}
 
 	@Override
@@ -431,7 +433,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
     	MCLogger.log("Debugging on port " + debugPort);
 
-		int timeout = getStartTimeoutMs();
+		int timeout = MicroclimateCorePlugin.getDefault().getPreferenceStore()
+				.getInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY)
+				* 1000;
+		MCLogger.log("Debugger connect timeout is " + timeout + "ms");
 
 		// Now prepare the Debug Connector, and try to attach it to the server's JVM
 		AttachingConnector connector = LaunchUtilities.getAttachingConnector();
@@ -501,7 +506,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				return debugTarget;
 			} catch (InterruptedIOException e) {
 				// timeout, consult status handler if there is one
-				IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+				IStatus status = new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID,
 						IJavaLaunchConfigurationConstants.ERR_VM_CONNECT_TIMEOUT, "", e);
 
 				IStatusHandler handler = DebugPlugin.getDefault().getStatusHandler(status);

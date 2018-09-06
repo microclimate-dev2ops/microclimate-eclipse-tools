@@ -11,7 +11,7 @@ import org.eclipse.wst.server.core.ServerPort;
 import org.eclipse.wst.server.core.model.IURLProvider;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
-import com.ibm.microclimate.core.Activator;
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 
 /**
@@ -72,7 +72,7 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public IStatus canModifyModules(IModule[] arg0, IModule[] arg1) {
-		return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "Modules cannot be modified on a Microclimate Server", null);
+		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Modules cannot be modified on a Microclimate Server", null);
 	}
 
 	@Override
