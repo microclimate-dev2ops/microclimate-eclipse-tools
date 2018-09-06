@@ -437,7 +437,8 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		// and give messages for each possible reason.
 		else if (app.isLinked()) {
 			return "Invalid project selected - This project is already linked to server \""
-					+ app.getLinkedServer().getServer().getName() + "\".";
+					+ app.getLinkedServer().getServer().getName() + "\"."
+					+ "\n Delete the server if you wish to unlink this project.";
 		}
 		else if (!app.isRunning()) {
 			// TODO this really shouldn't be a problem. A user could create a server for a stopped project,

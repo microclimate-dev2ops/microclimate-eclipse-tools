@@ -1,10 +1,13 @@
 package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jem.util.emf.workbench.ProjectUtilities;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
@@ -37,7 +40,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		selectedProject = LinkMicroclimateProjectDelegate.getProjectFromSelection(selection);
+		selectedProject = getProjectFromSelection(selection);
 
 		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getDefaultIcon());
 
@@ -45,10 +48,36 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		setHelpAvailable(false);
 	}
 
+	private static IProject getProjectFromSelection(ISelection selection) {
+		if (selection == null) {
+			MCLogger.logError("Null selection passed to getProjectFromSelection");
+			return null;
+		}
+		IStructuredSelection structuredSelection = null;
+		if (selection instanceof IStructuredSelection) {
+			structuredSelection = (IStructuredSelection) selection;
+		}
+		else {
+			MCLogger.logError("Non-structured selection passed to getProjectFromSelection");
+			return null;
+		}
+
+		IProject project = ProjectUtilities.getProject(structuredSelection.getFirstElement());
+		if (project == null){
+			Object firstElement = structuredSelection.getFirstElement();
+			if (firstElement instanceof IResource){
+				project = ((IResource)firstElement).getProject();
+			}
+		}
+		// If there are criteria which exclude certain projects, check those here,
+		// and return null if the project is not valid
+		return project;
+	}
+
 	@Override
 	public void addPages() {
 		setWindowTitle("Link to Microclimate Project");
-		
+
 		if (MicroclimateConnectionManager.connectionsCount() < 1) {
 			newConnectionPage = new NewMicroclimateConnectionPage();
 			addPage(newConnectionPage);
@@ -57,7 +86,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		newProjectPage = new LinkMicroclimateProjectPage(selectedProject, newConnectionPage == null);
 		addPage(newProjectPage);
 	}
-	
+
 	@Override
 	public IWizardPage getNextPage(IWizardPage page) {
 		// Make sure the project link page is initialized
@@ -67,7 +96,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 			connection = newConnectionPage.getMCConnection();
 		}
 		newProjectPage.init(connection);
-		
+
 		return super.getNextPage(page);
 	}
 
@@ -82,7 +111,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		if (newConnectionPage != null) {
 			newConnectionPage.performFinish();
 		}
-		
+
 		// appToLink must be non-null to finish the wizard page.
 		MicroclimateApplication appToLink = newProjectPage.getAppToLink();
 
