@@ -30,12 +30,10 @@ import com.ibm.microclimate.core.internal.MCLogger;
  */
 public class OpenLogAction extends Action {
     // protected MicroclimateServer mcServer;
-    protected final Shell shell;
     protected final IPath logFilePath;
 
     public OpenLogAction(String name, Shell shell, IPath logFile) {
         super(name);
-        this.shell = shell;
         this.logFilePath = logFile;
     }
 

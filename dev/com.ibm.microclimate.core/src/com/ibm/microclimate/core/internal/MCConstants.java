@@ -27,7 +27,6 @@ public class MCConstants {
 			APIPATH_PROJECTS_BASE = "api/v1/projects",
 			APIPATH_PROJECT_LIST = "api/v1/projects",
 			APIPATH_ENV = "api/v1/environment",
-			APIPATH_PROJECT_ACTION = "api/v1/projects/action",
 			APIPATH_RESTART = "restart",
 
 			// App statuses
@@ -64,7 +63,6 @@ public class MCConstants {
 			KEY_ENV_WORKSPACE_LOC = "workspace_location",
 			KEY_ENV_MC_VERSION = "microclimate_version",
 
-			KEY_ACTION = "action",
 			KEY_START_MODE = "startMode",
 
 			// JSON attribute values
@@ -74,9 +72,7 @@ public class MCConstants {
 			BUILD_STATUS_SUCCESS = "success",
 			BUILD_STATUS_FAILED = "failed",
 			BUILD_STATUS_QUEUED = "queued",
-			BUILD_STATUS_UNKNOWN = "unknown",
-
-			ACTION_RESTART = "restart"
+			BUILD_STATUS_UNKNOWN = "unknown"
 			;
 
 	// Microclimate 18.09 is required
