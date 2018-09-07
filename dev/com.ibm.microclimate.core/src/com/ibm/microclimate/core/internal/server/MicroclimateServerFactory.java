@@ -48,7 +48,7 @@ public class MicroclimateServerFactory {
 		newServerWc.setAttribute(MicroclimateServer.ATTR_PROJ_ID, app.projectID);
 
 		// The server will determine the corresponding MCConnection from the baseUrl
-		newServerWc.setAttribute(MicroclimateServer.ATTR_MCC_URL, app.mcConnection.baseUrl);
+		newServerWc.setAttribute(MicroclimateServer.ATTR_MCC_URL, app.mcConnection.baseUrl.toString());
 
 		// Store the name of the Eclipse project linked to this server. This will be used by the
 		// launch configuration to locate the source code when debugging

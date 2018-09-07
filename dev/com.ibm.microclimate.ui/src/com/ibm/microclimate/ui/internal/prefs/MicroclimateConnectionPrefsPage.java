@@ -1,5 +1,6 @@
 package com.ibm.microclimate.ui.internal.prefs;
 
+import java.net.URI;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
@@ -131,14 +132,21 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				for(int i : selected) {
 					// The URL is in the 0th column of the table
 					String url = connectionsTable.getItem(i).getText(0);
-					MicroclimateConnection connection = MicroclimateConnectionManager.getConnection(url);
-					List<MicroclimateApplication> linkedApps = connection.getLinkedApps();
 
-					if (linkedApps.isEmpty()) {
-						MicroclimateConnectionManager.remove(connection);
+					MicroclimateConnection connection = MicroclimateConnectionManager.getConnection(url);
+					if (connection != null) {
+						List<MicroclimateApplication> linkedApps = connection.getLinkedApps();
+
+						if (linkedApps.isEmpty()) {
+							MicroclimateConnectionManager.remove(connection);
+						}
+						else {
+							handleDeleteActiveServers(connection, linkedApps);
+						}
 					}
 					else {
-						handleDeleteActiveConnection(connection, linkedApps);
+						MicroclimateConnectionManager.removeBrokenConnection(
+								MicroclimateConnectionManager.getBrokenConnection(url));
 					}
 				}
 
@@ -187,12 +195,12 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			addTableRow(mcc.baseUrl, getLinkedAppNamesForConnection(mcc), false);
 		}
 
-		for (String brokenConnectionUrl : MicroclimateConnectionManager.brokenConnections()) {
+		for (URI brokenConnectionUrl : MicroclimateConnectionManager.brokenConnections()) {
 			addTableRow(brokenConnectionUrl, "", true);
 		}
 	}
 
-	private void addTableRow(String url, String linkedApps, boolean isBroken) {
+	private void addTableRow(URI url, String linkedApps, boolean isBroken) {
 		if (linkedApps == null || linkedApps.isEmpty()) {
 			linkedApps = "none";
 		}
@@ -201,7 +209,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			TableItem ti = new TableItem(connectionsTable, SWT.NONE);
 
 			// TODO error icon
-			ti.setText(new String[] { url, linkedApps, isBroken ? CONNECTION_BAD : CONNECTION_GOOD });
+			ti.setText(new String[] { url.toString(), linkedApps, isBroken ? CONNECTION_BAD : CONNECTION_GOOD });
 		}
 		catch(SWTException e) {
 			// suppress widget disposed exception - It gets thrown if the window is out of focus,
@@ -231,7 +239,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 	 * Proceeding with deleting this connection will delete all its linked servers too.
 	 * Make this clear to the user, then delete the servers if they still wish to delete the connection.
 	 */
-	private void handleDeleteActiveConnection(MicroclimateConnection connection,
+	private void handleDeleteActiveServers(MicroclimateConnection connection,
 			List<MicroclimateApplication> linkedApps) {
 
 		String[] buttons = new String[] { "Cancel", "Delete Servers"  };

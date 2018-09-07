@@ -50,7 +50,7 @@ public class MicroclimateSocket {
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 
-		socketUri = new URI("http", null, mcConnection.host, mcConnection.port, null, null, null);
+		socketUri = mcConnection.baseUrl;
 
 		socket = IO.socket(socketUri);
 

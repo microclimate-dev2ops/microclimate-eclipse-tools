@@ -1,12 +1,20 @@
 package com.ibm.microclimate.core.internal.connection;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.ICoreRunnable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.json.JSONException;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
@@ -27,8 +35,8 @@ public class MicroclimateConnectionManager {
 	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections";
 
 	private List<MicroclimateConnection> connections = new ArrayList<>();
-	// this list tracks the URLs of connections that
-	private List<String> brokenConnections = new ArrayList<>();
+	// this list tracks the URLs of connections that have never successfully connected
+	private List<URI> brokenConnections = new ArrayList<>();
 
 	private MicroclimateConnectionManager() {
 		instance = this;
@@ -59,7 +67,7 @@ public class MicroclimateConnectionManager {
 	/**
 	 * Adds the given connection to the list of connections.
 	 */
-	public static void add(MicroclimateConnection connection) {
+	public synchronized static void add(MicroclimateConnection connection) {
 		if (connection == null) {
 			MCLogger.logError("Null connection passed to be added");
 			return;
@@ -73,24 +81,22 @@ public class MicroclimateConnectionManager {
 	/**
 	 * @return An <b>unmodifiable</b> copy of the list of existing MC connections.
 	 */
-	public static List<MicroclimateConnection> connections() {
+	public synchronized static List<MicroclimateConnection> connections() {
 		return Collections.unmodifiableList(instance().connections);
 	}
 
-	public static List<String> brokenConnections() {
-		return Collections.unmodifiableList(instance().brokenConnections);
-	}
 
-	public static MicroclimateConnection getConnection(String baseUrl) {
+
+	public synchronized static MicroclimateConnection getConnection(String baseUrl) {
 		for(MicroclimateConnection mcc : connections()) {
-			if(mcc.baseUrl.equals(baseUrl)) {
+			if(mcc.baseUrl.toString().equals(baseUrl)) {
 				return mcc;
 			}
 		}
 		return null;
 	}
 
-	public static int connectionsCount() {
+	public synchronized static int activeConnectionsCount() {
 		return instance().connections.size();
 	}
 
@@ -100,7 +106,7 @@ public class MicroclimateConnectionManager {
 	 * 	true if the connection was removed,
 	 * 	false if not because it didn't exist.
 	 */
-	public static boolean remove(MicroclimateConnection connection) {
+	public synchronized static boolean remove(MicroclimateConnection connection) {
 		connection.close();
 		boolean removeResult = instance().connections.remove(connection);
 		if (!removeResult) {
@@ -113,7 +119,7 @@ public class MicroclimateConnectionManager {
 	/**
 	 * Deletes all of the instance's connections. Does NOT write to preferences after doing so.
 	 */
-	public static void clear() {
+	public synchronized static void clear() {
 		MCLogger.log("Clearing " + instance().connections.size() + " connections");
 
 		Iterator<MicroclimateConnection> it = instance().connections.iterator();
@@ -123,6 +129,26 @@ public class MicroclimateConnectionManager {
 			connection.close();
 			it.remove();
 		}
+	}
+
+	/**
+	 * @return An <b>unmodifiable</b> copy of the list of broken MC Connection URLs.
+	 */
+	public synchronized static List<URI> brokenConnections() {
+		return Collections.unmodifiableList(instance().brokenConnections);
+	}
+
+	public synchronized static URI getBrokenConnection(String url) {
+		for (URI brokenConnectionUri : brokenConnections()) {
+			if (brokenConnectionUri.toString().equals(url)) {
+				return brokenConnectionUri;
+			}
+		}
+		return null;
+	}
+
+	public synchronized static boolean removeBrokenConnection(URI url) {
+		return instance().brokenConnections.remove(url);
 	}
 
 	// Preferences serialization
@@ -148,7 +174,6 @@ public class MicroclimateConnectionManager {
 
 		MCLogger.log("Reading connections from preferences: \"" + storedConnections + "\"");
 
-		StringBuilder failedConnectionsBuilder = new StringBuilder();
 		for(String line : storedConnections.split("\n")) {
 			line = line.trim();
 			if(line.isEmpty()) {
@@ -161,26 +186,65 @@ public class MicroclimateConnectionManager {
 			}
 			catch (MicroclimateConnectionException mce) {
 				brokenConnections.add(mce.connectionUrl);
-				failedConnectionsBuilder.append(mce.connectionUrl);
+				spawnReconnectJob(mce.connectionUrl);
+			} catch (JSONException | IOException | URISyntaxException e) {
+				MCLogger.logError("Error loading MCConnection from preferences", e);
 			}
-			catch(Exception e) {
-				failedConnectionsBuilder.append(e.getClass().getSimpleName());
-				if (e.getMessage() != null) {
-					failedConnectionsBuilder.append(": ").append(e.getMessage());
+		}
+	}
+
+	private static void spawnReconnectJob(URI url) {
+		String msg = "Reconnecting to Microclimate at " + url;
+
+		Job reconnectJob = Job.create(msg, new ICoreRunnable() {
+			@Override
+			public void run(IProgressMonitor monitor) throws CoreException {
+				// each re-connect attempt takes 2 seconds because that's how long the socket tries to connect for
+				// so, we delay for 4 seconds, try to connect for 2 seconds, repeat.
+				final int delay = 4000;
+				monitor.beginTask("Reconnecting to Microclimate at " + url, 100);
+
+				int i = 0;
+				while(!monitor.isCanceled()) {
+					try {
+						Thread.sleep(delay);
+						i++;
+
+						if (i % 5 == 0) {
+							MCLogger.log("Trying to reconnect to Microclimate at " + url);
+						}
+
+						MicroclimateConnection newConnection = new MicroclimateConnection(url);
+						if (newConnection != null) {
+							// connection re-established!
+							MCLogger.log("Successfully re-connected to Microclimate at " + url);
+							instance().brokenConnections.remove(url);
+							instance().connections.add(newConnection);
+							break;
+						}
+					}
+					catch (InterruptedException e) {
+						MCLogger.logError(e);
+					}
+					catch(MicroclimateConnectionException e) {
+						// nothing, the connection just failed. we'll try again.
+					}
+					catch (Exception e) {
+						// If any exception other than a MCConnectionException (handled by tryReconnect) occurs,
+						// it is most likely that this connection will never succeed.
+						MCLogger.logError(e);
+						monitor.setCanceled(true);
+
+						MCUtil.openDialog(true, "Error reconnecting to Microclimate",
+								"Could not reconnect to " + url + ".\n" +
+								"Please re-create this connection in the Microclimate Connection preferences.");
+					}
 				}
-				failedConnectionsBuilder.append('\n');
+
+				monitor.done();
 			}
-		}
+		});
 
-		String failedConnections = failedConnectionsBuilder.toString();
-		if (!failedConnections.isEmpty()) {
-			MCUtil.openDialog(true, "Failed to connect to Microclimate instance(s)",
-					"Failed to connect to: " + failedConnections +
-					"\nWhen Microclimate is running once more, " +
-					"use the Microclimate Connections preferences page to reconnect.");
-					// TODO let them open that page?
-		}
-
-		// writeToPreferences();
+		reconnectJob.schedule();
 	}
 }

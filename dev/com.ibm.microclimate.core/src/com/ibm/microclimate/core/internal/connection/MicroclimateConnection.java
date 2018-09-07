@@ -1,7 +1,9 @@
 package com.ibm.microclimate.core.internal.connection;
 
-import java.io.Closeable;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,27 +26,26 @@ import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
  *
  * @author timetchells@ibm.com
  */
-public class MicroclimateConnection implements Closeable {
+public class MicroclimateConnection {
 
 	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace";
 	private static final String UNKNOWN_VERSION = "unknown";
 
-	public final String host;
-	public final int port;
-
-	public final String baseUrl;
+	public final URI baseUrl;
 	public final IPath localWorkspacePath;
 
 	private final MicroclimateSocket mcSocket;
 
 	private List<MicroclimateApplication> apps = Collections.emptyList();
 
-	public MicroclimateConnection (String host, int port) throws Exception {
-		this.host = host;
-		this.port = port;
-		this.baseUrl = String.format("http://%s:%d/", host, port);
+	public static URI buildUrl(String host, int port) throws URISyntaxException {
+		return new URI("http", null, host, port, null, null, null);
+	}
 
-		if (MicroclimateConnectionManager.getConnection(baseUrl) != null) {
+	public MicroclimateConnection (URI uri) throws IOException, URISyntaxException, JSONException {
+		this.baseUrl = uri;
+
+		if (MicroclimateConnectionManager.getConnection(baseUrl.toString()) != null) {
 			onInitFail("Microclimate Connection at " + baseUrl + " already exists.");
 		}
 
@@ -52,7 +53,7 @@ public class MicroclimateConnection implements Closeable {
 		mcSocket = new MicroclimateSocket(this);
 		if(!mcSocket.blockUntilFirstConnection()) {
 			close();
-			throw new MicroclimateConnectionException(mcSocket.socketUri.toString());
+			throw new MicroclimateConnectionException(mcSocket.socketUri);
 		}
 
 		JSONObject env = getEnvData(this.baseUrl);
@@ -82,16 +83,15 @@ public class MicroclimateConnection implements Closeable {
 		MCLogger.log("Created " + this);
 	}
 
-	private void onInitFail(String msg) throws Exception {
+	private void onInitFail(String msg) throws ConnectException {
 		MCLogger.log("Initializing MicroclimateConnection failed: " + msg);
 		close();
-		throw new Exception(msg);
+		throw new ConnectException(msg);
 	}
 
 	/**
 	 * Call this when the connection is removed.
 	 */
-	@Override
 	public void close() {
 		MCLogger.log("Closing " + this);
 		if (mcSocket != null && mcSocket.socket != null) {
@@ -102,7 +102,7 @@ public class MicroclimateConnection implements Closeable {
 		}
 	}
 
-	private static JSONObject getEnvData(String baseUrl) throws JSONException, IOException {
+	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
 		final String envUrl = baseUrl + MCConstants.APIPATH_ENV;
 
 		String envResponse = null;
@@ -292,7 +292,7 @@ public class MicroclimateConnection implements Closeable {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
 			if (server != null) {
 				// All linked apps should have getLinkedServer return non-null.
-				server.onMicroclimateDisconnect(baseUrl);
+				server.onMicroclimateDisconnect(baseUrl.toString());
 			}
 		}
 	}
@@ -314,35 +314,22 @@ public class MicroclimateConnection implements Closeable {
 
 	@Override
 	public String toString() {
-		return String.format("%s host=%s port=%d baseUrl=%s workspacePath=%s numApps=%d",
-				MicroclimateConnection.class.getSimpleName(), host, port, baseUrl, localWorkspacePath, apps.size());
+		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d",
+				MicroclimateConnection.class.getSimpleName(), baseUrl, localWorkspacePath, apps.size());
 	}
 
 	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
 	// in MicroclimateConnectionManager, so be careful modifying these.
 
-	private static final String HOST_KEY = "$host", PORT_KEY = "$port";
-
 	public String toPrefsString() {
 		// No newlines allowed!
-
-		return String.format("%s %s=%s %s=%s", MicroclimateConnection.class.getSimpleName(),
-				HOST_KEY, host, PORT_KEY, port);
+		return baseUrl.toString();
 	}
 
-	public static MicroclimateConnection fromPrefsString(String str) throws Exception {
+	public static MicroclimateConnection fromPrefsString(String str)
+			throws URISyntaxException, IOException, JSONException {
 
-		int hostIndex = str.indexOf(HOST_KEY);
-		String afterHostKey = str.substring(hostIndex + HOST_KEY.length() + 1);
-
-		// The hostname is between HOST_KEY and the PORT_KEY, also trim the space between them
-		String host = afterHostKey.substring(0, afterHostKey.indexOf(PORT_KEY)).trim();
-
-		int portIndex = str.indexOf(PORT_KEY);
-		String portStr = str.substring(portIndex + PORT_KEY.length() + 1);
-
-		int port = Integer.parseInt(portStr);
-
-		return new MicroclimateConnection(host, port);
+		URI uri = new URI(str);
+		return new MicroclimateConnection(uri);
 	}
 }

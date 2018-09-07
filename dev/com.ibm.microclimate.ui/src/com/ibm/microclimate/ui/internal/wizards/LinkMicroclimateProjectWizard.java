@@ -78,7 +78,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	public void addPages() {
 		setWindowTitle("Link to Microclimate Project");
 
-		if (MicroclimateConnectionManager.connectionsCount() < 1) {
+		if (MicroclimateConnectionManager.activeConnectionsCount() < 1) {
 			newConnectionPage = new NewMicroclimateConnectionPage();
 			addPage(newConnectionPage);
 		}

@@ -51,7 +51,7 @@ public class MicroclimateApplication {
 		this.projectType = projectType;
 		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
-		this.host = mcConnection.host;
+		this.host = mcConnection.baseUrl.getHost();
 		this.logPaths = new HashSet<>();
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace

@@ -270,7 +270,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		}
 
 		for(MicroclimateConnection mcc : connections) {
-			connectionsCombo.add(mcc.baseUrl);
+			connectionsCombo.add(mcc.baseUrl.toString());
 		}
 
 		if(previousCount == 0 || connectionsCombo.getItemCount() == 1) {
