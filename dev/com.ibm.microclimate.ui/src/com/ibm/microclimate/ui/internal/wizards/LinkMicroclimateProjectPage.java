@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
@@ -46,6 +47,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private boolean includeConnectionWidgets = false;
 
 	private Composite parent;
+	private Composite projectComposite;
 
 	private Combo connectionsCombo;
 	private Combo projectsCombo;
@@ -88,15 +90,12 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(gridWidth, false));
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
 		this.parent = composite;
 
 		if (includeConnectionWidgets) {
 			Label connectionsLabel = new Label(composite, SWT.NONE);
 			connectionsLabel.setText("Microclimate Connection:");
-
-			final GridData labelData = new GridData(GridData.FILL, GridData.CENTER, false, false);
-			connectionsLabel.setLayoutData(labelData);
+			connectionsLabel.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
 
 			connectionsCombo = new Combo(composite, SWT.READ_ONLY);
 			final GridData comboData = new GridData(GridData.FILL, GridData.FILL, true, false);
@@ -117,8 +116,8 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 			Button manageConnectionsBtn = new Button(composite, SWT.PUSH);
 			manageConnectionsBtn.setText("Manage");
-			final GridData buttonData = new GridData(GridData.CENTER, GridData.CENTER, false, false);
-			buttonData.widthHint = 125;
+			final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
+//			buttonData.widthHint = 125;
 			manageConnectionsBtn.setLayoutData(buttonData);
 
 			manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
@@ -157,30 +156,18 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		});
 
-		populateProjectsCombo();
-
-		// Initially select the project used to launch this wizard.
-		if (projectsCombo.getItemCount() > 0) {
-			projectsCombo.select(0);
-			for (int i = 0; i < projectsCombo.getItemCount(); i++) {
-				if (projectsCombo.getItem(i).equals(selectedProject.getName())) {
-					projectsCombo.select(i);
-				}
-			}
-		}
-
 		Label spacer = new Label(composite, SWT.NONE);
-		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 1, 1));;
+		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false));;
 
 		// new row
 		mcProjInfoTitle = new Label(composite, SWT.NONE);
-		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false, 2, 1));
+		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false, 2, 1));
 		mcProjInfoTitle.setText("The selected project will be linked to the following Microclimate project:");
 
 		refreshProjectsBtn = new Button(composite, SWT.PUSH);
 		refreshProjectsBtn.setText("Refresh");
-		final GridData buttonData = new GridData(GridData.CENTER, GridData.CENTER, false, false);
-		buttonData.widthHint = 125;
+		final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
+//		buttonData.widthHint = 125;
 		refreshProjectsBtn.setLayoutData(buttonData);
 
 		refreshProjectsBtn.addSelectionListener(new SelectionAdapter() {
@@ -200,30 +187,46 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				.createFont(parent.getDisplay());
 		*/
 
-		projInfoNameLabel = createProjInfoLabel(composite, "Name:");
-		projInfoName = new Label(composite, SWT.NONE);
+		projectComposite = new Composite(composite, SWT.NONE);
+		projectComposite.setLayout(new GridLayout(2, false));
+		projectComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+
+		projInfoNameLabel = createProjInfoLabel(projectComposite, "Name:");
+		projInfoName = new Label(projectComposite, SWT.NONE);
 		projInfoName.setText("");
-		GridData infoData = new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1);
+		GridData infoData = new GridData(GridData.FILL, GridData.FILL, true, false);
 		projInfoName.setLayoutData(infoData);
 
-		projInfoTypeLabel = createProjInfoLabel(composite, "Type:");
-		projInfoType = new Label(composite, SWT.NONE);
+		projInfoTypeLabel = createProjInfoLabel(projectComposite, "Type:");
+		projInfoType = new Label(projectComposite, SWT.NONE);
 		projInfoType.setText("");
 		projInfoType.setLayoutData(infoData);
 
-		projInfoUrlLabel = createProjInfoLabel(composite, "URL:");
-		projInfoUrl = new Label(composite, SWT.NONE);
+		projInfoUrlLabel = createProjInfoLabel(projectComposite, "URL:");
+		projInfoUrl = new Label(projectComposite, SWT.NONE);
 		projInfoUrl.setText("");
 		projInfoUrl.setLayoutData(infoData);
 
+		projInfoPathLabel = createProjInfoLabel(projectComposite, "Path:");
 
-		projInfoPathLabel = createProjInfoLabel(composite, "Path:");
+		populateProjectsCombo();
+
+		// Initially select the project used to launch this wizard.
+		if (projectsCombo.getItemCount() > 0) {
+			projectsCombo.select(0);
+			for (int i = 0; i < projectsCombo.getItemCount(); i++) {
+				if (projectsCombo.getItem(i).equals(selectedProject.getName())) {
+					projectsCombo.select(i);
+				}
+			}
+		}
+
+		populateAppToLinkDetails();
 
 		if (includeConnectionWidgets) {
-			populateAppToLinkDetails();
-
 			MicroclimateCorePlugin.getDefault().getPreferenceStore().addPropertyChangeListener(
 					new IPropertyChangeListener() {
+
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
 				    if (event.getProperty().equals(MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY)
@@ -246,10 +249,10 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private Label createProjInfoLabel(Composite parent, String text) {
 		Label label = new Label(parent, SWT.NONE);
 		label.setText(text);
-		label.setAlignment(SWT.LEFT);
+//		label.setAlignment(SWT.LEFT);
 		//label.setFont(font);
 
-		GridData gridData = new GridData(GridData.END, GridData.FILL, true, false);
+		GridData gridData = new GridData(GridData.BEGINNING, GridData.FILL, false, false);
 		//gridData.horizontalIndent = 150;		// arbitrary indent
 		label.setLayoutData(gridData);
 
@@ -356,27 +359,31 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			projInfoPaths = new Text[subPaths.length];
 			projInfoSpacers = new Label[subPaths.length - 1];
 
-			GridData spacerData = new GridData(GridData.HORIZONTAL_ALIGN_FILL, GridData.FILL, true, false);
-			GridData pathData = new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1);
+			GridData spacerData = new GridData(GridData.FILL, GridData.FILL, false, false);
+			GridData pathData = new GridData(GridData.FILL, GridData.FILL, false, false);
 
 			for (int i = 0; i < subPaths.length; i++) {
 				// we don't need a spacer for the first line because the "Path:" label is there
 				if (i > 0) {
-					Label spacer = new Label(parent, SWT.NONE);
+					Label spacer = new Label(projectComposite, SWT.NONE);
 					spacer.setLayoutData(spacerData);
 					projInfoSpacers[i - 1] = spacer;
 				}
-				Text text = new Text(parent, SWT.READ_ONLY);
+				Text text = new Text(projectComposite, SWT.READ_ONLY);
 				text.setText(subPaths[i]);
 				text.setLayoutData(pathData);
-				text.setBackground(parent.getBackground());
+				text.setBackground(projectComposite.getBackground());
 				text.clearSelection();
 				projInfoPaths[i] = text;
 			}
 		}
 
 		// forces a redraw of the new labels and texts
-		parent.layout();
+		projectComposite.pack();
+		projectComposite.layout();
+
+		Shell shell = parent.getShell();
+		shell.layout(true, true);
 
 		// Refresh the error message and wizard buttons
 		// if notLinkableReason is null, the user can finish the wizard.
@@ -437,8 +444,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		// and give messages for each possible reason.
 		else if (app.isLinked()) {
 			return "Invalid project selected - This project is already linked to server \""
-					+ app.getLinkedServer().getServer().getName() + "\"."
-					+ "\n Delete the server if you wish to unlink this project.";
+					+ app.getLinkedServer().getServer().getName() + "\".";
 		}
 		else if (!app.isRunning()) {
 			// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
