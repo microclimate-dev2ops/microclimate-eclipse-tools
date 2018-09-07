@@ -19,7 +19,8 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 
 	public static final String
 			ICON_BASE_PATH = "icons/",
-			DEFAULT_ICON_PATH = "microclimate.ico",
+			MICROCLIMATE_ICON_PATH = "microclimate.ico",
+			MICROCLIMATE_BANNER_PATH = "microclimateBanner.png",
 			ERROR_ICON_PATH = "error.gif";
 
 	// The shared instance
@@ -66,7 +67,7 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 	}
 
 	public static ImageDescriptor getDefaultIcon() {
-		return getIcon(DEFAULT_ICON_PATH);
+		return getIcon(MICROCLIMATE_ICON_PATH);
 	}
 
 	@Override

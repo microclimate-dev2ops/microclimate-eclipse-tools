@@ -10,6 +10,7 @@
 			<menu
 				label="%CONTEXT_MENU_CATEGORY_NAME"
 				path="additions"
+				icon="%DEFAULT_ICON_PATH"
 				id="com.ibm.microclimate.ui.internal.menu.category">
 				<separator
 					name="popupActions">
