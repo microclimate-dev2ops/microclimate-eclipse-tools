@@ -8,6 +8,8 @@ import java.util.List;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;;
+
 /**
  * Singleton class to keep track of the list of current Microclimate Connections,
  * and manage persisting them to and from the Preferences.
@@ -31,7 +33,7 @@ public class MicroclimateConnectionManager {
 		loadFromPreferences();
 
 		// Add a preference listener to reload the cached list of connections each time it's modified.
-		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+		MicroclimateCorePlugin.getDefault().getPreferenceStore()
 			.addPropertyChangeListener(new IPropertyChangeListener() {
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
@@ -125,14 +127,14 @@ public class MicroclimateConnectionManager {
 		}
 		MCLogger.log("Writing connections to preferences: " + prefsBuilder.toString());
 
-		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+		MicroclimateCorePlugin.getDefault().getPreferenceStore()
 				.setValue(CONNECTION_LIST_PREFSKEY, prefsBuilder.toString());
 	}
 
 	private void loadFromPreferences() {
 		clear();
 
-		String storedConnections = com.ibm.microclimate.core.Activator.getDefault()
+		String storedConnections = MicroclimateCorePlugin.getDefault()
 				.getPreferenceStore()
 				.getString(CONNECTION_LIST_PREFSKEY).trim();
 

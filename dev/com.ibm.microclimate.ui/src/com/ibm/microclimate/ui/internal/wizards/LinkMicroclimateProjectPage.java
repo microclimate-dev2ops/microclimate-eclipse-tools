@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
@@ -85,21 +86,21 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		// getShell().setSize(600, 400);
 
 		final int gridWidth = 3;
-		
+
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(gridWidth, false));
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		this.parent = composite;
-		
+
 		if (includeConnectionWidgets) {
 			Label connectionsLabel = new Label(composite, SWT.NONE);
 			connectionsLabel.setText("Microclimate Connection:");
 			connectionsLabel.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
-	
+
 			connectionsCombo = new Combo(composite, SWT.READ_ONLY);
 			final GridData comboData = new GridData(GridData.FILL, GridData.FILL, true, false);
 			connectionsCombo.setLayoutData(comboData);
-	
+
 			connectionsCombo.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent se) {
@@ -107,18 +108,18 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 					setMCConnection();
 				}
 			});
-	
+
 			populateConnectionsCombo();
 			// Initially select the first mcConnection
 			connectionsCombo.select(0);
 			setMCConnection();
-	
+
 			Button manageConnectionsBtn = new Button(composite, SWT.PUSH);
 			manageConnectionsBtn.setText("Manage");
 			final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
 //			buttonData.widthHint = 125;
 			manageConnectionsBtn.setLayoutData(buttonData);
-	
+
 			manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent se) {
@@ -185,7 +186,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				.setStyle(SWT.BOLD)
 				.createFont(parent.getDisplay());
 		*/
-		
+
 		projectComposite = new Composite(composite, SWT.NONE);
 		projectComposite.setLayout(new GridLayout(2, false));
 		projectComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
@@ -219,12 +220,13 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				}
 			}
 		}
-		
+
 		populateAppToLinkDetails();
-		
+
 		if (includeConnectionWidgets) {
-			com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
-			.addPropertyChangeListener(new IPropertyChangeListener() {
+			MicroclimateCorePlugin.getDefault().getPreferenceStore().addPropertyChangeListener(
+					new IPropertyChangeListener() {
+
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
 				    if (event.getProperty().equals(MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY)
@@ -277,7 +279,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			setMCConnection();
 		}
 	}
-	
+
 	void init(MicroclimateConnection connection) {
 		if (connection != null) {
 			mcConnection = connection;
@@ -382,7 +384,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		Shell shell = parent.getShell();
 		shell.layout(true, true);
-        
+
 		// Refresh the error message and wizard buttons
 		// if notLinkableReason is null, the user can finish the wizard.
 		String notLinkableReason = getAppNotLinkableMsg(appToLink, selectedProject);

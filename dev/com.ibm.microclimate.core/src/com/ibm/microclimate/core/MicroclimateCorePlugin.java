@@ -8,24 +8,31 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  * The activator class controls the plug-in life cycle
  */
-public class Activator extends AbstractUIPlugin {
+public class MicroclimateCorePlugin extends AbstractUIPlugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.ibm.microclimate.core"; //$NON-NLS-1$
 
 	public static final String DEFAULT_ICON_PATH = "icons/microclimate.ico";
 
+	public static final String
+			// Boolean option for hiding the on-finish dialog for the Link Project wizard
+			HIDE_ONFINISH_MSG_PREFSKEY = "showLinkWizardOnFinishDialog",
+			// Int option for debug timeout in seconds
+			DEBUG_CONNECT_TIMEOUT_PREFSKEY = "serverDebugTimeout";
+
 	// The shared instance
-	private static Activator plugin;
+	private static MicroclimateCorePlugin plugin;
 
 	/**
 	 * The constructor
 	 */
-	public Activator() {
+	public MicroclimateCorePlugin() {
 	}
 
 	/*
@@ -36,7 +43,14 @@ public class Activator extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+
+		// Register our logger with the debug options service
 		context.registerService(DebugOptionsListener.class, MCLogger.instance(), null);
+
+		// Set default preferences once, here
+		getPreferenceStore().setDefault(HIDE_ONFINISH_MSG_PREFSKEY, false);
+		getPreferenceStore().setDefault(DEBUG_CONNECT_TIMEOUT_PREFSKEY,
+				MicroclimateServerBehaviour.DEFAULT_DEBUG_CONNECT_TIMEOUT);
 	}
 
 	/*
@@ -54,12 +68,12 @@ public class Activator extends AbstractUIPlugin {
 	 *
 	 * @return the shared instance
 	 */
-	public static Activator getDefault() {
+	public static MicroclimateCorePlugin getDefault() {
 		return plugin;
 	}
 
 	public static ImageDescriptor getIcon(String path) {
-		final URL url = Activator.getDefault().getBundle().getEntry(DEFAULT_ICON_PATH);
+		final URL url = MicroclimateCorePlugin.getDefault().getBundle().getEntry(DEFAULT_ICON_PATH);
 		return ImageDescriptor.createFromURL(url);
 	}
 

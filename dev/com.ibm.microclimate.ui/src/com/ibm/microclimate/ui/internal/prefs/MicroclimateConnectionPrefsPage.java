@@ -28,11 +28,12 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.eclipse.wst.server.core.IServer;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
-import com.ibm.microclimate.ui.Activator;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard;
 import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
 
@@ -56,7 +57,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 	private List<MicroclimateConnection> connections;
 
 	public MicroclimateConnectionPrefsPage() {
-		super("Microclimate Connections", Activator.getDefaultIcon());
+		super("Microclimate Connections", MicroclimateUIPlugin.getDefaultIcon());
 		setMessage("Manage Microclimate Connections");
 	}
 
@@ -65,6 +66,9 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		// Note that ConfigurationScope is used. This means that our list of MCConnections is shared
 		// between different workspaces.
 		setPreferenceStore(new ScopedPreferenceStore(ConfigurationScope.INSTANCE, MC_CONNECTIONS_PREFSKEY));
+
+		// these buttons don't do anything
+		noDefaultAndApplyButton();
 	}
 
 	@Override
@@ -152,7 +156,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		addButton.setEnabled(true);
 		removeButton.setEnabled(false);
 
-		com.ibm.microclimate.core.Activator.getDefault().getPreferenceStore()
+		MicroclimateCorePlugin.getDefault().getPreferenceStore()
 			.addPropertyChangeListener(new IPropertyChangeListener() {
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {

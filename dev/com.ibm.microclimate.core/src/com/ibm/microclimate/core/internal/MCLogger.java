@@ -6,7 +6,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.service.debug.DebugOptions;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
 
-import com.ibm.microclimate.core.Activator;
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
 
 /**
  * @author timetchells@ibm.com
@@ -15,7 +15,7 @@ public class MCLogger implements DebugOptionsListener {
 
 	// private static final SimpleDateFormat TIME_SDF = new SimpleDateFormat("k:mm:ss");
 
-	private static final ILog logger = com.ibm.microclimate.core.Activator.getDefault().getLog();
+	private static final ILog logger = MicroclimateCorePlugin.getDefault().getLog();
 
 	private static MCLogger instance;
 
@@ -51,7 +51,7 @@ public class MCLogger implements DebugOptionsListener {
 		// com.ibm.microclimate.core/debug/info=true
 		// and then passing eclipse the '-debug' option
 
-		logInfo = debugOptions.getBooleanOption(com.ibm.microclimate.core.Activator.PLUGIN_ID + INFO_LEVEL, false);
+		logInfo = debugOptions.getBooleanOption(MicroclimateCorePlugin.PLUGIN_ID + INFO_LEVEL, false);
 	}
 
 	public static void log(String msg) {
@@ -114,10 +114,10 @@ public class MCLogger implements DebugOptionsListener {
 		IStatus status;
 
 		if (t != null) {
-			status = new Status(level, Activator.PLUGIN_ID, fullMessage, t);
+			status = new Status(level, MicroclimateCorePlugin.PLUGIN_ID, fullMessage, t);
 		}
 		else {
-			status = new Status(level, Activator.PLUGIN_ID, fullMessage);
+			status = new Status(level, MicroclimateCorePlugin.PLUGIN_ID, fullMessage);
 		}
 
 		logger.log(status);
