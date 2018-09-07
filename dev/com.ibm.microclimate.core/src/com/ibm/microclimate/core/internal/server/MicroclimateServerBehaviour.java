@@ -70,8 +70,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getConnection(mcConnectionBaseUrl);
 		if (mcConnection == null) {
-			onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl +
-					", try re-creating the connection.");
+			onMicroclimateDisconnect(mcConnectionBaseUrl);
+			//onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl +
+			//		", try re-creating the connection.");
 			return;
 		}
 
