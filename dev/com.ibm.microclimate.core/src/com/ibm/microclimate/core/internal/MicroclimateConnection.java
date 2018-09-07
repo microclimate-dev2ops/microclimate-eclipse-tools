@@ -36,23 +36,16 @@ public class MicroclimateConnection implements Closeable {
 
 	private List<MicroclimateApplication> apps = Collections.emptyList();
 
-	public MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException, JSONException {
-		String baseUrl_ = buildUrl(host, port);
-
-		if (MicroclimateConnectionManager.getConnection(baseUrl_) != null) {
-			onInitFail("Microclimate Connection at " + baseUrl_ + " already exists.");
-		}
-
-		if(!test(baseUrl_)) {
-			// Note this message is displayed directly to the user, so we have to localize it.
-			onInitFail(String.format("Connecting to Microclimate instance at \"%s\" failed", baseUrl_));
-		}
-
+	public MicroclimateConnection (String host, int port) throws IOException, URISyntaxException, JSONException {
 		this.host = host;
 		this.port = port;
-		this.baseUrl = baseUrl_;
+		this.baseUrl = String.format("http://%s:%d/", host, port);
 
-		// Must set host field before doing this
+		if (MicroclimateConnectionManager.getConnection(baseUrl) != null) {
+			onInitFail("Microclimate Connection at " + baseUrl + " already exists.");
+		}
+
+		// Must set host, port fields before doing this
 		mcSocket = new MicroclimateSocket(this);
 		if(!mcSocket.blockUntilFirstConnection()) {
 			// Note this message is displayed directly to the user, so we have to localize it.
@@ -105,23 +98,7 @@ public class MicroclimateConnection implements Closeable {
 		}
 	}
 
-	private static String buildUrl(String host, int port) {
-		return String.format("http://%s:%d/", host, port);
-	}
-
-	private static boolean test(String baseUrl) {
-		String getResult = null;
-		try {
-			getResult = HttpUtil.get(baseUrl).response;
-		} catch (IOException e) {
-			MCLogger.logError(e);
-			return false;
-		}
-
-		return getResult != null && getResult.contains("Microclimate");
-	}
-
-	private static JSONObject getEnvData(String baseUrl) throws JSONException {
+	private static JSONObject getEnvData(String baseUrl) throws JSONException, IOException {
 		final String envUrl = baseUrl + MCConstants.APIPATH_ENV;
 
 		String envResponse = null;
@@ -130,7 +107,7 @@ public class MicroclimateConnection implements Closeable {
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Environment endpoint", e);
 			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + envUrl);
-			return null;
+			throw e;
 		}
 
 		return new JSONObject(envResponse);
@@ -147,7 +124,7 @@ public class MicroclimateConnection implements Closeable {
 			MCLogger.log("Microclimate Version is: " + versionStr);
 			return versionStr;
 		} catch (JSONException e) {
-			// we already checked for this key so I'm not sure what could cause this.
+			// we already checked for this key so this will not happen.
 			MCLogger.logError(e);
 			return UNKNOWN_VERSION;
 		}
@@ -350,7 +327,7 @@ public class MicroclimateConnection implements Closeable {
 	}
 
 	public static MicroclimateConnection fromPrefsString(String str)
-			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException,
+			throws IOException, NumberFormatException, StringIndexOutOfBoundsException,
 			URISyntaxException, JSONException {
 
 		int hostIndex = str.indexOf(HOST_KEY);
