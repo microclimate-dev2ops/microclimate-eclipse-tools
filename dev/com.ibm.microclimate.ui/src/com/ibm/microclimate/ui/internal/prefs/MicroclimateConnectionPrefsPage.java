@@ -31,8 +31,8 @@ import org.eclipse.wst.server.core.IServer;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard;
 import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
@@ -50,11 +50,11 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			MC_CONNECTIONS_PREFSKEY = "com.ibm.microclimate.ui.prefs.connections",
 			PAGE_ID = "MicroclimateConnectionsPage";		// must match the value in plugin.xml
 
+	private static final String CONNECTION_GOOD = "Yes", CONNECTION_BAD = "No";
+
 	//private static MicroclimateConnectionPrefsPage instance;
 
 	private Table connectionsTable;
-
-	private List<MicroclimateConnection> connections;
 
 	public MicroclimateConnectionPrefsPage() {
 		super("Microclimate Connections", MicroclimateUIPlugin.getDefaultIcon());
@@ -95,13 +95,17 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		gridData.heightHint = 300;
 		connectionsTable.setLayoutData(gridData);
 
-		TableColumn addresses = new TableColumn(connectionsTable, SWT.BORDER);
-		addresses.setText("URL");
-		addresses.setWidth(gridData.widthHint / 2);
+		TableColumn urlsCol = new TableColumn(connectionsTable, SWT.BORDER);
+		urlsCol.setText("URL");
+		urlsCol.setWidth((int)(gridData.widthHint / 2.5));
 
-		TableColumn enabled = new TableColumn(connectionsTable, SWT.BORDER);
-		enabled.setText("Linked Projects");
-		enabled.setWidth(gridData.widthHint - addresses.getWidth());
+		TableColumn linkedProjectsCol = new TableColumn(connectionsTable, SWT.BORDER);
+		linkedProjectsCol.setText("Linked Projects");
+		linkedProjectsCol.setWidth(urlsCol.getWidth());
+
+		TableColumn connectedCol = new TableColumn(connectionsTable, SWT.BORDER);
+		connectedCol.setText("Connected");
+		connectedCol.setWidth(gridData.widthHint - urlsCol.getWidth() - linkedProjectsCol.getWidth());
 
 		Button addButton = new Button(composite, SWT.PUSH);
 		addButton.setText("Add...");
@@ -125,7 +129,9 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 				int[] selected = connectionsTable.getSelectionIndices();
 				for(int i : selected) {
-					MicroclimateConnection connection = connections.get(i);
+					// The URL is in the 0th column of the table
+					String url = connectionsTable.getItem(i).getText(0);
+					MicroclimateConnection connection = MicroclimateConnectionManager.getConnection(url);
 					List<MicroclimateApplication> linkedApps = connection.getLinkedApps();
 
 					if (linkedApps.isEmpty()) {
@@ -173,25 +179,35 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 	}
 
 	private void refreshConnectionsList() {
-		// Update the cached connections when we update the table, so that they always match
-		connections = MicroclimateConnectionManager.connections();
-
 		if (!connectionsTable.isDisposed()) {
 			connectionsTable.removeAll();
 		}
 
-		for(MicroclimateConnection mcc : connections) {
-			try {
-				TableItem ti = new TableItem(connectionsTable, SWT.NONE);
+		for(MicroclimateConnection mcc : MicroclimateConnectionManager.connections()) {
+			addTableRow(mcc.baseUrl, getLinkedAppNamesForConnection(mcc), false);
+		}
 
-				ti.setText(new String[] { mcc.baseUrl, getLinkedAppNamesForConnection(mcc) });
-			}
-			catch(SWTException e) {
-				// suppress widget disposed exception - It gets thrown if the window is out of focus,
-				// but then the table populates just fine anyway, so I don't know why it is a problem.
-				if (!"Widget is disposed".equals(e.getMessage())) {
-					throw e;
-				}
+		for (String brokenConnectionUrl : MicroclimateConnectionManager.brokenConnections()) {
+			addTableRow(brokenConnectionUrl, "", true);
+		}
+	}
+
+	private void addTableRow(String url, String linkedApps, boolean isBroken) {
+		if (linkedApps == null || linkedApps.isEmpty()) {
+			linkedApps = "none";
+		}
+
+		try {
+			TableItem ti = new TableItem(connectionsTable, SWT.NONE);
+
+			// TODO error icon
+			ti.setText(new String[] { url, linkedApps, isBroken ? CONNECTION_BAD : CONNECTION_GOOD });
+		}
+		catch(SWTException e) {
+			// suppress widget disposed exception - It gets thrown if the window is out of focus,
+			// but then the table populates just fine anyway, so I don't know why it is a problem.
+			if (!"Widget is disposed".equals(e.getMessage())) {
+				throw e;
 			}
 		}
 	}
@@ -208,7 +224,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			linkedAppsBuilder.setLength(linkedAppsBuilder.length() - separator.length());
 		}
 
-		return linkedAppsBuilder.length() > 0 ? linkedAppsBuilder.toString() : "none";
+		return linkedAppsBuilder.toString();
 	}
 
 	/**

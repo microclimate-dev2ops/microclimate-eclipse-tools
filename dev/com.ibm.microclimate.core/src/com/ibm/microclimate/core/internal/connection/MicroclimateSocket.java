@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.internal;
+package com.ibm.microclimate.core.internal.connection;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -8,6 +8,10 @@ import org.eclipse.debug.core.ILaunchManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.microclimate.core.internal.MCConstants;
+import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 import io.socket.client.IO;

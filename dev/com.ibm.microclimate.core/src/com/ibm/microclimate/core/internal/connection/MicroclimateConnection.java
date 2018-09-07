@@ -1,9 +1,7 @@
-package com.ibm.microclimate.core.internal;
+package com.ibm.microclimate.core.internal.connection;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,7 +12,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
+import com.ibm.microclimate.core.internal.MCConstants;
+import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
@@ -36,7 +39,7 @@ public class MicroclimateConnection implements Closeable {
 
 	private List<MicroclimateApplication> apps = Collections.emptyList();
 
-	public MicroclimateConnection (String host, int port) throws IOException, URISyntaxException, JSONException {
+	public MicroclimateConnection (String host, int port) throws Exception {
 		this.host = host;
 		this.port = port;
 		this.baseUrl = String.format("http://%s:%d/", host, port);
@@ -48,10 +51,8 @@ public class MicroclimateConnection implements Closeable {
 		// Must set host, port fields before doing this
 		mcSocket = new MicroclimateSocket(this);
 		if(!mcSocket.blockUntilFirstConnection()) {
-			// Note this message is displayed directly to the user, so we have to localize it.
-			onInitFail(String.format(
-					"Connecting to Microclimate Socket at \"%s\" failed",
-					mcSocket.socketUri.toString()));
+			close();
+			throw new MicroclimateConnectionException(mcSocket.socketUri.toString());
 		}
 
 		JSONObject env = getEnvData(this.baseUrl);
@@ -81,10 +82,10 @@ public class MicroclimateConnection implements Closeable {
 		MCLogger.log("Created " + this);
 	}
 
-	private void onInitFail(String msg) throws ConnectException {
+	private void onInitFail(String msg) throws Exception {
 		MCLogger.log("Initializing MicroclimateConnection failed: " + msg);
 		close();
-		throw new ConnectException(msg);
+		throw new Exception(msg);
 	}
 
 	/**
@@ -93,8 +94,11 @@ public class MicroclimateConnection implements Closeable {
 	@Override
 	public void close() {
 		MCLogger.log("Closing " + this);
-		if (mcSocket != null && mcSocket.socket != null && mcSocket.socket.connected()) {
-			mcSocket.socket.disconnect();
+		if (mcSocket != null && mcSocket.socket != null) {
+			if (mcSocket.socket.connected()) {
+				mcSocket.socket.disconnect();
+			}
+			mcSocket.socket.close();
 		}
 	}
 
@@ -326,9 +330,7 @@ public class MicroclimateConnection implements Closeable {
 				HOST_KEY, host, PORT_KEY, port);
 	}
 
-	public static MicroclimateConnection fromPrefsString(String str)
-			throws IOException, NumberFormatException, StringIndexOutOfBoundsException,
-			URISyntaxException, JSONException {
+	public static MicroclimateConnection fromPrefsString(String str) throws Exception {
 
 		int hostIndex = str.indexOf(HOST_KEY);
 		String afterHostKey = str.substring(hostIndex + HOST_KEY.length() + 1);

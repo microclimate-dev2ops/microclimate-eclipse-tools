@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.internal;
+package com.ibm.microclimate.core.internal.connection;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,7 +8,9 @@ import java.util.List;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
-import com.ibm.microclimate.core.MicroclimateCorePlugin;;
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
+import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;;
 
 /**
  * Singleton class to keep track of the list of current Microclimate Connections,
@@ -25,6 +27,8 @@ public class MicroclimateConnectionManager {
 	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections";
 
 	private List<MicroclimateConnection> connections = new ArrayList<>();
+	// this list tracks the URLs of connections that
+	private List<String> brokenConnections = new ArrayList<>();
 
 	private MicroclimateConnectionManager() {
 		instance = this;
@@ -71,6 +75,10 @@ public class MicroclimateConnectionManager {
 	 */
 	public static List<MicroclimateConnection> connections() {
 		return Collections.unmodifiableList(instance().connections);
+	}
+
+	public static List<String> brokenConnections() {
+		return Collections.unmodifiableList(instance().brokenConnections);
 	}
 
 	public static MicroclimateConnection getConnection(String baseUrl) {
@@ -142,29 +150,35 @@ public class MicroclimateConnectionManager {
 
 		StringBuilder failedConnectionsBuilder = new StringBuilder();
 		for(String line : storedConnections.split("\n")) {
-			if(line.trim().isEmpty()) {
+			line = line.trim();
+			if(line.isEmpty()) {
 				continue;
 			}
 
 			try {
-				add(MicroclimateConnection.fromPrefsString(line));
+				MicroclimateConnection connection = MicroclimateConnection.fromPrefsString(line);
+				add(connection);
 			}
-			catch(StringIndexOutOfBoundsException | NumberFormatException e) {
-				MCLogger.logError(e);
-				MCLogger.logError("Stored MCConnection preference line did not match expected format:\n" + line);
+			catch (MicroclimateConnectionException mce) {
+				brokenConnections.add(mce.connectionUrl);
+				failedConnectionsBuilder.append(mce.connectionUrl);
 			}
 			catch(Exception e) {
-				// TODO Probably we should keep the connection info, but mark it as 'inactive' or similar
-				// right now it will just be deleted (because it's never added back to the connections list)
-				MCLogger.logError(e);
-
-				failedConnectionsBuilder.append(e.getMessage()).append('\n');
+				failedConnectionsBuilder.append(e.getClass().getSimpleName());
+				if (e.getMessage() != null) {
+					failedConnectionsBuilder.append(": ").append(e.getMessage());
+				}
+				failedConnectionsBuilder.append('\n');
 			}
 		}
 
 		String failedConnections = failedConnectionsBuilder.toString();
 		if (!failedConnections.isEmpty()) {
-			MCUtil.openDialog(true, "Failed to connect to Microclimate instance(s)", failedConnections);
+			MCUtil.openDialog(true, "Failed to connect to Microclimate instance(s)",
+					"Failed to connect to: " + failedConnections +
+					"\nWhen Microclimate is running once more, " +
+					"use the Microclimate Connections preferences page to reconnect.");
+					// TODO let them open that page?
 		}
 
 		// writeToPreferences();

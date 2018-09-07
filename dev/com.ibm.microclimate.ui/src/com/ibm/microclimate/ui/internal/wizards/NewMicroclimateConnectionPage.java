@@ -14,8 +14,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 
 /**
  * This simple page allows the user to add new Microclimate connections, by entering a hostname and port and
@@ -111,7 +111,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		// so if they have one already, block the Add button.
 		if (MicroclimateConnectionManager.connectionsCount() > 0) {
 			testConnectionBtn.setEnabled(false);
-			String existingConnectionUrl = MicroclimateConnectionManager.connections().get(0).baseUrl;
+			String existingConnectionUrl = MicroclimateConnectionManager.connections().get(0).baseUrl.toString();
 			setErrorMessage("You already have an existing Microclimate connection at " + existingConnectionUrl +
 					"\nAt this time, only one Microclimate connection is permitted.");
 		}
@@ -138,7 +138,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 			MCLogger.log("Validating connection: " + hostPortAddr);
 
-			// Will throw a ConnectException if fails
+			// Will throw an Exception if fails
 			mcConnection = new MicroclimateConnection(hostname, port);
 
 			if(mcConnection != null) {
@@ -173,7 +173,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	public boolean canFlipToNextPage() {
 		return mcConnection != null;
 	}
-	
+
 	void performFinish() {
 		if (mcConnection != null) {
 			MicroclimateConnectionManager.add(mcConnection);
