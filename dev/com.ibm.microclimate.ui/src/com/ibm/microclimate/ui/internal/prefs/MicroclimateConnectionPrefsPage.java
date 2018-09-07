@@ -224,9 +224,9 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		String message =
 				"The following Microclimate applications have linked servers in the workspace: " +
 				getLinkedAppNamesForConnection(connection) + "\n\n" +
-				"If you still wish to delete the connection to " + connection.baseUrl + ", " +
-				"ALL these servers will be DELETED from your Eclipse workspace.\n" +
-				"Are you sure you want to proceed?";
+				"If you delete the connection to " + connection.baseUrl + ", " +
+				"all of these servers will be deleted from your Eclipse workspace.\n" +
+				"Do you want to continue?";
 
 		MessageDialog dialog = new MessageDialog(
 				getShell(), "Connection has active servers",
