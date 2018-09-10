@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.4"?>
+
+<!--
+    IBM Confidential
+    OCO Source Materials
+    (C) Copyright IBM Corp. 2018 All Rights Reserved.
+    The source code for this program is not published or otherwise
+    divested of its trade secrets, irrespective of what has
+    been deposited with the U.S. Copyright Office.
+-->
+
 <plugin>
 
    	<extension point="org.eclipse.ui.popupMenus">
