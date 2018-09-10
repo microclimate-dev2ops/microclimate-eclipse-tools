@@ -13,6 +13,8 @@ import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
@@ -126,6 +128,14 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		return true;
 	}
 
+	private static final String
+			// from org.eclipse.wst.server.ui.internal.ServerUIPlugin.VIEW_ID
+			SERVERS_VIEW_ID = "org.eclipse.wst.server.ui.ServersView",
+			// from https://help.eclipse.org/photon/index.jsp?topic=%2Forg.eclipse.platform.doc.\
+			// isv%2Freference%2Fapi%2Forg%2Feclipse%2Fui%2Fconsole%2FIConsoleConstants.html
+			CONSOLE_VIEW_ID = "org.eclipse.ui.console.ConsoleView";
+
+
 	/**
 	 * Called when the wizard finishes.
 	 * This creates the Server which is 'linked' to the given application.
@@ -150,6 +160,11 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 			// The call above is supposed to set this prefs key, but it doesn't seem to work.
 			prefs.setValue(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY, dialog.getToggleState());
 		}
+
+		// Make sure the Console and Server views are open
+		IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		activePage.showView(CONSOLE_VIEW_ID);
+		activePage.showView(SERVERS_VIEW_ID);
 	}
 
 }
