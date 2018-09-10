@@ -226,6 +226,7 @@ public class MicroclimateSocket {
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
 			MCLogger.logError("Failed to get serverBehaviour, aborting state update triggered by restart");
+			return;
 		}
 
 		String status = event.getString(MCConstants.KEY_STATUS);
