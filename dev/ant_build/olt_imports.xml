@@ -82,8 +82,8 @@
 
             <!-- Add Main feature here -->
             <category name="was4d"
-                label="Microclimate Eclipse plugin"
-                description="Microclimate Eclipse plugin">
+                label="Microclimate Developer Tools"
+                description="Tools for working with Microclimate applications in Eclipse">
 
                 <!-- Features list file -->
                 <featuresFile id="Open OLT product updatesite toplevel features"

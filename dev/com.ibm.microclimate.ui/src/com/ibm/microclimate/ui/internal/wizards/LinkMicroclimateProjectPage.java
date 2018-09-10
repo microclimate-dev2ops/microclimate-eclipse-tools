@@ -88,7 +88,9 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		final int gridWidth = 3;
 
 		Composite composite = new Composite(parent, SWT.NONE);
-		composite.setLayout(new GridLayout(gridWidth, false));
+		GridLayout layout = new GridLayout(gridWidth, false);
+		layout.verticalSpacing = 8;
+		composite.setLayout(layout);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		this.parent = composite;
 
@@ -117,7 +119,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			Button manageConnectionsBtn = new Button(composite, SWT.PUSH);
 			manageConnectionsBtn.setText("Manage");
 			final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
-//			buttonData.widthHint = 125;
+			buttonData.widthHint = 100;
 			manageConnectionsBtn.setLayoutData(buttonData);
 
 			manageConnectionsBtn.addSelectionListener(new SelectionAdapter() {
@@ -129,6 +131,10 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 					prefsDialog.open();
 				}
 			});
+			
+			Label spacer = new Label(composite, SWT.NONE);
+			spacer.setText("");
+			spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 3, 1));
 		}
 
 		Label eclipseProj = new Label(composite, SWT.NONE);
@@ -159,15 +165,14 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		Label spacer = new Label(composite, SWT.NONE);
 		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false));;
 
-		// new row
 		mcProjInfoTitle = new Label(composite, SWT.NONE);
 		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false, 2, 1));
 		mcProjInfoTitle.setText("The selected project will be linked to the following Microclimate project:");
-
+		
 		refreshProjectsBtn = new Button(composite, SWT.PUSH);
 		refreshProjectsBtn.setText("Refresh");
 		final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
-//		buttonData.widthHint = 125;
+		buttonData.widthHint = 100;
 		refreshProjectsBtn.setLayoutData(buttonData);
 
 		refreshProjectsBtn.addSelectionListener(new SelectionAdapter() {
@@ -178,6 +183,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		});
 
+
 		// Create the bottom part of the wizard which contains info about the selected project,
 		// if the project has a corresponding project in Microclimate.
 
@@ -186,9 +192,11 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				.setStyle(SWT.BOLD)
 				.createFont(parent.getDisplay());
 		*/
-
-		projectComposite = new Composite(composite, SWT.NONE);
-		projectComposite.setLayout(new GridLayout(2, false));
+		
+		projectComposite = new Composite(composite, SWT.BORDER);
+		layout = new GridLayout(2, false);
+		layout.marginLeft = 15;
+		projectComposite.setLayout(layout);
 		projectComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 
 		projInfoNameLabel = createProjInfoLabel(projectComposite, "Name:");
@@ -208,7 +216,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projInfoUrl.setLayoutData(infoData);
 
 		projInfoPathLabel = createProjInfoLabel(projectComposite, "Path:");
-
+		
 		populateProjectsCombo();
 
 		// Initially select the project used to launch this wizard.

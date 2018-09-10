@@ -46,7 +46,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 	private Table connectionsTable;
 
 	public MicroclimateConnectionPrefsPage() {
-		super("Microclimate Connections", MicroclimateUIPlugin.getDefaultIcon());
+		super("Microclimate Connections", MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.MICROCLIMATE_ICON_PATH));
 		setMessage("Manage Microclimate Connections");
 	}
 

@@ -42,7 +42,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		selectedProject = getProjectFromSelection(selection);
 
-		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getDefaultIcon());
+		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.MICROCLIMATE_BANNER_PATH));
 
 		// TODO help
 		setHelpAvailable(false);
