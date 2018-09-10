@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.internal;
+package com.ibm.microclimate.core.internal.connection;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -8,6 +8,10 @@ import org.eclipse.debug.core.ILaunchManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.microclimate.core.internal.MCConstants;
+import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 import io.socket.client.IO;
@@ -46,7 +50,7 @@ public class MicroclimateSocket {
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 
-		socketUri = new URI("http", null, mcConnection.host, mcConnection.port, null, null, null);
+		socketUri = mcConnection.baseUrl;
 
 		socket = IO.socket(socketUri);
 
@@ -284,8 +288,7 @@ public class MicroclimateSocket {
 				Thread.sleep(delay);
 				waited += delay;
 
-				// only log every 10 ticks
-				if (waited % (10 * delay) == 0) {
+				if (waited % (5 * delay) == 0) {
 					MCLogger.log("Waiting for MicroclimateSocket initial connection");
 				}
 			}

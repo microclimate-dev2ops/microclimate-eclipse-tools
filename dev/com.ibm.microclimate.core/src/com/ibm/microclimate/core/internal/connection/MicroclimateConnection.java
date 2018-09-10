@@ -1,8 +1,8 @@
-package com.ibm.microclimate.core.internal;
+package com.ibm.microclimate.core.internal.connection;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
@@ -14,51 +14,49 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
+import com.ibm.microclimate.core.internal.MCConstants;
+import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  *
  * @author timetchells@ibm.com
  */
-public class MicroclimateConnection implements Closeable {
+public class MicroclimateConnection {
 
 	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace";
 	private static final String UNKNOWN_VERSION = "unknown";
 
-	public final String host;
-	public final int port;
-
-	public final String baseUrl;
+	public final URI baseUrl;
 	public final IPath localWorkspacePath;
 
 	private final MicroclimateSocket mcSocket;
 
 	private List<MicroclimateApplication> apps = Collections.emptyList();
 
-	public MicroclimateConnection (String host, int port) throws ConnectException, URISyntaxException, JSONException {
-		String baseUrl_ = buildUrl(host, port);
+	public static URI buildUrl(String host, int port) throws URISyntaxException {
+		return new URI("http", null, host, port, null, null, null);
+	}
 
-		if (MicroclimateConnectionManager.getConnection(baseUrl_) != null) {
-			onInitFail("Microclimate Connection at " + baseUrl_ + " already exists.");
+	public MicroclimateConnection (URI uri) throws IOException, URISyntaxException, JSONException {
+		if (!uri.toString().endsWith("/")) {
+			uri = uri.resolve("/");
+		}
+		this.baseUrl = uri;
+
+		if (MicroclimateConnectionManager.getActiveConnection(uri.toString()) != null) {
+			onInitFail("Microclimate Connection at " + baseUrl + " already exists.");
 		}
 
-		if(!test(baseUrl_)) {
-			// Note this message is displayed directly to the user, so we have to localize it.
-			onInitFail(String.format("Connecting to Microclimate instance at \"%s\" failed", baseUrl_));
-		}
-
-		this.host = host;
-		this.port = port;
-		this.baseUrl = baseUrl_;
-
-		// Must set host field before doing this
+		// Must set host, port fields before doing this
 		mcSocket = new MicroclimateSocket(this);
 		if(!mcSocket.blockUntilFirstConnection()) {
-			// Note this message is displayed directly to the user, so we have to localize it.
-			onInitFail(String.format(
-					"Connecting to Microclimate Socket at \"%s\" failed",
-					mcSocket.socketUri.toString()));
+			close();
+			throw new MicroclimateConnectionException(mcSocket.socketUri);
 		}
 
 		JSONObject env = getEnvData(this.baseUrl);
@@ -97,32 +95,18 @@ public class MicroclimateConnection implements Closeable {
 	/**
 	 * Call this when the connection is removed.
 	 */
-	@Override
 	public void close() {
 		MCLogger.log("Closing " + this);
-		if (mcSocket != null && mcSocket.socket != null && mcSocket.socket.connected()) {
-			mcSocket.socket.disconnect();
+		if (mcSocket != null && mcSocket.socket != null) {
+			if (mcSocket.socket.connected()) {
+				mcSocket.socket.disconnect();
+			}
+			mcSocket.socket.close();
 		}
 	}
 
-	private static String buildUrl(String host, int port) {
-		return String.format("http://%s:%d/", host, port);
-	}
-
-	private static boolean test(String baseUrl) {
-		String getResult = null;
-		try {
-			getResult = HttpUtil.get(baseUrl).response;
-		} catch (IOException e) {
-			MCLogger.logError(e);
-			return false;
-		}
-
-		return getResult != null && getResult.contains("Microclimate");
-	}
-
-	private static JSONObject getEnvData(String baseUrl) throws JSONException {
-		final String envUrl = baseUrl + MCConstants.APIPATH_ENV;
+	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
+		final URI envUrl = baseUrl.resolve(MCConstants.APIPATH_ENV);
 
 		String envResponse = null;
 		try {
@@ -130,7 +114,7 @@ public class MicroclimateConnection implements Closeable {
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Environment endpoint", e);
 			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + envUrl);
-			return null;
+			throw e;
 		}
 
 		return new JSONObject(envResponse);
@@ -147,7 +131,7 @@ public class MicroclimateConnection implements Closeable {
 			MCLogger.log("Microclimate Version is: " + versionStr);
 			return versionStr;
 		} catch (JSONException e) {
-			// we already checked for this key so I'm not sure what could cause this.
+			// we already checked for this key so this will not happen.
 			MCLogger.logError(e);
 			return UNKNOWN_VERSION;
 		}
@@ -194,14 +178,14 @@ public class MicroclimateConnection implements Closeable {
 	 */
 	public void refreshApps() {
 
-		final String projectsUrl = baseUrl + MCConstants.APIPATH_PROJECT_LIST;
+		final URI projectsURL = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST);
 
 		String projectsResponse = null;
 		try {
-			projectsResponse = HttpUtil.get(projectsUrl).response;
+			projectsResponse = HttpUtil.get(projectsURL).response;
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Projects endpoint", e);
-			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
+			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsURL);
 			return;
 		}
 
@@ -257,7 +241,11 @@ public class MicroclimateConnection implements Closeable {
 	public void requestProjectRestart(MicroclimateApplication app, String launchMode)
 			throws JSONException, IOException {
 
-        String url = baseUrl + MCConstants.APIPATH_PROJECTS_BASE + "/" + app.projectID + "/" + MCConstants.APIPATH_RESTART;
+		String restartEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/"
+				+ app.projectID + "/"
+				+ MCConstants.APIPATH_RESTART;
+
+        URI url = baseUrl.resolve(restartEndpoint);
 
 		JSONObject restartProjectPayload = new JSONObject();
 		restartProjectPayload.put(MCConstants.KEY_START_MODE, launchMode);
@@ -274,7 +262,7 @@ public class MicroclimateConnection implements Closeable {
 	 * 	or null if the project is not found in the status info.
 	 */
 	public JSONObject requestProjectStatus(MicroclimateApplication app) throws IOException, JSONException {
-		final String statusUrl = baseUrl + MCConstants.APIPATH_PROJECT_LIST;
+		final URI statusUrl = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST);
 
 		HttpResult result = HttpUtil.get(statusUrl);
 
@@ -311,7 +299,7 @@ public class MicroclimateConnection implements Closeable {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
 			if (server != null) {
 				// All linked apps should have getLinkedServer return non-null.
-				server.onMicroclimateDisconnect(baseUrl);
+				server.onMicroclimateDisconnect(baseUrl.toString());
 			}
 		}
 	}
@@ -333,37 +321,22 @@ public class MicroclimateConnection implements Closeable {
 
 	@Override
 	public String toString() {
-		return String.format("%s host=%s port=%d baseUrl=%s workspacePath=%s numApps=%d",
-				MicroclimateConnection.class.getSimpleName(), host, port, baseUrl, localWorkspacePath, apps.size());
+		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d",
+				MicroclimateConnection.class.getSimpleName(), baseUrl, localWorkspacePath, apps.size());
 	}
 
 	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
 	// in MicroclimateConnectionManager, so be careful modifying these.
 
-	private static final String HOST_KEY = "$host", PORT_KEY = "$port";
-
 	public String toPrefsString() {
 		// No newlines allowed!
-
-		return String.format("%s %s=%s %s=%s", MicroclimateConnection.class.getSimpleName(),
-				HOST_KEY, host, PORT_KEY, port);
+		return baseUrl.toString();
 	}
 
 	public static MicroclimateConnection fromPrefsString(String str)
-			throws ConnectException, NumberFormatException, StringIndexOutOfBoundsException,
-			URISyntaxException, JSONException {
+			throws URISyntaxException, IOException, JSONException {
 
-		int hostIndex = str.indexOf(HOST_KEY);
-		String afterHostKey = str.substring(hostIndex + HOST_KEY.length() + 1);
-
-		// The hostname is between HOST_KEY and the PORT_KEY, also trim the space between them
-		String host = afterHostKey.substring(0, afterHostKey.indexOf(PORT_KEY)).trim();
-
-		int portIndex = str.indexOf(PORT_KEY);
-		String portStr = str.substring(portIndex + PORT_KEY.length() + 1);
-
-		int port = Integer.parseInt(portStr);
-
-		return new MicroclimateConnection(host, port);
+		URI uri = new URI(str);
+		return new MicroclimateConnection(uri);
 	}
 }

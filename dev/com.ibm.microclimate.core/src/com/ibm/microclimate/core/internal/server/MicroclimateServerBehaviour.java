@@ -26,8 +26,8 @@ import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.server.console.MicroclimateServerConsole;
 import com.ibm.microclimate.core.internal.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
@@ -68,10 +68,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			onInitializeFailure("No " + MicroclimateServer.ATTR_MCC_URL + " attribute");
 			return;
 		}
-		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getConnection(mcConnectionBaseUrl);
+		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getActiveConnection(mcConnectionBaseUrl);
 		if (mcConnection == null) {
-			onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl +
-					", try re-creating the connection.");
+			onMicroclimateDisconnect(mcConnectionBaseUrl);
+			//onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl +
+			//		", try re-creating the connection.");
 			return;
 		}
 

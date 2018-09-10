@@ -6,7 +6,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
-import com.ibm.microclimate.core.internal.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 
 /**

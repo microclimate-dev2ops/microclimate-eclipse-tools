@@ -19,6 +19,7 @@ Import-Package: org.eclipse.wst.server.core,
 Bundle-ActivationPolicy: lazy
 Export-Package: com.ibm.microclimate.core,
  com.ibm.microclimate.core.internal,
+ com.ibm.microclimate.core.internal.connection,
  com.ibm.microclimate.core.internal.server
 Bundle-ClassPath: .,
  lib/engine.io-client-1.0.0.jar,

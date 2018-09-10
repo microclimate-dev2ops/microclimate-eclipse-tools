@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -50,7 +51,7 @@ public class MicroclimateApplication {
 		this.projectType = projectType;
 		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
-		this.host = mcConnection.host;
+		this.host = mcConnection.baseUrl.getHost();
 		this.logPaths = new HashSet<>();
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
@@ -91,7 +92,7 @@ public class MicroclimateApplication {
 				String name = appJso.getString(MCConstants.KEY_NAME);
 				String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
 
-				String type = "unknown";
+				String type = MCConstants.PROJECT_TYPE_UNKNOWN;
 				try {
 					type = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
 				}

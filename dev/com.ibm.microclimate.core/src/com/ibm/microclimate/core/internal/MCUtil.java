@@ -1,6 +1,7 @@
 package com.ibm.microclimate.core.internal;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Scanner;
 
 import org.eclipse.core.runtime.IPath;
@@ -79,5 +80,25 @@ public class MCUtil {
 		// final line
 		result[i] = longString.substring(strIndex);
 		return result;
+	}
+
+	/**
+	 * In: [ "Here", "Is", "Some Input" ]
+	 * Out: "Here, Is, Some Input"
+	 */
+	public static String toCommaSeparatedString(Collection<String> collection) {
+		StringBuilder resultBuilder = new StringBuilder();
+
+		final String separator = ", ";
+		for (String s : collection) {
+			resultBuilder.append(s).append(separator);
+		}
+
+		// Remove the last separator
+		if (resultBuilder.length() > separator.length()) {
+			resultBuilder.setLength(resultBuilder.length() - separator.length());
+		}
+
+		return resultBuilder.toString();
 	}
 }

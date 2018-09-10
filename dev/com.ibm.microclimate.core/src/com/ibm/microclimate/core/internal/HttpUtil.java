@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 
 import org.json.JSONObject;
 
@@ -56,12 +56,12 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult get(String url) throws IOException {
+	public static HttpResult get(URI uri) throws IOException {
 		HttpURLConnection connection = null;
 		BufferedReader in = null;
 
 		try {
-			connection = (HttpURLConnection) new URL(url).openConnection();
+			connection = (HttpURLConnection) uri.toURL().openConnection();
 			// MCLogger.log("GET " + url);
 
 			connection.setRequestMethod("GET");
@@ -82,13 +82,13 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult post(String url, JSONObject payload) throws IOException {
+	public static HttpResult post(URI uri, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
 		BufferedReader in = null;
 
-		MCLogger.log("POST " + payload.toString() + " TO " + url);
+		MCLogger.log("POST " + payload.toString() + " TO " + uri);
 		try {
-			connection = (HttpURLConnection) new URL(url).openConnection();
+			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "application/json");

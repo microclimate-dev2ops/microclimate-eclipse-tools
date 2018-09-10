@@ -1,5 +1,8 @@
 package com.ibm.microclimate.ui.internal.wizards;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -14,8 +17,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 
 /**
  * This simple page allows the user to add new Microclimate connections, by entering a hostname and port and
@@ -109,9 +112,9 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 		// In the Local case, the user can only create one connection,
 		// so if they have one already, block the Add button.
-		if (MicroclimateConnectionManager.connectionsCount() > 0) {
+		if (MicroclimateConnectionManager.activeConnectionsCount() > 0) {
 			testConnectionBtn.setEnabled(false);
-			String existingConnectionUrl = MicroclimateConnectionManager.connections().get(0).baseUrl;
+			String existingConnectionUrl = MicroclimateConnectionManager.activeConnections().get(0).baseUrl.toString();
 			setErrorMessage("You already have an existing Microclimate connection at " + existingConnectionUrl +
 					"\nAt this time, only one Microclimate connection is permitted.");
 		}
@@ -131,30 +134,42 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		String hostname = hostnameText.getText().trim();
 		String portStr = portText.getText().trim();
 
-		String hostPortAddr = String.format("%s:%s", hostname, portStr);
-
+		URI uri = null;
 		try {
 			int port = Integer.parseInt(portStr);
 
-			MCLogger.log("Validating connection: " + hostPortAddr);
+			uri = MicroclimateConnection.buildUrl(hostname, port);
+		}
+		catch(NumberFormatException e) {
+			MCLogger.logError(e);
+			setErrorMessage(String.format("\"%s\" is not a valid port number", portStr));
+		}
+		catch(URISyntaxException e) {
+			MCLogger.logError(e);
+			setErrorMessage(e.getMessage());
+		}
 
-			// Will throw a ConnectException if fails
-			mcConnection = new MicroclimateConnection(hostname, port);
+		if (uri == null) {
+			return;
+		}
+
+		try {
+			MCLogger.log("Validating connection: " + uri);
+
+			// Will throw an Exception if fails
+			mcConnection = new MicroclimateConnection(uri);
 
 			if(mcConnection != null) {
 				setErrorMessage(null);
 				setMessage("Connecting to " + mcConnection.baseUrl + " succeeded");
 			}
 		}
-		catch(NumberFormatException e) {
-			setErrorMessage(String.format("\"%s\" is not a valid port number", portStr));
-		}
 		catch(Exception e) {
 			String msg = e.getMessage();
 			if (msg == null) {
 				// The exceptions we expect to get here should have good messages for the user.
 				MCLogger.logError("Unexpected exception", e);
-				msg = e.getClass().getSimpleName() + ": Could not connect to Microclimate at " + hostPortAddr;
+				msg = e.getClass().getSimpleName() + ": Could not connect to Microclimate at " + uri;
 			}
 			setErrorMessage(msg);
 		}
@@ -173,7 +188,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	public boolean canFlipToNextPage() {
 		return mcConnection != null;
 	}
-	
+
 	void performFinish() {
 		if (mcConnection != null) {
 			MicroclimateConnectionManager.add(mcConnection);

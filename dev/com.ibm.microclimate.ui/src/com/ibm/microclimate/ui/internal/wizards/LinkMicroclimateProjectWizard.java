@@ -18,8 +18,8 @@ import org.eclipse.wst.server.core.IServer;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 
@@ -78,7 +78,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 	public void addPages() {
 		setWindowTitle("Link to Microclimate Project");
 
-		if (MicroclimateConnectionManager.connectionsCount() < 1) {
+		if (MicroclimateConnectionManager.activeConnectionsCount() < 1) {
 			newConnectionPage = new NewMicroclimateConnectionPage();
 			addPage(newConnectionPage);
 		}
