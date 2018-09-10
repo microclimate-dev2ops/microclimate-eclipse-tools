@@ -45,7 +45,7 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         // Validate here that the server can actually be restarted.
         String errorTitle = "Error Starting Server";
         String errorMsg = "";
-        if (serverBehaviour.getSuffix() != null) {
+        if (server.getServerState() == IServer.STATE_UNKNOWN && serverBehaviour.getSuffix() != null) {
         	errorTitle = "Server can't be started";
         	errorMsg = serverBehaviour.getSuffix();
         }
