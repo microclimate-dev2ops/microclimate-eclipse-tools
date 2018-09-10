@@ -92,7 +92,7 @@ public class MicroclimateApplication {
 				String name = appJso.getString(MCConstants.KEY_NAME);
 				String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
 
-				String type = "unknown";
+				String type = MCConstants.PROJECT_TYPE_UNKNOWN;
 				try {
 					type = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
 				}

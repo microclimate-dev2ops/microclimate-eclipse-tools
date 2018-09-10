@@ -1,11 +1,6 @@
 package com.ibm.microclimate.ui.internal.prefs;
 
-import java.net.URI;
-import java.util.List;
-
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -19,7 +14,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -27,11 +21,9 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
-import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
@@ -50,10 +42,6 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 	public static final String
 			MC_CONNECTIONS_PREFSKEY = "com.ibm.microclimate.ui.prefs.connections",
 			PAGE_ID = "MicroclimateConnectionsPage";		// must match the value in plugin.xml
-
-	private static final String CONNECTION_GOOD = "Yes", CONNECTION_BAD = "No";
-
-	//private static MicroclimateConnectionPrefsPage instance;
 
 	private Table connectionsTable;
 
@@ -98,15 +86,17 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 		TableColumn urlsCol = new TableColumn(connectionsTable, SWT.BORDER);
 		urlsCol.setText("URL");
-		urlsCol.setWidth((int)(gridData.widthHint / 2.5));
+		urlsCol.setWidth(gridData.widthHint / 2);
 
 		TableColumn linkedProjectsCol = new TableColumn(connectionsTable, SWT.BORDER);
 		linkedProjectsCol.setText("Linked Projects");
 		linkedProjectsCol.setWidth(urlsCol.getWidth());
 
+		/*
 		TableColumn connectedCol = new TableColumn(connectionsTable, SWT.BORDER);
 		connectedCol.setText("Connected");
 		connectedCol.setWidth(gridData.widthHint - urlsCol.getWidth() - linkedProjectsCol.getWidth());
+		*/
 
 		Button addButton = new Button(composite, SWT.PUSH);
 		addButton.setText("Add...");
@@ -132,25 +122,12 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				for(int i : selected) {
 					// The URL is in the 0th column of the table
 					String url = connectionsTable.getItem(i).getText(0);
-
-					MicroclimateConnection connection = MicroclimateConnectionManager.getConnection(url);
-					if (connection != null) {
-						List<MicroclimateApplication> linkedApps = connection.getLinkedApps();
-
-						if (linkedApps.isEmpty()) {
-							MicroclimateConnectionManager.remove(connection);
-						}
-						else {
-							handleDeleteActiveServers(connection, linkedApps);
-						}
-					}
-					else {
-						MicroclimateConnectionManager.removeBrokenConnection(
-								MicroclimateConnectionManager.getBrokenConnection(url));
-					}
+					MicroclimateConnectionManager.removeConnection(url);
 				}
 
 				refreshConnectionsList();
+				// Popup shell removes the selection, so fix that.
+				connectionsTable.setSelection(selected);
 			}
 		});
 
@@ -191,16 +168,20 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			connectionsTable.removeAll();
 		}
 
-		for(MicroclimateConnection mcc : MicroclimateConnectionManager.connections()) {
-			addTableRow(mcc.baseUrl, getLinkedAppNamesForConnection(mcc), false);
+		for(MicroclimateConnection mcc : MicroclimateConnectionManager.activeConnections()) {
+			addTableRow(mcc.baseUrl.toString(),
+					MicroclimateConnectionManager.getLinkedAppNames(mcc.baseUrl.toString()),
+					false);
 		}
 
-		for (URI brokenConnectionUrl : MicroclimateConnectionManager.brokenConnections()) {
-			addTableRow(brokenConnectionUrl, "", true);
+		for (String brokenConnectionUrl : MicroclimateConnectionManager.brokenConnections()) {
+			addTableRow(brokenConnectionUrl,
+					MicroclimateConnectionManager.getLinkedAppNames(brokenConnectionUrl),
+					true);
 		}
 	}
 
-	private void addTableRow(URI url, String linkedApps, boolean isBroken) {
+	private void addTableRow(String url, String linkedApps, boolean isBroken) {
 		if (linkedApps == null || linkedApps.isEmpty()) {
 			linkedApps = "none";
 		}
@@ -208,79 +189,13 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		try {
 			TableItem ti = new TableItem(connectionsTable, SWT.NONE);
 
-			// TODO error icon
-			ti.setText(new String[] { url.toString(), linkedApps, isBroken ? CONNECTION_BAD : CONNECTION_GOOD });
+			ti.setText(new String[] { url.toString(), linkedApps /*, isBroken ? CONNECTION_BAD : CONNECTION_GOOD */ });
 		}
 		catch(SWTException e) {
 			// suppress widget disposed exception - It gets thrown if the window is out of focus,
 			// but then the table populates just fine anyway, so I don't know why it is a problem.
 			if (!"Widget is disposed".equals(e.getMessage())) {
 				throw e;
-			}
-		}
-	}
-
-	private static String getLinkedAppNamesForConnection(MicroclimateConnection mcc) {
-		StringBuilder linkedAppsBuilder = new StringBuilder();
-		final String separator = ", ";
-
-		mcc.getLinkedApps().stream()
-				.forEachOrdered(app -> linkedAppsBuilder.append(app.name).append(separator));
-
-		// Remove the last separator
-		if (linkedAppsBuilder.length() > separator.length()) {
-			linkedAppsBuilder.setLength(linkedAppsBuilder.length() - separator.length());
-		}
-
-		return linkedAppsBuilder.toString();
-	}
-
-	/**
-	 * Proceeding with deleting this connection will delete all its linked servers too.
-	 * Make this clear to the user, then delete the servers if they still wish to delete the connection.
-	 */
-	private void handleDeleteActiveServers(MicroclimateConnection connection,
-			List<MicroclimateApplication> linkedApps) {
-
-		String[] buttons = new String[] { "Cancel", "Delete Servers"  };
-		final int deleteBtnIndex = 1;
-
-		String message =
-				"The following Microclimate applications have linked servers in the workspace: " +
-				getLinkedAppNamesForConnection(connection) + "\n\n" +
-				"If you still wish to delete the connection to " + connection.baseUrl + ", " +
-				"ALL these servers will be DELETED from your Eclipse workspace.\n" +
-				"Are you sure you want to proceed?";
-
-		MessageDialog dialog = new MessageDialog(
-				getShell(), "Connection has active servers",
-				Display.getDefault().getSystemImage(SWT.ICON_WARNING),
-				message, MessageDialog.WARNING, buttons,
-				// Below is the index of the initially selected button - This unfortunately is always
-				// the rightmost button in the dialog. So it's not possible to have the normal order
-				// (ie Cancel to the left of OK) but also have Cancel selected initially.
-				deleteBtnIndex);
-
-		boolean delete = dialog.open() == deleteBtnIndex;
-
-		if (delete) {
-			boolean deletionSuccess = true;
-			for (MicroclimateApplication app : linkedApps) {
-				IServer server = app.getLinkedServer().getServer();
-				try {
-					server.delete();
-				} catch (CoreException e) {
-					MCLogger.logError("Error deleting server when deleting MCConnection", e);
-					MessageDialog.openError(getShell(),
-							"Error deleting server " + server.getName(),
-							e.getMessage());
-
-					deletionSuccess = false;
-				}
-			}
-
-			if (deletionSuccess) {
-				MicroclimateConnectionManager.remove(connection);
 			}
 		}
 	}

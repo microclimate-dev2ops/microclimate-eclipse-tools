@@ -43,9 +43,12 @@ public class MicroclimateConnection {
 	}
 
 	public MicroclimateConnection (URI uri) throws IOException, URISyntaxException, JSONException {
+		if (!uri.toString().endsWith("/")) {
+			uri = uri.resolve("/");
+		}
 		this.baseUrl = uri;
 
-		if (MicroclimateConnectionManager.getConnection(baseUrl.toString()) != null) {
+		if (MicroclimateConnectionManager.getActiveConnection(uri.toString()) != null) {
 			onInitFail("Microclimate Connection at " + baseUrl + " already exists.");
 		}
 
@@ -103,7 +106,7 @@ public class MicroclimateConnection {
 	}
 
 	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
-		final String envUrl = baseUrl + MCConstants.APIPATH_ENV;
+		final URI envUrl = baseUrl.resolve(MCConstants.APIPATH_ENV);
 
 		String envResponse = null;
 		try {
@@ -175,14 +178,14 @@ public class MicroclimateConnection {
 	 */
 	public void refreshApps() {
 
-		final String projectsUrl = baseUrl + MCConstants.APIPATH_PROJECT_LIST;
+		final URI projectsURL = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST);
 
 		String projectsResponse = null;
 		try {
-			projectsResponse = HttpUtil.get(projectsUrl).response;
+			projectsResponse = HttpUtil.get(projectsURL).response;
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Projects endpoint", e);
-			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsUrl);
+			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsURL);
 			return;
 		}
 
@@ -238,7 +241,11 @@ public class MicroclimateConnection {
 	public void requestProjectRestart(MicroclimateApplication app, String launchMode)
 			throws JSONException, IOException {
 
-        String url = baseUrl + MCConstants.APIPATH_PROJECTS_BASE + "/" + app.projectID + "/" + MCConstants.APIPATH_RESTART;
+		String restartEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/"
+				+ app.projectID + "/"
+				+ MCConstants.APIPATH_RESTART;
+
+        URI url = baseUrl.resolve(restartEndpoint);
 
 		JSONObject restartProjectPayload = new JSONObject();
 		restartProjectPayload.put(MCConstants.KEY_START_MODE, launchMode);
@@ -255,7 +262,7 @@ public class MicroclimateConnection {
 	 * 	or null if the project is not found in the status info.
 	 */
 	public JSONObject requestProjectStatus(MicroclimateApplication app) throws IOException, JSONException {
-		final String statusUrl = baseUrl + MCConstants.APIPATH_PROJECT_LIST;
+		final URI statusUrl = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST);
 
 		HttpResult result = HttpUtil.get(statusUrl);
 

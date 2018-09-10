@@ -12,17 +12,6 @@ public class MCConstants {
 
 			MC_SERVER_BASE_NAME = "Microclimate Project: ",
 
-			PROJECT_TYPE_LIBERTY = "liberty",
-			PROJECT_TYPE_SPRING = "spring",
-			PROJECT_TYPE_NODE = "nodejs",
-			PROJECT_TYPE_SWIFT = "swift",
-
-			// user-friendly project types
-			USER_PROJECT_TYPE_LIBERTY = "Microprofile",
-			USER_PROJECT_TYPE_SPRING = "Spring",
-			USER_PROJECT_TYPE_NODE = "Node.js",
-			USER_PROJECT_TYPE_SWIFT = "Swift",
-
 			// Portal API endpoints
 			APIPATH_PROJECTS_BASE = "api/v1/projects",
 			APIPATH_PROJECT_LIST = "api/v1/projects",
@@ -156,6 +145,21 @@ public class MCConstants {
 		}
 	}
 
+	public static final String
+
+			PROJECT_TYPE_LIBERTY = "liberty",
+			PROJECT_TYPE_SPRING = "spring",
+			PROJECT_TYPE_NODE = "nodejs",
+			PROJECT_TYPE_SWIFT = "swift",
+			PROJECT_TYPE_UNKNOWN = "unknown",
+
+			// user-friendly project types
+			USER_PROJECT_TYPE_LIBERTY = "Microprofile",
+			USER_PROJECT_TYPE_SPRING = "Spring",
+			USER_PROJECT_TYPE_NODE = "Node.js",
+			USER_PROJECT_TYPE_SWIFT = "Swift",
+			USER_PROJECT_TYPE_UNKNOWN = "Unknown";
+
 	public static String projectTypeToUserFriendly(String projectType) {
 		if (PROJECT_TYPE_LIBERTY.equals(projectType)) {
 			return USER_PROJECT_TYPE_LIBERTY;
@@ -168,6 +172,9 @@ public class MCConstants {
 		}
 		else if (PROJECT_TYPE_SWIFT.equals(projectType)) {
 			return USER_PROJECT_TYPE_SWIFT;
+		}
+		else if (PROJECT_TYPE_UNKNOWN.equals(projectType)) {
+			return USER_PROJECT_TYPE_UNKNOWN;
 		}
 		else {
 			MCLogger.logError("Unknown project type: " + projectType);

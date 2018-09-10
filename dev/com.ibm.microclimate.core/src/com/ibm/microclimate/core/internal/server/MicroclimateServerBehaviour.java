@@ -68,7 +68,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			onInitializeFailure("No " + MicroclimateServer.ATTR_MCC_URL + " attribute");
 			return;
 		}
-		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getConnection(mcConnectionBaseUrl);
+		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getActiveConnection(mcConnectionBaseUrl);
 		if (mcConnection == null) {
 			onMicroclimateDisconnect(mcConnectionBaseUrl);
 			//onInitializeFailure("Couldn't connect to Microclimate at " + mcConnectionBaseUrl +

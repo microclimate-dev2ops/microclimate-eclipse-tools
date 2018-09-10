@@ -114,7 +114,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		// so if they have one already, block the Add button.
 		if (MicroclimateConnectionManager.activeConnectionsCount() > 0) {
 			testConnectionBtn.setEnabled(false);
-			String existingConnectionUrl = MicroclimateConnectionManager.connections().get(0).baseUrl.toString();
+			String existingConnectionUrl = MicroclimateConnectionManager.activeConnections().get(0).baseUrl.toString();
 			setErrorMessage("You already have an existing Microclimate connection at " + existingConnectionUrl +
 					"\nAt this time, only one Microclimate connection is permitted.");
 		}

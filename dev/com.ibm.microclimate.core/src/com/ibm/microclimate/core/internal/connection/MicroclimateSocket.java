@@ -288,8 +288,7 @@ public class MicroclimateSocket {
 				Thread.sleep(delay);
 				waited += delay;
 
-				// only log every 10 ticks
-				if (waited % (10 * delay) == 0) {
+				if (waited % (5 * delay) == 0) {
 					MCLogger.log("Waiting for MicroclimateSocket initial connection");
 				}
 			}

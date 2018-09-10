@@ -263,7 +263,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		int previousCount = connectionsCombo.getItemCount();
 		connectionsCombo.removeAll();
 
-		List<MicroclimateConnection> connections = MicroclimateConnectionManager.connections();
+		List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
 		if(connections.isEmpty()) {
 			mcConnection = null;
 			return;
@@ -294,7 +294,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	 */
 	private void setMCConnection() {
 		String selected = connectionsCombo.getText();
-		MicroclimateConnection connection = MicroclimateConnectionManager.getConnection(selected);
+		MicroclimateConnection connection = MicroclimateConnectionManager.getActiveConnection(selected);
 
 		if (connection == null) {
 			MCLogger.logError("Failed to get MCConnection object from selected URL: " + selected);
@@ -450,7 +450,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
 			// but then we'd have to give them a way to start the project from Eclipse.
 			return "Invalid project selected - This project is not running. "
-					+ "\n Make sure it is enabled and started, then refresh the project info.";
+					+ "\n Make sure it is enabled and started, then click Refresh.";
 		}
 		else if (!app.isMicroprofileProject()) {
 			return "Invalid project selected - Only Microprofile projects are supported at this time.";
