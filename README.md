@@ -1,9 +1,9 @@
 # microclimate-eclipse-plugin
 
 # Summary
-Provides tools for working with Microclimate\u00ae applications in Eclipse
+Tools for working with Microclimate applications in Eclipse
 
-## Contribute to Microclimate Eclipse plugin
+## Contribute to Microclimate Developer Tools
 1. Clone the repository to your system.
 
     ```git clone https://github.ibm.com/dev-ex/microclimate-eclipse-plugin```

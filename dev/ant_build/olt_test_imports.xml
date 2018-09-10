@@ -95,8 +95,8 @@
 
 		<!-- Add Main feature here -->
 			<category name="was4d"
-				label="Microclimate Eclipse plugin V${version} Unit Tests"
-				description="Microclimate Eclipse plugin V${version} Unit Tests">
+				label="Microclimate Developer Tools V${version} Unit Tests"
+				description="Microclimate Developer Tools V${version} Unit Tests">
 				<feature id="com.ibm.ws.st.liberty.tools.test" />
 		  	</category>
 		</generateUpdateSite>
