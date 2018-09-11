@@ -18,6 +18,7 @@ import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,6 +38,7 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.ui.internal.Messages;
 import com.ibm.microclimate.ui.internal.prefs.MicroclimateConnectionPrefsPage;
 
 /**
@@ -77,17 +79,17 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private Label[] projInfoSpacers = new Label[0];
 
 	protected LinkMicroclimateProjectPage(IProject selectedProject, boolean includeConnectionWidgets) {
-		super("Link to Microclimate Project");
+		super(Messages.LinkPage_ShellTitle);
 
 		this.selectedProject = selectedProject;
 		this.includeConnectionWidgets = includeConnectionWidgets;
 		setCustomTitle();
 
-		setDescription("Select the Eclipse project you wish to link to a Microclimate project.");
+		setDescription(Messages.LinkPage_WizardDescription);
 	}
 
 	private void setCustomTitle() {
-		setTitle("Link " + selectedProject.getName() + " to Microclimate Project");
+		setTitle(NLS.bind(Messages.LinkPage_WizardTitle, selectedProject.getName()));
 	}
 
 	@Override
@@ -106,7 +108,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		if (includeConnectionWidgets) {
 			Label connectionsLabel = new Label(composite, SWT.NONE);
-			connectionsLabel.setText("Microclimate Connection:");
+			connectionsLabel.setText(Messages.LinkPage_ConnectionComboLabel);
 			connectionsLabel.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
 
 			connectionsCombo = new Combo(composite, SWT.READ_ONLY);
@@ -127,7 +129,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			setMCConnection();
 
 			Button manageConnectionsBtn = new Button(composite, SWT.PUSH);
-			manageConnectionsBtn.setText("Manage");
+			manageConnectionsBtn.setText(Messages.LinkPage_ManageConnectionBtn);
 			final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
 			buttonData.widthHint = 100;
 			manageConnectionsBtn.setLayoutData(buttonData);
@@ -143,12 +145,12 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			});
 
 			Label spacer = new Label(composite, SWT.NONE);
-			spacer.setText("");
+			spacer.setText(""); //$NON-NLS-1$
 			spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 3, 1));
 		}
 
 		Label eclipseProj = new Label(composite, SWT.NONE);
-		eclipseProj.setText("Eclipse Project:");
+		eclipseProj.setText(Messages.LinkPage_ProjectsComboLabel);
 		eclipseProj.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
 
 		projectsCombo = new Combo(composite, SWT.READ_ONLY);
@@ -160,9 +162,9 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				String projectName = projectsCombo.getText();
 
 				selectedProject = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-				MCLogger.log("New selected project is " + selectedProject.getName());
+				MCLogger.log("New selected project is " + selectedProject.getName()); //$NON-NLS-1$
 				if (selectedProject == null) {
-					MCLogger.logError("Eclipse project with name " + projectName + " not found!");
+					MCLogger.logError("Eclipse project with name " + projectName + " not found!"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				else {
 					setCustomTitle();
@@ -177,10 +179,10 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		mcProjInfoTitle = new Label(composite, SWT.NONE);
 		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false, 2, 1));
-		mcProjInfoTitle.setText("The selected project will be linked to the following Microclimate project:");
+		mcProjInfoTitle.setText(Messages.LinkPage_ProjectInfoLabel);
 
 		refreshProjectsBtn = new Button(composite, SWT.PUSH);
-		refreshProjectsBtn.setText("Refresh");
+		refreshProjectsBtn.setText(Messages.LinkPage_RefreshBtn);
 		final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
 		buttonData.widthHint = 100;
 		refreshProjectsBtn.setLayoutData(buttonData);
@@ -209,23 +211,23 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projectComposite.setLayout(layout);
 		projectComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 
-		projInfoNameLabel = createProjInfoLabel(projectComposite, "Name:");
+		projInfoNameLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjectInfoNameLabel);
 		projInfoName = new Label(projectComposite, SWT.NONE);
-		projInfoName.setText("");
+		projInfoName.setText(""); //$NON-NLS-1$
 		GridData infoData = new GridData(GridData.FILL, GridData.FILL, true, false);
 		projInfoName.setLayoutData(infoData);
 
-		projInfoTypeLabel = createProjInfoLabel(projectComposite, "Type:");
+		projInfoTypeLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoTypeLabel);
 		projInfoType = new Label(projectComposite, SWT.NONE);
-		projInfoType.setText("");
+		projInfoType.setText(""); //$NON-NLS-1$
 		projInfoType.setLayoutData(infoData);
 
-		projInfoUrlLabel = createProjInfoLabel(projectComposite, "URL:");
+		projInfoUrlLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoUrlLabel);
 		projInfoUrl = new Label(projectComposite, SWT.NONE);
-		projInfoUrl.setText("");
+		projInfoUrl.setText(""); //$NON-NLS-1$
 		projInfoUrl.setLayoutData(infoData);
 
-		projInfoPathLabel = createProjInfoLabel(projectComposite, "Path:");
+		projInfoPathLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoPathLabel);
 
 		populateProjectsCombo();
 
@@ -315,7 +317,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		MicroclimateConnection connection = MicroclimateConnectionManager.getActiveConnection(selected);
 
 		if (connection == null) {
-			MCLogger.logError("Failed to get MCConnection object from selected URL: " + selected);
+			MCLogger.logError("Failed to get MCConnection object from selected URL: " + selected); //$NON-NLS-1$
 		}
 		mcConnection = connection;
 	}
@@ -330,9 +332,9 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 	private void populateAppToLinkDetails() {
 		if (selectedProject == null) {
-			MCLogger.logError("Null selectedProject");
+			MCLogger.logError("Null selectedProject"); //$NON-NLS-1$
 			// should never happen?
-			setErrorMessage("There was an error getting the selected project. Please re-launch the wizard.");
+			setErrorMessage(Messages.LinkPage_ErrorGettingSelectedProj);
 			return;
 		}
 
@@ -354,12 +356,12 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		if (hasApp) {
 			// Populate the app info label
 
-			MCLogger.log("Found app with matching path " + appToLink.name);
+			MCLogger.log("Found app with matching path " + appToLink.name); //$NON-NLS-1$
 
 			projInfoName.setText(appToLink.name);
 			projInfoType.setText(appToLink.getUserFriendlyType());
 
-			String baseUrl = "Not running";
+			String baseUrl = Messages.LinkPage_ProjNotRunning;
 			if (appToLink.getBaseUrl() != null) {
 				baseUrl = appToLink.getBaseUrl().toString();
 			}
@@ -398,7 +400,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 		// Refresh the error message and wizard buttons
 		// if notLinkableReason is null, the user can finish the wizard.
-		String notLinkableReason = getAppNotLinkableMsg(appToLink, selectedProject);
+		String notLinkableReason = getAppNotLinkableMsg();
 		setErrorMessage(notLinkableReason);
 	}
 
@@ -438,7 +440,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				return app;
 			}
 		}
-		MCLogger.log("No MC project found matching Eclipse project path: " + eclipseProjPath);
+		MCLogger.log("No MC project found matching Eclipse project path: " + eclipseProjPath); //$NON-NLS-1$
 		return null;
 	}
 
@@ -451,34 +453,32 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	 * Check if the given app is linkable. If it is, return null.
 	 * If not, return a user-friendly string describing why it can't be linked.
 	 */
-	private String getAppNotLinkableMsg(MicroclimateApplication app, IProject project) {
+	private String getAppNotLinkableMsg() {
 		if (mcConnection == null) {
-			return "No Microclimate Connection. Click \"Manage Connections\" to add a new connection.";
+			return Messages.LinkPage_ErrMsgNoConnection;
 		}
-		else if (app == null) {
-			return "No Microclimate project matching Eclipse project location\n" + project.getLocation();
+		else if (appToLink == null) {
+			return NLS.bind(Messages.LinkPage_ErrMsgNoMatchingProj, selectedProject.getLocation());
 		}
-		else if (app.isLinkable()) {
+		else if (appToLink.isLinkable()) {
 			return null;
 		}
 		// Check out MicroclimateApplication.isLinkable for reasons why this project is not valid,
 		// and give messages for each possible reason.
-		else if (app.isLinked()) {
-			return "Invalid project selected - This project is already linked to server \""
-					+ app.getLinkedServer().getServer().getName() + "\".";
+		else if (appToLink.isLinked()) {
+			return NLS.bind(Messages.LinkPage_ErrMsgProjAlreadyLinked, appToLink.getLinkedServer().getServer().getName());
 		}
-		else if (!app.isRunning()) {
+		else if (!appToLink.isRunning()) {
 			// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
 			// but then we'd have to give them a way to start the project from Eclipse.
-			return "Invalid project selected - This project is not running. "
-					+ "\n Make sure it is enabled and started, then click Refresh.";
+			return Messages.LinkPage_ErrMsgNotRunning;
 		}
-		else if (!app.isMicroprofileProject()) {
-			return "Invalid project selected - Only Microprofile projects are supported at this time.";
+		else if (!appToLink.isMicroprofileProject()) {
+			return Messages.LinkPage_ErrMsgOnlyMicroprofileSupported;
 		}
 		else {
 			// should never happen - handle all possible reasons for invalidity above
-			return "Invalid project selected";
+			return Messages.LinkPage_ErrMsgFallThrough;
 		}
 	}
 
