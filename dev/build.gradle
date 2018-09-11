@@ -228,6 +228,11 @@ task deployArtifactory {
 
     doLast {
     }
+
+    onlyIf {
+        ((System.getenv("olt_build_type") == "nightly") ||
+             (System.getenv("olt_build_type") == "release"))
+    }
 }
 
 // deploy build to DHE

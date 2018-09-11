@@ -7,7 +7,17 @@
     been deposited with the U.S. Copyright Office.
 -->
 <project name="com.ibm.microclimate.core" default="build">
-	<!-- <property name="image.write.dir" value="test/plugins"/> -->
 	<import file="../ant_build/public_imports/tooling_imports.xml"/>
 	<target name="build" depends="standard_targets.build"/>
+	<property name="version" value="${level_tag}" />
+	<property name="build_id" value="${buildLabel}"/>
+
+	<echo file="about.mappings"># about.mappings
+# contains fill-ins for about.properties
+# java.io.Properties file (ISO 8859-1 with "\" escapes)
+# This file is generated and does not need to be translated.
+0=${version}
+1=${build_id}
+	</echo>
+		
 </project>
