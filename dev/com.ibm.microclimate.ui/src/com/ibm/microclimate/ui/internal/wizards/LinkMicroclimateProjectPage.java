@@ -92,7 +92,8 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
-		// getShell().setSize(600, 400);
+		// Give a minimum size that fits everything comfortably but doesn't require resizing when components change.
+		getShell().setMinimumSize(600, 450);
 
 		final int gridWidth = 3;
 
@@ -140,7 +141,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 					prefsDialog.open();
 				}
 			});
-			
+
 			Label spacer = new Label(composite, SWT.NONE);
 			spacer.setText("");
 			spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 3, 1));
@@ -177,7 +178,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		mcProjInfoTitle = new Label(composite, SWT.NONE);
 		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false, 2, 1));
 		mcProjInfoTitle.setText("The selected project will be linked to the following Microclimate project:");
-		
+
 		refreshProjectsBtn = new Button(composite, SWT.PUSH);
 		refreshProjectsBtn.setText("Refresh");
 		final GridData buttonData = new GridData(GridData.FILL, GridData.FILL, false, false);
@@ -201,7 +202,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 				.setStyle(SWT.BOLD)
 				.createFont(parent.getDisplay());
 		*/
-		
+
 		projectComposite = new Composite(composite, SWT.BORDER);
 		layout = new GridLayout(2, false);
 		layout.marginLeft = 15;
@@ -225,7 +226,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projInfoUrl.setLayoutData(infoData);
 
 		projInfoPathLabel = createProjInfoLabel(projectComposite, "Path:");
-		
+
 		populateProjectsCombo();
 
 		// Initially select the project used to launch this wizard.
@@ -256,7 +257,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			});
 		}
 
-		composite.pack();
+		getShell().pack();
 		setControl(composite);
 	}
 
@@ -364,22 +365,20 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 			projInfoUrl.setText(baseUrl);
 
-			String path = appToLink.fullLocalPath.toString();
-
 			// The path section can be split into multiple lines (over multiple GridLayout rows) if the path is too long
 
 			// arbitrary max path length that looks good
 			final int pathLineLength = 64;
 
-			String[] subPaths = MCUtil.splitStringIntoArray(path, pathLineLength);
+			List<String> subPaths = MCUtil.splitPath(appToLink.fullLocalPath, pathLineLength);
 
-			projInfoPaths = new Text[subPaths.length];
-			projInfoSpacers = new Label[subPaths.length - 1];
+			projInfoPaths = new Text[subPaths.size()];
+			projInfoSpacers = new Label[subPaths.size() - 1];
 
 			GridData spacerData = new GridData(GridData.FILL, GridData.FILL, false, false);
 			GridData pathData = new GridData(GridData.FILL, GridData.FILL, false, false);
 
-			for (int i = 0; i < subPaths.length; i++) {
+			for (int i = 0; i < subPaths.size(); i++) {
 				// we don't need a spacer for the first line because the "Path:" label is there
 				if (i > 0) {
 					Label spacer = new Label(projectComposite, SWT.NONE);
@@ -387,7 +386,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 					projInfoSpacers[i - 1] = spacer;
 				}
 				Text text = new Text(projectComposite, SWT.READ_ONLY);
-				text.setText(subPaths[i]);
+				text.setText(subPaths.get(i));
 				text.setLayoutData(pathData);
 				text.setBackground(projectComposite.getBackground());
 				text.clearSelection();
@@ -395,12 +394,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			}
 		}
 
-		// forces a redraw of the new labels and texts
-		projectComposite.pack();
-		projectComposite.layout();
-
-		Shell shell = parent.getShell();
-		shell.layout(true, true);
+		redrawShell();
 
 		// Refresh the error message and wizard buttons
 		// if notLinkableReason is null, the user can finish the wizard.
@@ -420,6 +414,16 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projInfoType.setVisible(show);
 		projInfoUrl.setVisible(show);
 		//projInfoPath.setVisible(show);
+	}
+
+	private void redrawShell() {
+		Shell shell = parent.getShell();
+		shell.layout(true, true);
+		shell.pack();
+
+		// By setting the minimum size to the new size, we allow the shell to resize itself if it's required
+		// to fit everything we need - but we also minimize resizing because the shell will only get bigger
+		shell.setMinimumSize(shell.getSize());
 	}
 
 	private MicroclimateApplication findAppToLink() {
