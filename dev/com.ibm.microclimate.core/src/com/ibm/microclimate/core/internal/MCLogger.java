@@ -47,7 +47,7 @@ public class MCLogger implements DebugOptionsListener {
 			logInfo;
 
 	private static final String
-			INFO_LEVEL = "/debug/info";
+			INFO_LEVEL = "/debug/info"; //$NON-NLS-1$
 
 	@Override
 	public void optionsChanged(DebugOptions debugOptions) {
@@ -72,7 +72,7 @@ public class MCLogger implements DebugOptionsListener {
 	}
 
 	public static void logError(Throwable t) {
-		logError("Exception occurred:", t);
+		logError("Exception occurred:", t); //$NON-NLS-1$
 	}
 
 	public static void logError(String msg, Throwable t) {
@@ -92,12 +92,12 @@ public class MCLogger implements DebugOptionsListener {
 		StackTraceElement[] ste = Thread.currentThread().getStackTrace();
 		StackTraceElement callingMethod = null;
 		for (int x = 0; x < ste.length; x++) {
-			if (ste[x].getMethodName().equals("writeLog")) {
+			if (ste[x].getMethodName().equals("writeLog")) { //$NON-NLS-1$
 				callingMethod = ste[x++];
 				// Skip over logging methods, we want to print their callers.
-				while (callingMethod.getMethodName().equals("writeLog")
-						|| callingMethod.getMethodName().equals("log")
-						|| callingMethod.getMethodName().equals("logError")) {
+				while (callingMethod.getMethodName().equals("writeLog") //$NON-NLS-1$
+						|| callingMethod.getMethodName().equals("log") //$NON-NLS-1$
+						|| callingMethod.getMethodName().equals("logError")) { //$NON-NLS-1$
 					callingMethod = ste[x++];
 				}
 				break;
@@ -106,18 +106,18 @@ public class MCLogger implements DebugOptionsListener {
 
 		// String time = TIME_SDF.format(Calendar.getInstance().getTime());
 
-		String callerInfo = "unknown";
+		String callerInfo = "unknown"; //$NON-NLS-1$
 
 		if (callingMethod != null) {
 			String className = callingMethod.getClassName();
 			String simpleClassName = className.substring(className.lastIndexOf('.') + 1);
 
-			callerInfo = String.format("%s.%s:%s",
+			callerInfo = String.format("%s.%s:%s", //$NON-NLS-1$
 					simpleClassName, callingMethod.getMethodName(), callingMethod.getLineNumber());
 		}
 
-		String type = isError ? "ERROR" : "INFO";
-		String fullMessage = String.format("[%s %s] %s", type, callerInfo, msg);
+		String type = isError ? "ERROR" : "INFO"; //$NON-NLS-1$ //$NON-NLS-2$
+		String fullMessage = String.format("[%s %s] %s", type, callerInfo, msg); //$NON-NLS-1$
 
 		int level = isError ? IStatus.ERROR : IStatus.INFO;
 		IStatus status;

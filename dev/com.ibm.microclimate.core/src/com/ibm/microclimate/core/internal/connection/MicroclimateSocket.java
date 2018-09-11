@@ -14,12 +14,14 @@ import java.net.URISyntaxException;
 
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -51,11 +53,11 @@ public class MicroclimateSocket {
 
 	// SocketIO Event names
 	private static final String
-			EVENT_PROJECT_CHANGED = "projectChanged",
-			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged",
-			EVENT_PROJECT_RESTART = "projectRestartResult",
-			EVENT_PROJECT_CLOSED = "projectClosed",
-			EVENT_PROJECT_DELETION = "projectDeletion";
+			EVENT_PROJECT_CHANGED = "projectChanged", //$NON-NLS-1$
+			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged", //$NON-NLS-1$
+			EVENT_PROJECT_RESTART = "projectRestartResult", //$NON-NLS-1$
+			EVENT_PROJECT_CLOSED = "projectClosed", //$NON-NLS-1$
+			EVENT_PROJECT_DELETION = "projectDeletion"; //$NON-NLS-1$
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 
@@ -66,7 +68,7 @@ public class MicroclimateSocket {
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log("SocketIO connect success @ " + socketUri);
+				MCLogger.log("SocketIO connect success @ " + socketUri); //$NON-NLS-1$
 
 				if (!hasConnected) {
 					hasConnected = true;
@@ -84,7 +86,7 @@ public class MicroclimateSocket {
 					Exception e = (Exception) arg0[0];
 					if (previousException == null || !e.getMessage().equals(previousException.getMessage())) {
 						previousException = e;
-						MCLogger.logError("SocketIO Connect Error @ " + socketUri, e);
+						MCLogger.logError("SocketIO Connect Error @ " + socketUri, e); //$NON-NLS-1$
 					}
 				}
 				mcConnection.onConnectionError();
@@ -96,7 +98,7 @@ public class MicroclimateSocket {
 			public void call(Object... arg0) {
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];
-					MCLogger.logError("SocketIO Error @ " + socketUri, e);
+					MCLogger.logError("SocketIO Error @ " + socketUri, e); //$NON-NLS-1$
 				}
 			}
 		})
@@ -104,78 +106,78 @@ public class MicroclimateSocket {
 			@Override
 			public void call(Object... arg0) {
 				// Don't think this is ever used
-				MCLogger.log("SocketIO EVENT_MESSAGE " + arg0[0].toString());
+				MCLogger.log("SocketIO EVENT_MESSAGE " + arg0[0].toString()); //$NON-NLS-1$
 			}
 		})
 		.on(EVENT_PROJECT_CHANGED, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log(EVENT_PROJECT_CHANGED + ": " + arg0[0].toString());
+				MCLogger.log(EVENT_PROJECT_CHANGED + ": " + arg0[0].toString()); //$NON-NLS-1$
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectChanged(event);
 				} catch (JSONException e) {
-					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e);
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
 			}
 		})
 		.on(EVENT_PROJECT_STATUS_CHANGE, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log(EVENT_PROJECT_STATUS_CHANGE + ": " + arg0[0].toString());
+				MCLogger.log(EVENT_PROJECT_STATUS_CHANGE + ": " + arg0[0].toString()); //$NON-NLS-1$
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectStatusChanged(event);
 				} catch (JSONException e) {
-					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e);
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
 			}
 		})
 		.on(EVENT_PROJECT_RESTART, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log(EVENT_PROJECT_RESTART + ": " + arg0[0].toString());
+				MCLogger.log(EVENT_PROJECT_RESTART + ": " + arg0[0].toString()); //$NON-NLS-1$
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectRestart(event);
 				} catch (JSONException e) {
-					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e);
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
 			}
 		})
 		.on(EVENT_PROJECT_CLOSED, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log(EVENT_PROJECT_CLOSED + ": " + arg0[0].toString());
+				MCLogger.log(EVENT_PROJECT_CLOSED + ": " + arg0[0].toString()); //$NON-NLS-1$
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectDeletion(event);
 				} catch (JSONException e) {
-					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e);
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
 			}
 		})
 		.on(EVENT_PROJECT_DELETION, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log(EVENT_PROJECT_DELETION + ": " + arg0[0].toString());
+				MCLogger.log(EVENT_PROJECT_DELETION + ": " + arg0[0].toString()); //$NON-NLS-1$
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectDeletion(event);
 				} catch (JSONException e) {
-					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e);
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
 			}
 		});
 
 		socket.connect();
 
-		MCLogger.log("Created MicroclimateSocket connected to " + socketUri);
+		MCLogger.log("Created MicroclimateSocket connected to " + socketUri); //$NON-NLS-1$
 	}
 
 	private void onProjectChanged(JSONObject event) throws JSONException {
@@ -225,15 +227,17 @@ public class MicroclimateSocket {
 		// The project state events will be received separately and handled normally.
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
-			MCLogger.logError("Failed to get serverBehaviour, aborting state update triggered by restart");
+			MCLogger.logError("Failed to get serverBehaviour, aborting state update triggered by restart"); //$NON-NLS-1$
 			return;
 		}
 
 		String status = event.getString(MCConstants.KEY_STATUS);
 		if (!MCConstants.REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
-			MCLogger.log("Project restart failed on the server: " + event.toString());
-			MCUtil.openDialog(true, "Error restarting project",
-					"Failed to restart server " + serverBehaviour.getServer().getName() + ": " + status);
+			MCLogger.logError("Project restart failed on the server: " + event.toString()); //$NON-NLS-1$
+			MCUtil.openDialog(true,
+					Messages.MicroclimateSocket_ErrRestartingProjectDialogTitle,
+					NLS.bind(Messages.MicroclimateSocket_ErrRestartingProjectDialogMsg,
+							serverBehaviour.getServer().getName(), status));
 			return;
 		}
 
@@ -258,7 +262,7 @@ public class MicroclimateSocket {
 	private void onProjectDeletion(JSONObject event) throws JSONException {
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
-			MCLogger.logError("Failed to get serverBehaviour, aborting projectDeletion status update");
+			MCLogger.logError("Failed to get serverBehaviour, aborting projectDeletion status update"); //$NON-NLS-1$
 			return;
 		}
 
@@ -272,7 +276,7 @@ public class MicroclimateSocket {
 		if (server == null) {
 			// can't recover from this
 			// This is normal if the project has been deleted or disabled
-			MCLogger.log("No server linked to project with ID " + projectID);
+			MCLogger.log("No server linked to project with ID " + projectID); //$NON-NLS-1$
 			return null;
 		}
 
@@ -284,7 +288,7 @@ public class MicroclimateSocket {
 			return Integer.parseInt(portStr);
 		}
 		catch(NumberFormatException e) {
-			MCLogger.logError(String.format("Couldn't parse port from \"%s\"", portStr), e);
+			MCLogger.logError(String.format("Couldn't parse port from \"%s\"", portStr), e); //$NON-NLS-1$
 			return -1;
 		}
 	}
@@ -299,14 +303,14 @@ public class MicroclimateSocket {
 				waited += delay;
 
 				if (waited % (5 * delay) == 0) {
-					MCLogger.log("Waiting for MicroclimateSocket initial connection");
+					MCLogger.log("Waiting for MicroclimateSocket initial connection"); //$NON-NLS-1$
 				}
 			}
 			catch(InterruptedException e) {
 				MCLogger.logError(e);
 			}
 		}
-		MCLogger.log("MicroclimateSocket initialized in time ? " + hasConnected);
+		MCLogger.log("MicroclimateSocket initialized in time ? " + hasConnected); //$NON-NLS-1$
 		return hasConnected;
 	}
 }

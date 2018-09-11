@@ -75,7 +75,7 @@ public class MicroclimateApplication {
 
 	public static MicroclimateServerBehaviour getServerWithProjectID(String projectID) {
 		for (IServer server : ServerCore.getServers()) {
-			if (projectID.equals(server.getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""))) {
+			if (projectID.equals(server.getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""))) { //$NON-NLS-1$
 				return server.getAdapter(MicroclimateServerBehaviour.class);
 			}
 		}
@@ -108,7 +108,7 @@ public class MicroclimateApplication {
 				catch(JSONException e) {
 					// Sometimes (seems to be when project is disabled) this value is missing -
 					// see https://github.ibm.com/dev-ex/portal/issues/425
-					MCLogger.logError(e.getMessage() + " in: " + appJso);
+					MCLogger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
 				}
 
 				String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
@@ -127,14 +127,14 @@ public class MicroclimateApplication {
 					}
 					catch(JSONException e) {
 						// Indicates the app is not started
-						MCLogger.log(name + " has not bound to a port");
+						MCLogger.log(name + " has not bound to a port"); //$NON-NLS-1$
 					}
 					catch(NumberFormatException e) {
-						MCLogger.logError("Error parsing port from " + appJso, e);
+						MCLogger.logError("Error parsing port from " + appJso, e); //$NON-NLS-1$
 					}
 				}
 				else {
-					MCLogger.log(name + " is not running");
+					MCLogger.log(name + " is not running"); //$NON-NLS-1$
 				}
 
 				String contextRoot = null;
@@ -167,11 +167,11 @@ public class MicroclimateApplication {
 					}
 				}
 				else {
-					MCLogger.logError("Project JSON didn't have logs key: " + appJso);
+					MCLogger.logError("Project JSON didn't have logs key: " + appJso); //$NON-NLS-1$
 				}
 			}
 			catch(JSONException e) {
-				MCLogger.logError("Error parsing project json: " + appJso, e);
+				MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
 			}
 		}
 
@@ -180,12 +180,12 @@ public class MicroclimateApplication {
 
 	private void setBaseUrl() throws MalformedURLException {
 		if (httpPort == -1) {
-			MCLogger.log("Un-setting baseUrl because httpPort is not valid");
+			MCLogger.log("Un-setting baseUrl because httpPort is not valid"); //$NON-NLS-1$
 			baseUrl = null;
 			return;
 		}
 
-		baseUrl = new URL("http", host, httpPort, "");
+		baseUrl = new URL("http", host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
 
 		if (contextRoot != null) {
 			baseUrl = new URL(baseUrl, contextRoot);
@@ -250,7 +250,7 @@ public class MicroclimateApplication {
 	}
 
 	public synchronized void setHttpPort(int httpPort) {
-		MCLogger.log("Set HTTP port for " + baseUrl + " to " + httpPort);
+		MCLogger.log("Set HTTP port for " + baseUrl + " to " + httpPort); //$NON-NLS-1$ //$NON-NLS-2$
 		this.httpPort = httpPort;
 		try {
 			setBaseUrl();
@@ -260,7 +260,7 @@ public class MicroclimateApplication {
 	}
 
 	public synchronized void setDebugPort(int debugPort) {
-		MCLogger.log("Set debug port for " + baseUrl + " to " + debugPort);
+		MCLogger.log("Set debug port for " + baseUrl + " to " + debugPort); //$NON-NLS-1$ //$NON-NLS-2$
 		this.debugPort = debugPort;
 	}
 
@@ -271,14 +271,14 @@ public class MicroclimateApplication {
 	 * set to something other than -1 before trying to connect.
 	 */
 	public synchronized void invalidatePorts() {
-		MCLogger.log("Invalidate ports for " + baseUrl.toString());
+		MCLogger.log("Invalidate ports for " + baseUrl.toString()); //$NON-NLS-1$
 		httpPort = -1;
 		debugPort = -1;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%s@%s id=%s name=%s type=%s loc=%s",
+		return String.format("%s@%s id=%s name=%s type=%s loc=%s", //$NON-NLS-1$
 				MicroclimateApplication.class.getSimpleName(), baseUrl.toString(),
 				projectID, name, projectType, fullLocalPath.toOSString());
 	}

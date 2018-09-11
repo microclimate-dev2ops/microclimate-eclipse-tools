@@ -29,7 +29,7 @@ public class WizardLauncher {
 
 	/**
 	 * Useful when the wizard to be launched does not care about the workbench or selection.
-	 * Do not use with the LinkMicroclimateProjectWizard since it requires these.
+	 * Do not use with the LinkWizard_ since it requires these.
 	 */
 	public static void launchWizardWithoutSelection(Wizard wizard) {
 		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);

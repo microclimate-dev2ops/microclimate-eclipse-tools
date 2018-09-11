@@ -50,7 +50,7 @@ public class LaunchUtilities {
         List<?> connectors = Bootstrap.virtualMachineManager().attachingConnectors();
         for (int i = 0; i < connectors.size(); i++) {
             AttachingConnector c = (AttachingConnector) connectors.get(i);
-            if ("com.sun.jdi.SocketAttach".equals(c.name())) {
+            if ("com.sun.jdi.SocketAttach".equals(c.name())) { //$NON-NLS-1$
 				return c;
 			}
         }
@@ -64,16 +64,16 @@ public class LaunchUtilities {
     public static Map<String, Connector.Argument> configureConnector(
     		Map<String, Connector.Argument> argsToConfigure, String host, int portNumber) {
 
-        Connector.StringArgument hostArg = (Connector.StringArgument) argsToConfigure.get("hostname");
+        Connector.StringArgument hostArg = (Connector.StringArgument) argsToConfigure.get("hostname"); //$NON-NLS-1$
         hostArg.setValue(host);
 
-        Connector.IntegerArgument portArg = (Connector.IntegerArgument) argsToConfigure.get("port");
+        Connector.IntegerArgument portArg = (Connector.IntegerArgument) argsToConfigure.get("port"); //$NON-NLS-1$
         portArg.setValue(portNumber);
 
-        Connector.IntegerArgument timeoutArg = (Connector.IntegerArgument) argsToConfigure.get("timeout");
+        Connector.IntegerArgument timeoutArg = (Connector.IntegerArgument) argsToConfigure.get("timeout"); //$NON-NLS-1$
         if (timeoutArg != null) {
             int timeout = Platform.getPreferencesService().getInt(
-                                                                  "org.eclipse.jdt.launching",
+                                                                  "org.eclipse.jdt.launching", //$NON-NLS-1$
                                                                   JavaRuntime.PREF_CONNECT_TIMEOUT,
                                                                   JavaRuntime.DEF_CONNECT_TIMEOUT,
                                                                   null);

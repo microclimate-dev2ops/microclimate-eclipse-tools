@@ -38,6 +38,7 @@ import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.ui.internal.Messages;
 
 /**
  * From com.ibm.ws.st.ui.internal.actions.LogActionProvider
@@ -86,7 +87,7 @@ public class LogActionProvider extends CommonActionProvider implements ISelectio
     		return;
     	}
 
-        MenuManager openLogsMenu = new MenuManager("Open Log File", "OpenLogFiles");
+        MenuManager openLogsMenu = new MenuManager(Messages.LogActionProvider_OpenLogFileCategory, "OpenLogFiles"); //$NON-NLS-2$
 
     	for (IPath logFilePath : mcServerBehaviour.getApp().getLogFilePaths()) {
     		String name = logFilePath.lastSegment();
@@ -94,7 +95,7 @@ public class LogActionProvider extends CommonActionProvider implements ISelectio
 				name = MCConstants.BUILD_LOG_SHORTNAME;
 			}
 
-			OpenLogAction openLogAction = new OpenLogAction("Open " + name, shell, logFilePath);
+			OpenLogAction openLogAction = new OpenLogAction(Messages.LogActionProvider_OpenLogMenuBtn + name, shell, logFilePath);
 			openLogsMenu.add(openLogAction);
     	}
 

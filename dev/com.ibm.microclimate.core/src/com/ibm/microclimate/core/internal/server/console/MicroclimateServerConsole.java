@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
@@ -24,11 +25,12 @@ import org.eclipse.ui.console.IOConsoleOutputStream;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
 public class MicroclimateServerConsole extends IOConsole {
 
-	private static final String MC_CONSOLE_TYPE = "microclimate-console";
+	private static final String MC_CONSOLE_TYPE = "microclimate-console"; //$NON-NLS-1$
 
 	public static Set<MicroclimateServerConsole> createApplicationConsoles(MicroclimateApplication app) {
 
@@ -38,7 +40,7 @@ public class MicroclimateServerConsole extends IOConsole {
 			File logFile = new File(logPath.toOSString());
 
 			if (!logFile.exists()) {
-				MCLogger.logError("Log file not found at: " + logPath.toOSString());
+				MCLogger.logError("Log file not found at: " + logPath.toOSString()); //$NON-NLS-1$
 				continue;
 			}
 
@@ -51,7 +53,7 @@ public class MicroclimateServerConsole extends IOConsole {
 				fileName = MCConstants.BUILD_LOG_SHORTNAME;
 			}
 
-			String consoleName = app.name + " - " + fileName;
+			String consoleName = NLS.bind(Messages.MicroclimateServerConsole_ConsoleName, app.name, fileName);
 			consoles.add(new MicroclimateServerConsole(consoleName, logFile));
 		}
 
@@ -82,20 +84,20 @@ public class MicroclimateServerConsole extends IOConsole {
 			}
 		}
 
-		MCLogger.log("Creating new server console: " + getName());
+		MCLogger.log("Creating new server console: " + getName()); //$NON-NLS-1$
 		consoleManager.addConsoles(new IConsole[] { this });
 	}
 
 	@Override
 	protected void dispose() {
-		MCLogger.log("Dispose console " + getName());
+		MCLogger.log("Dispose console " + getName()); //$NON-NLS-1$
 
 		logMonitorThread.disable();
 		logMonitorThread.interrupt();
 		try {
 			outputStream.close();
 		} catch (IOException e) {
-			MCLogger.logError("Error closing console output stream", e);
+			MCLogger.logError("Error closing console output stream", e); //$NON-NLS-1$
 		}
 
 		super.dispose();

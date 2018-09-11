@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.wst.server.core.IServer;
@@ -34,6 +35,7 @@ import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;;
 
 /**
@@ -48,7 +50,7 @@ public class MicroclimateConnectionManager {
 	// Singleton instance. Never access this directly. Use the instance() method.
 	private static MicroclimateConnectionManager instance;
 
-	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections";
+	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections"; //$NON-NLS-1$
 
 	private List<MicroclimateConnection> connections = new ArrayList<>();
 	// this list tracks the URLs of connections that have never successfully connected
@@ -84,12 +86,12 @@ public class MicroclimateConnectionManager {
 	 */
 	public synchronized static void add(MicroclimateConnection connection) {
 		if (connection == null) {
-			MCLogger.logError("Null connection passed to be added");
+			MCLogger.logError("Null connection passed to be added"); //$NON-NLS-1$
 			return;
 		}
 
 		instance().connections.add(connection);
-		MCLogger.log("Added a new MCConnection: " + connection.baseUrl);
+		MCLogger.log("Added a new MCConnection: " + connection.baseUrl); //$NON-NLS-1$
 		instance().writeToPreferences();
 	}
 
@@ -132,7 +134,7 @@ public class MicroclimateConnectionManager {
 		}
 
 		if (!removeResult) {
-			MCLogger.logError("Tried to remove MCConnection " + baseUrl + ", but it didn't exist");
+			MCLogger.logError("Tried to remove MCConnection " + baseUrl + ", but it didn't exist"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		instance().writeToPreferences();
 		return removeResult;
@@ -142,7 +144,7 @@ public class MicroclimateConnectionManager {
 	 * Deletes all of the instance's connections. Does NOT write to preferences after doing so.
 	 */
 	public synchronized static void clear() {
-		MCLogger.log("Clearing " + instance().connections.size() + " connections");
+		MCLogger.log("Clearing " + instance().connections.size() + " connections"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Iterator<MicroclimateConnection> it = instance().connections.iterator();
 
@@ -187,7 +189,7 @@ public class MicroclimateConnectionManager {
 			prefsBuilder.append(mcc).append('\n');
 		}
 
-		MCLogger.log("Writing connections to preferences: " + prefsBuilder.toString());
+		MCLogger.log("Writing connections to preferences: " + prefsBuilder.toString()); //$NON-NLS-1$
 
 		MicroclimateCorePlugin.getDefault().getPreferenceStore()
 				.setValue(CONNECTION_LIST_PREFSKEY, prefsBuilder.toString());
@@ -200,9 +202,9 @@ public class MicroclimateConnectionManager {
 				.getPreferenceStore()
 				.getString(CONNECTION_LIST_PREFSKEY).trim();
 
-		MCLogger.log("Reading connections from preferences: \"" + storedConnections + "\"");
+		MCLogger.log("Reading connections from preferences: \"" + storedConnections + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 
-		for(String line : storedConnections.split("\n")) {
+		for(String line : storedConnections.split("\n")) { //$NON-NLS-1$
 			line = line.trim();
 			if(line.isEmpty()) {
 				continue;
@@ -219,7 +221,7 @@ public class MicroclimateConnectionManager {
 				MicroclimateReconnectJob.createAndStart(mce.connectionUrl);
 			}
 			catch (JSONException | IOException | URISyntaxException e) {
-				MCLogger.logError("Error loading MCConnection from preferences", e);
+				MCLogger.logError("Error loading MCConnection from preferences", e); //$NON-NLS-1$
 			}
 		}
 
@@ -240,15 +242,15 @@ public class MicroclimateConnectionManager {
 			return true;
 		}
 
-		final String[] buttons = new String[] { "Cancel", "Delete Servers"  };
+		final String[] buttons = new String[] {
+				Messages.MicroclimateConnectionManager_CancelBtn,
+				Messages.MicroclimateConnectionManager_DeleteServersBtn
+		};
+
 		final int deleteBtnIndex = 1;
 
-		final String message =
-				"The following Microclimate servers are linked to this Microclimate instance:\n" +
-				getServerNames(linkedServers, false) + "\n\n" +
-				"If you still wish to delete the connection to " + mcConnectionUrl + ", " +
-				"ALL these servers will be DELETED from your Eclipse workspace.\n" +
-				"Are you sure you want to proceed?";
+		final String message = NLS.bind(Messages.MicroclimateConnectionManager_ServersLinkedDialogMsg,
+				getServerNames(linkedServers, false), mcConnectionUrl);
 
 		AtomicBoolean deleted = new AtomicBoolean(false);
 
@@ -257,7 +259,7 @@ public class MicroclimateConnectionManager {
 			public void run() {
 				MessageDialog dialog = new MessageDialog(
 						Display.getDefault().getActiveShell(),
-						"Connection has active servers",
+						Messages.MicroclimateConnectionManager_ServersLinkedDialogTitle,
 						Display.getDefault().getSystemImage(SWT.ICON_WARNING),
 						message, MessageDialog.WARNING, buttons,
 						// Below is the index of the initially selected button - This unfortunately is always
@@ -273,9 +275,9 @@ public class MicroclimateConnectionManager {
 							server.delete();
 						}
 						catch (CoreException e) {
-							MCLogger.logError("Error deleting server when deleting MCConnection", e);
+							MCLogger.logError("Error deleting server when deleting MCConnection", e); //$NON-NLS-1$
 							MCUtil.openDialog(true,
-									"Error deleting server " + server.getName(),
+									Messages.MicroclimateConnectionManager_ErrDeletingServerDialogTitle + server.getName(),
 									e.getMessage());
 						}
 					}
@@ -291,9 +293,9 @@ public class MicroclimateConnectionManager {
 		};
 
 		boolean onUIThread = Display.getDefault().getThread().equals(Thread.currentThread());
-		MCLogger.log("On UI thread = " + onUIThread);
+		MCLogger.log("On UI thread = " + onUIThread); //$NON-NLS-1$
 
-		MCLogger.log("Waiting for user to confirm delete linked server");
+		MCLogger.log("Waiting for user to confirm delete linked server"); //$NON-NLS-1$
 		if (onUIThread) {
 			confirmDeleteRunnable.run();
 		}
@@ -311,14 +313,14 @@ public class MicroclimateConnectionManager {
 		}
 
 		final boolean result = deleted.get();
-		MCLogger.log("User deleted linked server(s)? " + result);
+		MCLogger.log("User deleted linked server(s)? " + result); //$NON-NLS-1$
 		return result;
 	}
 
 	private static Set<IServer> getServers(String mcConnectionUrl) {
 		Set<IServer> servers = new HashSet<>();
 		for (IServer server : ServerCore.getServers()) {
-			if (mcConnectionUrl.equals(server.getAttribute(MicroclimateServer.ATTR_MCC_URL, ""))) {
+			if (mcConnectionUrl.equals(server.getAttribute(MicroclimateServer.ATTR_MCC_URL, ""))) { //$NON-NLS-1$
 				servers.add(server);
 			}
 		}

@@ -41,7 +41,7 @@ public class MicroclimateServerLogMonitorThread extends Thread {
 
 		setPriority(Thread.MIN_PRIORITY + 1);
 		setDaemon(true);
-		setName(consoleName + " MonitorThread");
+		setName(consoleName + " MonitorThread"); //$NON-NLS-1$
 	}
 
 	// From com.ibm.ws.st.core.internal.launch.ConsoleReader.update()
@@ -85,7 +85,7 @@ public class MicroclimateServerLogMonitorThread extends Thread {
 	            }
 			}
 			catch(IOException e) {
-				MCLogger.logError("Error updating server log for file " + inputFile.getAbsolutePath(), e);
+				MCLogger.logError("Error updating server log for file " + inputFile.getAbsolutePath(), e); //$NON-NLS-1$
 			}
 		}
 

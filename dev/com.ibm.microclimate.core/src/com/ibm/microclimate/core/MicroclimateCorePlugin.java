@@ -27,13 +27,13 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.ibm.microclimate.core"; //$NON-NLS-1$
 
-	public static final String DEFAULT_ICON_PATH = "icons/microclimate.ico";
+	public static final String DEFAULT_ICON_PATH = "icons/microclimate.ico"; //$NON-NLS-1$
 
 	public static final String
 			// Boolean option for hiding the on-finish dialog for the Link Project wizard
-			HIDE_ONFINISH_MSG_PREFSKEY = "showLinkWizardOnFinishDialog",
+			HIDE_ONFINISH_MSG_PREFSKEY = "showLinkWizardOnFinishDialog", //$NON-NLS-1$
 			// Int option for debug timeout in seconds
-			DEBUG_CONNECT_TIMEOUT_PREFSKEY = "serverDebugTimeout";
+			DEBUG_CONNECT_TIMEOUT_PREFSKEY = "serverDebugTimeout"; //$NON-NLS-1$
 
 	// The shared instance
 	private static MicroclimateCorePlugin plugin;

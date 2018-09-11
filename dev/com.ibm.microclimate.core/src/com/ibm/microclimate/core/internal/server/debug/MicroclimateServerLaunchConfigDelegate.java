@@ -15,11 +15,13 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -36,23 +38,21 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
 
         final IServer server = ServerUtil.getServer(config);
         if (server == null) {
-            MCLogger.logError("Could not find server from configuration " + config.getName());
+            MCLogger.logError("Could not find server from configuration " + config.getName()); //$NON-NLS-1$
             return;
         }
 
         final MicroclimateServerBehaviour serverBehaviour = server.getAdapter(MicroclimateServerBehaviour.class);
 
         // Validate here that the server can actually be restarted.
-        String errorTitle = "Error Starting Server";
-        String errorMsg = "";
+        String errorTitle = Messages.MicroclimateServerLaunchConfigDelegate_ErrStartingServerDialogTitle;
+        String errorMsg = ""; //$NON-NLS-1$
         if (server.getServerState() == IServer.STATE_UNKNOWN && serverBehaviour.getSuffix() != null) {
-        	errorTitle = "Server can't be started";
+        	errorTitle = Messages.MicroclimateServerLaunchConfigDelegate_ErrServerCantStart;
         	errorMsg = serverBehaviour.getSuffix();
         }
         else if (serverBehaviour.getApp() == null) {
-			errorTitle = "Server Error";
-			errorMsg = "There was an error initializing " + server.getName() +
-				". Please delete and re-create the server.";
+			errorMsg = NLS.bind(Messages.MicroclimateServerLaunchConfigDelegate_ErrInitServer, server.getName());
         }
 
         if (!errorMsg.isEmpty()) {
@@ -62,13 +62,13 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         	return;
         }
 
-		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode");
+		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        final String projectName = server.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, "");
+        final String projectName = server.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, ""); //$NON-NLS-1$
         if (projectName.isEmpty()) {
         	// Need the project name to set the source path - in this case the user can work around it by
         	// adding the project to the source path manually.
-        	MCLogger.logError(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME + " was not set on server "
+        	MCLogger.logError(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME + " was not set on server " //$NON-NLS-1$
         			+ server.getName());
         }
 

@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +29,7 @@ import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -37,8 +39,8 @@ import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
  */
 public class MicroclimateConnection {
 
-	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace";
-	private static final String UNKNOWN_VERSION = "unknown";
+	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace"; //$NON-NLS-1$
+	private static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
 
 	public final URI baseUrl;
 	public final IPath localWorkspacePath;
@@ -48,17 +50,17 @@ public class MicroclimateConnection {
 	private List<MicroclimateApplication> apps = Collections.emptyList();
 
 	public static URI buildUrl(String host, int port) throws URISyntaxException {
-		return new URI("http", null, host, port, null, null, null);
+		return new URI("http", null, host, port, null, null, null); //$NON-NLS-1$
 	}
 
 	public MicroclimateConnection (URI uri) throws IOException, URISyntaxException, JSONException {
-		if (!uri.toString().endsWith("/")) {
-			uri = uri.resolve("/");
+		if (!uri.toString().endsWith("/")) { //$NON-NLS-1$
+			uri = uri.resolve("/"); //$NON-NLS-1$
 		}
 		this.baseUrl = uri;
 
 		if (MicroclimateConnectionManager.getActiveConnection(uri.toString()) != null) {
-			onInitFail("Microclimate Connection at " + baseUrl + " already exists.");
+			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_AlreadyExists, baseUrl));
 		}
 
 		// Must set host, port fields before doing this
@@ -73,13 +75,11 @@ public class MicroclimateConnection {
 		String version = getMCVersion(env);
 
 		if (UNKNOWN_VERSION.equals(version)) {
-			onInitFail(String.format("Your version of Microclimate could not be determined. "
-					+ "At least version %s is required.",
+			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_VersionUnknown,
 					MCConstants.REQUIRED_MC_VERSION));
 		}
 		else if (!isSupportedVersion(version)) {
-			onInitFail(String.format("Your version of Microclimate is not supported. "
-					+ "You are running version %s but at least version %s is required.",
+			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_OldVersion,
 					version, MCConstants.REQUIRED_MC_VERSION));
 		}
 
@@ -87,16 +87,16 @@ public class MicroclimateConnection {
 		if (localWorkspacePath == null) {
 			// Can't recover from this
 			// This should never happen since we have already determined it is a supported version of microclimate.
-			onInitFail("Could not determine the location of your Microclimate workspace.");
+			onInitFail(Messages.MicroclimateConnection_ErrConnection_WorkspaceErr);
 		}
 
 		refreshApps();
 
-		MCLogger.log("Created " + this);
+		MCLogger.log("Created " + this); //$NON-NLS-1$
 	}
 
 	private void onInitFail(String msg) throws ConnectException {
-		MCLogger.log("Initializing MicroclimateConnection failed: " + msg);
+		MCLogger.log("Initializing MicroclimateConnection failed: " + msg); //$NON-NLS-1$
 		close();
 		throw new ConnectException(msg);
 	}
@@ -105,7 +105,7 @@ public class MicroclimateConnection {
 	 * Call this when the connection is removed.
 	 */
 	public void close() {
-		MCLogger.log("Closing " + this);
+		MCLogger.log("Closing " + this); //$NON-NLS-1$
 		if (mcSocket != null && mcSocket.socket != null) {
 			if (mcSocket.socket.connected()) {
 				mcSocket.socket.disconnect();
@@ -121,8 +121,8 @@ public class MicroclimateConnection {
 		try {
 			envResponse = HttpUtil.get(envUrl).response;
 		} catch (IOException e) {
-			MCLogger.logError("Error contacting Environment endpoint", e);
-			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + envUrl);
+			MCLogger.logError("Error contacting Environment endpoint", e); //$NON-NLS-1$
+			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrContactingServerDialogTitle, Messages.MicroclimateConnection_ErrContactingServerDialogMsg + envUrl);
 			throw e;
 		}
 
@@ -131,13 +131,13 @@ public class MicroclimateConnection {
 
 	private static String getMCVersion(JSONObject env) {
 		if (!env.has(MCConstants.KEY_ENV_MC_VERSION)) {
-			MCLogger.logError("Missing version from env data");
+			MCLogger.logError("Missing version from env data"); //$NON-NLS-1$
 			return UNKNOWN_VERSION;
 		}
 
 		try {
 			String versionStr = env.getString(MCConstants.KEY_ENV_MC_VERSION);
-			MCLogger.log("Microclimate Version is: " + versionStr);
+			MCLogger.log("Microclimate Version is: " + versionStr); //$NON-NLS-1$
 			return versionStr;
 		} catch (JSONException e) {
 			// we already checked for this key so this will not happen.
@@ -151,7 +151,7 @@ public class MicroclimateConnection {
 			return false;
 		}
 
-		if ("latest".equals(versionStr)) {
+		if ("latest".equals(versionStr)) { //$NON-NLS-1$
 			// Development build - possible other values to check for?
 			return true;
 		}
@@ -162,7 +162,7 @@ public class MicroclimateConnection {
 			return version >= MCConstants.REQUIRED_MC_VERSION;
 		}
 		catch(NumberFormatException e) {
-			MCLogger.logError("Couldn't parse version number from " + versionStr);
+			MCLogger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
 			return false;
 		}
 	}
@@ -175,7 +175,7 @@ public class MicroclimateConnection {
 		}
 
 		if (!env.has(MCConstants.KEY_ENV_WORKSPACE_LOC)) {
-			MCLogger.logError("Missing workspace location from env data");
+			MCLogger.logError("Missing workspace location from env data"); //$NON-NLS-1$
 			return null;
 		}
 		String workspaceLoc = env.getString(MCConstants.KEY_ENV_WORKSPACE_LOC);
@@ -194,16 +194,17 @@ public class MicroclimateConnection {
 			projectsResponse = HttpUtil.get(projectsURL).response;
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Projects endpoint", e);
-			MCUtil.openDialog(true, "Error contacting Microclimate server", "Failed to contact " + projectsURL);
+			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrContactingServerDialogTitle,
+					NLS.bind(Messages.MicroclimateConnection_ErrContactingServerDialogMsg, projectsURL));
 			return;
 		}
 
 		try {
 			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse);
-			MCLogger.log("App list update success");
+			MCLogger.log("App list update success"); //$NON-NLS-1$
 		}
 		catch(Exception e) {
-			MCUtil.openDialog(true, "Error getting list of projects", e.getMessage());
+			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrGettingProjectListTitle, e.getMessage());
 		}
 	}
 
@@ -243,15 +244,15 @@ public class MicroclimateConnection {
 			}
 		}
 
-		MCLogger.logError("No project found with ID " + projectID);
+		MCLogger.logError("No project found with ID " + projectID); //$NON-NLS-1$
 		return null;
 	}
 
 	public void requestProjectRestart(MicroclimateApplication app, String launchMode)
 			throws JSONException, IOException {
 
-		String restartEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/"
-				+ app.projectID + "/"
+		String restartEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/" 	//$NON-NLS-1$
+				+ app.projectID + "/" 										//$NON-NLS-1$
 				+ MCConstants.APIPATH_RESTART;
 
         URI url = baseUrl.resolve(restartEndpoint);
@@ -276,13 +277,13 @@ public class MicroclimateConnection {
 		HttpResult result = HttpUtil.get(statusUrl);
 
 		if (!result.isGoodResponse) {
-			final String msg = String.format("Received bad response from server %d with error message %s",
+			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
 					result.responseCode, result.error);
 			throw new IOException(msg);
 		}
 		else if (result.response == null) {
 			// I don't think this will ever happen.
-			throw new IOException("Server returned good response code, but null response when getting initial state");
+			throw new IOException("Server returned good response code, but null response when getting initial state"); //$NON-NLS-1$
 		}
 
 		JSONArray allProjectStatuses = new JSONArray(result.response);
@@ -294,7 +295,7 @@ public class MicroclimateConnection {
 			}
 		}
 
-		MCLogger.log("Didn't find status info for project " + app.name);
+		MCLogger.log("Didn't find status info for project " + app.name); //$NON-NLS-1$
 		return null;
 	}
 
@@ -302,7 +303,7 @@ public class MicroclimateConnection {
 	 * Called by the MicroclimateSocket when the socket.io connection goes down.
 	 */
 	public synchronized void onConnectionError() {
-		MCLogger.log("MCConnection to " + baseUrl + " lost");
+		MCLogger.log("MCConnection to " + baseUrl + " lost"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		for (MicroclimateApplication app : getLinkedApps()) {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
@@ -317,7 +318,7 @@ public class MicroclimateConnection {
 	 * Called by the MicroclimateSocket when the socket.io connection is working.
 	 */
 	public synchronized void clearConnectionError() {
-		MCLogger.log("MCConnection to " + baseUrl + " restored");
+		MCLogger.log("MCConnection to " + baseUrl + " restored"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		for (MicroclimateApplication app : getLinkedApps()) {
 			MicroclimateServerBehaviour server = app.getLinkedServer();
@@ -330,7 +331,7 @@ public class MicroclimateConnection {
 
 	@Override
 	public String toString() {
-		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d",
+		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d", //$NON-NLS-1$
 				MicroclimateConnection.class.getSimpleName(), baseUrl, localWorkspacePath, apps.size());
 	}
 

@@ -46,15 +46,15 @@ public class MCUtil {
 	public static String readAllFromStream(InputStream stream) {
 		Scanner s = new Scanner(stream);
 		// end-of-stream
-		s.useDelimiter("\\A");
-		String result = s.hasNext() ? s.next() : "";
+		s.useDelimiter("\\A"); //$NON-NLS-1$
+		String result = s.hasNext() ? s.next() : ""; //$NON-NLS-1$
 		s.close();
 		return result;
 	}
 
 	public static boolean pathEquals(IPath path, IPath path2) {
-		String os = System.getProperty("os.name");
-		if (os != null && os.toLowerCase().startsWith("windows")) {
+		String os = System.getProperty("os.name"); //$NON-NLS-1$
+		if (os != null && os.toLowerCase().startsWith("windows")) { //$NON-NLS-1$
 			// case-insensitivity on windows
 			String pathStr = path.toOSString();
 			String pathStr2 = path2.toOSString();
@@ -104,7 +104,7 @@ public class MCUtil {
 	public static String toCommaSeparatedString(Collection<String> collection) {
 		StringBuilder resultBuilder = new StringBuilder();
 
-		final String separator = ", ";
+		final String separator = ", "; //$NON-NLS-1$
 		for (String s : collection) {
 			resultBuilder.append(s).append(separator);
 		}
