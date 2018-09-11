@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Microclimate Core Plugin
+Bundle-Name: Microclimate Developer Tools
 Bundle-SymbolicName: com.ibm.microclimate.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.ibm.microclimate.core.MicroclimateCorePlugin
