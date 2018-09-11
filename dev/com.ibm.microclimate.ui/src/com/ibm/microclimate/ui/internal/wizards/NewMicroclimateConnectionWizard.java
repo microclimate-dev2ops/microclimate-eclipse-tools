@@ -17,6 +17,7 @@ import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
+import com.ibm.microclimate.ui.internal.Messages;
 
 /**
  * This wizard, which can be launched through the MC Preferences page or as a prerequisite to Linking a project,
@@ -50,7 +51,7 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 	@Override
 	public void addPages() {
-		setWindowTitle("New Microclimate Connection");
+		setWindowTitle(Messages.NewConnectionWizard_ShellTitle);
 		newConnectionPage = new NewMicroclimateConnectionPage();
 		addPage(newConnectionPage);
 	}

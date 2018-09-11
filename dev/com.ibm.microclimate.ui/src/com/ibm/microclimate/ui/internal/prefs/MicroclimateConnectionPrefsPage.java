@@ -36,6 +36,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
+import com.ibm.microclimate.ui.internal.Messages;
 import com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard;
 import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
 
@@ -49,14 +50,14 @@ import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
 public class MicroclimateConnectionPrefsPage extends PreferencePage implements IWorkbenchPreferencePage {
 
 	public static final String
-			MC_CONNECTIONS_PREFSKEY = "com.ibm.microclimate.ui.prefs.connections",
-			PAGE_ID = "MicroclimateConnectionsPage";		// must match the value in plugin.xml
+			MC_CONNECTIONS_PREFSKEY = "com.ibm.microclimate.ui.prefs.connections", //$NON-NLS-1$
+			PAGE_ID = "MicroclimateConnectionsPage";		// must match the value in plugin.xml //$NON-NLS-1$
 
 	private Table connectionsTable;
 
 	public MicroclimateConnectionPrefsPage() {
-		super("Microclimate Connections", MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.MICROCLIMATE_ICON_PATH));
-		setMessage("Manage Microclimate Connections");
+		super(Messages.ConnectionPrefsPage_ShellTitle, MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.MICROCLIMATE_ICON_PATH));
+		setMessage(Messages.ConnectionPrefsPage_PageTitle);
 	}
 
 	@Override
@@ -81,7 +82,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		composite.setLayoutData(data);
 
 		Label existingConnections = new Label(composite, SWT.NONE);
-		existingConnections.setText("Create or remove connections:");
+		existingConnections.setText(Messages.ConnectionPrefsPage_TableTitleLabel);
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1);
 		existingConnections.setLayoutData(gridData);
 
@@ -94,11 +95,11 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		connectionsTable.setLayoutData(gridData);
 
 		TableColumn urlsCol = new TableColumn(connectionsTable, SWT.BORDER);
-		urlsCol.setText("URL");
+		urlsCol.setText(Messages.ConnectionPrefsPage_URLColumn);
 		urlsCol.setWidth(gridData.widthHint / 2);
 
 		TableColumn linkedProjectsCol = new TableColumn(connectionsTable, SWT.BORDER);
-		linkedProjectsCol.setText("Linked Projects");
+		linkedProjectsCol.setText(Messages.ConnectionPrefsPage_LinkedProjectsColumn);
 		linkedProjectsCol.setWidth(urlsCol.getWidth());
 
 		/*
@@ -108,7 +109,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		*/
 
 		Button addButton = new Button(composite, SWT.PUSH);
-		addButton.setText("Add...");
+		addButton.setText(Messages.ConnectionPrefsPage_AddBtn);
 		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
 		addButton.setLayoutData(gridData);
 		addButton.addSelectionListener(new SelectionAdapter() {
@@ -120,7 +121,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		});
 
 		Button removeButton = new Button(composite, SWT.PUSH);
-		removeButton.setText("Remove");
+		removeButton.setText(Messages.ConnectionPrefsPage_RemoveBtn);
 		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
 		removeButton.setLayoutData(gridData);
 		removeButton.addSelectionListener(new SelectionAdapter() {
@@ -161,7 +162,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 				@Override
 				public void propertyChange(PropertyChangeEvent event) {
 					if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-						MCLogger.log("Reloading preferences in MCCPP");
+						MCLogger.log("Reloading preferences in MCCPP"); //$NON-NLS-1$
 						// calling refreshConnectionsList here results in WidgetDisposed exception if
 						// the window is not in focus
 						refreshConnectionsList();
@@ -192,7 +193,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 
 	private void addTableRow(String url, String linkedApps, boolean isBroken) {
 		if (linkedApps == null || linkedApps.isEmpty()) {
-			linkedApps = "none";
+			linkedApps = Messages.ConnectionPrefsPage_NoLinkedAppsDisplay;
 		}
 
 		try {
@@ -203,7 +204,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		catch(SWTException e) {
 			// suppress widget disposed exception - It gets thrown if the window is out of focus,
 			// but then the table populates just fine anyway, so I don't know why it is a problem.
-			if (!"Widget is disposed".equals(e.getMessage())) {
+			if (!"Widget is disposed".equals(e.getMessage())) { //$NON-NLS-1$
 				throw e;
 			}
 		}

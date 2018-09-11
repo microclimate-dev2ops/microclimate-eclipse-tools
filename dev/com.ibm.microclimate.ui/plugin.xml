@@ -15,7 +15,7 @@
 		<objectContribution
 			adaptable="true"
 			objectClass="org.eclipse.core.resources.IProject"
-			id="com.ibm.microclimate.ui.internal.wizards.LinkMicroclimateProjectWizard.id">
+			id="com.ibm.microclimate.ui.internal.wizards.LinkWizard_.id">
 			<menu
 				label="%CONTEXT_MENU_CATEGORY_NAME"
 				path="additions"
@@ -155,9 +155,9 @@
      	</category>		
 		<wizard
        		icon="%DEFAULT_ICON_PATH"
-            id="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"
+            id="com.ibm.microclimate.ui.internal.wizards.NewConnectionWizard"
             name="Plugin XML Wizard Description">
-            <class class="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"/>
+            <class class="com.ibm.microclimate.ui.internal.wizards.NewConnectionWizard"/>
           	<description>
             	New Microclimate Connection
          	</description>
@@ -176,9 +176,9 @@
 		<wizard
        		icon="%DEFAULT_ICON_PATH"
             hasPages="true"
-            id="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"
+            id="com.ibm.microclimate.ui.internal.wizards.NewConnectionWizard"
             name="Plugin XML Wizard Description">
-            <class class="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard"/>
+            <class class="com.ibm.microclimate.ui.internal.wizards.NewConnectionWizard"/>
           	<description>
             	New Microclimate Project
          	</description>

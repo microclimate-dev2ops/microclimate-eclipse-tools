@@ -22,6 +22,7 @@ import org.eclipse.wst.server.core.model.ServerDelegate;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.Messages;
 
 /**
  * @author timetchells@ibm.com
@@ -29,22 +30,22 @@ import com.ibm.microclimate.core.internal.MCLogger;
  */
 public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
-	public static final String SERVER_ID = "microclimate.server";		// must match ID in plugin.xml
+	public static final String SERVER_ID = "microclimate.server";		// must match ID in plugin.xml //$NON-NLS-1$
 
 	// Attributes
 	public static final String
 			// Root URL of this particular project
-			ATTR_PROJ_ID	= "projectID",
+			ATTR_PROJ_ID	= "projectID", //$NON-NLS-1$
 			// Base URL of the corresponding MicroclimateConnection
-			ATTR_MCC_URL	= "mcBaseUrl",
+			ATTR_MCC_URL	= "mcBaseUrl", //$NON-NLS-1$
 			// The name of the Eclipse project associated with this server
-			ATTR_ECLIPSE_PROJECT_NAME = "eclipseProjectName";
+			ATTR_ECLIPSE_PROJECT_NAME = "eclipseProjectName"; //$NON-NLS-1$
 
 	private MicroclimateServerBehaviour behaviour;
 
 	@Override
 	public void setDefaults(IProgressMonitor monitor) {
-		MCLogger.log("Initialize MicroclimateServer");
+		MCLogger.log("Initialize MicroclimateServer"); //$NON-NLS-1$
 
 		behaviour = getServer().getAdapter(MicroclimateServerBehaviour.class);
 	}
@@ -53,17 +54,17 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 	public ServerPort[] getServerPorts() {
 		final int httpPortNum = behaviour.getApp().getHttpPort();
 		if (httpPortNum == -1) {
-			MCLogger.logError("No HttpPort set for server " + getServer().getName());
+			MCLogger.logError("No HttpPort set for server " + getServer().getName()); //$NON-NLS-1$
 			return null;
 		}
 
-		ServerPort httpPort = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http");
+		ServerPort httpPort = new ServerPort("microclimateServerPort", "httpPort", httpPortNum, "http"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		ServerPort debugPort = null;
 
 		final int debugPortNum = behaviour.getApp().getDebugPort();
 		if (debugPortNum != -1) {
-			debugPort = new ServerPort("microclimateServerPort", "debugPort", debugPortNum, "http");
+			debugPort = new ServerPort("microclimateServerPort", "debugPort", debugPortNum, "http"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		if (debugPort != null) {
@@ -81,7 +82,7 @@ public class MicroclimateServer extends ServerDelegate implements IURLProvider {
 
 	@Override
 	public IStatus canModifyModules(IModule[] arg0, IModule[] arg1) {
-		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Modules cannot be modified on a Microclimate Server", null);
+		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, Messages.MicroclimateServer_CantModifyModules, null);
 	}
 
 	@Override

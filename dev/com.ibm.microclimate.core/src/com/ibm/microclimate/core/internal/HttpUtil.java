@@ -9,7 +9,6 @@
 
 package com.ibm.microclimate.core.internal;
 
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,7 +66,6 @@ public class HttpUtil {
 
 	public static HttpResult get(URI uri) throws IOException {
 		HttpURLConnection connection = null;
-		BufferedReader in = null;
 
 		try {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
@@ -78,13 +76,6 @@ public class HttpUtil {
 
 			return new HttpResult(connection);
 		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					MCLogger.logError(e);
-				}
-			}
 			if (connection != null) {
 				connection.disconnect();
 			}
@@ -93,7 +84,6 @@ public class HttpUtil {
 
 	public static HttpResult post(URI uri, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
-		BufferedReader in = null;
 
 		MCLogger.log("POST " + payload.toString() + " TO " + uri);
 		try {
@@ -108,13 +98,6 @@ public class HttpUtil {
 
 			return new HttpResult(connection);
 		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					MCLogger.logError(e);
-				}
-			}
 			if (connection != null) {
 				connection.disconnect();
 			}

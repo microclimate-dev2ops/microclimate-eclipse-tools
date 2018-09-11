@@ -11,6 +11,7 @@ package com.ibm.microclimate.ui.internal.prefs;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -26,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
+import com.ibm.microclimate.ui.internal.Messages;
 
 /**
  * @author timetchells@ibm.com
@@ -51,11 +53,12 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 		parent.setLayout(new GridLayout(2, false));
 
 		Label debugTimeoutLabel = new Label(parent, SWT.NONE);
-		debugTimeoutLabel.setText("Timeout for server debug connection (seconds): ");
+		debugTimeoutLabel.setText(Messages.PrefsParentPage_DebugTimeoutLabel);
 
 		debugTimeoutText = new Text(parent, SWT.BORDER);
 		debugTimeoutText.setTextLimit(3);
-		debugTimeoutText.setText("" + prefs.getInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
+		debugTimeoutText.setText("" + 	//$NON-NLS-1$
+				prefs.getInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
 
 		GridData debugTextData = new GridData(GridData.BEGINNING, GridData.FILL, false, false);
 		debugTextData.widthHint = 50;
@@ -74,7 +77,7 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 		spacer.setLayoutData(fillRowData);
 
 		showLinkFinishDialogBtn = new Button(parent, SWT.CHECK);
-		showLinkFinishDialogBtn.setText("Hide link project wizard confirmation dialog");
+		showLinkFinishDialogBtn.setText(Messages.PrefsParentPage_HidePostLinkDialogLabel);
 		showLinkFinishDialogBtn.setSelection(prefs.getBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY));
 //		showLinkFinishDialogBtn.setFont(parent.getFont());
 		showLinkFinishDialogBtn.setLayoutData(fillRowData);
@@ -100,8 +103,7 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 		catch(NumberFormatException e) {}
 
 		if (!goodDebugTimeout) {
-			invalidReason = String.format("Invalid debug timeout \"%s\": must be an integer greater than 0.",
-					timeoutText);
+			invalidReason = NLS.bind(Messages.PrefsParentPage_ErrInvalidDebugTimeout, timeoutText);
 		}
 
 		setErrorMessage(invalidReason);
@@ -128,6 +130,7 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 		showLinkFinishDialogBtn.setSelection(
 				prefs.getDefaultBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY));
 
-		debugTimeoutText.setText("" + prefs.getDefaultInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
+		debugTimeoutText.setText("" + 	//$NON-NLS-1$
+				prefs.getDefaultInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
 	}
 }

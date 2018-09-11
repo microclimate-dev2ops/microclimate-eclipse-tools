@@ -20,6 +20,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -33,6 +34,7 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
+import com.ibm.microclimate.ui.internal.Messages;
 
 /**
  * This wizard allows the user to select a Microclimate project, then links it the Eclipse project whose context menu
@@ -61,7 +63,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	private static IProject getProjectFromSelection(ISelection selection) {
 		if (selection == null) {
-			MCLogger.logError("Null selection passed to getProjectFromSelection");
+			MCLogger.logError("Null selection passed to getProjectFromSelection"); //$NON-NLS-1$
 			return null;
 		}
 		IStructuredSelection structuredSelection = null;
@@ -69,7 +71,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 			structuredSelection = (IStructuredSelection) selection;
 		}
 		else {
-			MCLogger.logError("Non-structured selection passed to getProjectFromSelection");
+			MCLogger.logError("Non-structured selection passed to getProjectFromSelection"); //$NON-NLS-1$
 			return null;
 		}
 
@@ -87,7 +89,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	@Override
 	public void addPages() {
-		setWindowTitle("Link to Microclimate Project");
+		setWindowTitle(Messages.LinkWizard_ShellTitle);
 
 		if (MicroclimateConnectionManager.activeConnectionsCount() < 1) {
 			newConnectionPage = new NewMicroclimateConnectionPage();
@@ -131,7 +133,7 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		}
 		catch(CoreException e) {
 			MCLogger.logError(e);
-			MessageDialog.openError(getShell(), "Error creating Microclimate Server", e.getMessage());
+			MessageDialog.openError(getShell(), Messages.LinkWizard_GenericErrorCreatingServer, e.getMessage());
 		}
 
 		return true;
@@ -139,10 +141,10 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 
 	private static final String
 			// from org.eclipse.wst.server.ui.internal.ServerUIPlugin.VIEW_ID
-			SERVERS_VIEW_ID = "org.eclipse.wst.server.ui.ServersView",
+			SERVERS_VIEW_ID = "org.eclipse.wst.server.ui.ServersView", //$NON-NLS-1$
 			// from https://help.eclipse.org/photon/index.jsp?topic=%2Forg.eclipse.platform.doc.\
 			// isv%2Freference%2Fapi%2Forg%2Feclipse%2Fui%2Fconsole%2FIConsoleConstants.html
-			CONSOLE_VIEW_ID = "org.eclipse.ui.console.ConsoleView";
+			CONSOLE_VIEW_ID = "org.eclipse.ui.console.ConsoleView"; //$NON-NLS-1$
 
 
 	/**
@@ -157,13 +159,12 @@ public class LinkMicroclimateProjectWizard extends Wizard implements INewWizard 
 		// The user can choose to hide this dialog
 		if(!prefs.getBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY)) {
 
-			String successMsg = String.format("Linked project %s with Microclimate application %s.\n"
-					+ "Server \"%s\" is now available in the Servers view, and its logs in the Console view.",
-					project.getName(), appToLink.name, newServer.getName());
+			String successMsg = NLS.bind(Messages.LinkWizard_LinkedSuccessDialogMsg,
+					new Object[] { project.getName(), appToLink.name, newServer.getName() });
 
 			MessageDialogWithToggle dialog = MessageDialogWithToggle
-					.openInformation(getShell(), "Linking Complete", successMsg,
-					"Don't show this again", false,
+					.openInformation(getShell(), Messages.LinkWizard_LinkSuccessDialogTitle, successMsg,
+					Messages.LinkWizard_DontShowThisAgain, false,
 					prefs, MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY);
 
 			// The call above is supposed to set this prefs key, but it doesn't seem to work.

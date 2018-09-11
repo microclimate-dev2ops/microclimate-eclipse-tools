@@ -26,6 +26,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.ui.internal.Messages;
 
 public class OpenAppAction implements IObjectActionDelegate {
 
@@ -63,9 +64,8 @@ public class OpenAppAction implements IObjectActionDelegate {
         MicroclimateApplication app = mcServer.getApp();
         // Shouldn't happen because the action is disabled for non-started servers, but just in case:
         if (app == null || !mcServer.isStarted() || app.getBaseUrl() == null) {
-        	MCUtil.openDialog(true, "Can't open an app that isn't running",
-        			"This server's project is not found or not running. "
-        			+ "Please make sure the project is [Started] before trying to open the application.");
+        	MCUtil.openDialog(true, Messages.OpenAppAction_CantOpenNotRunningAppTitle,
+        			Messages.OpenAppAction_CantOpenNotRunningAppMsg);
         	return;
         }
 
@@ -82,7 +82,7 @@ public class OpenAppAction implements IObjectActionDelegate {
 
 	        browser.openURL(appRootUrl);
 		} catch (PartInitException e) {
-			MCLogger.logError("Error opening app in browser", e);
+			MCLogger.logError("Error opening app in browser", e); //$NON-NLS-1$
 		}
     }
 

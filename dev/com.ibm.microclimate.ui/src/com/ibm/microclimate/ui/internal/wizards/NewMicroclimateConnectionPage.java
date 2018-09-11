@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.Text;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.ui.internal.Messages;
 
 /**
  * This simple page allows the user to add new Microclimate connections, by entering a hostname and port and
@@ -43,9 +45,9 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 	private MicroclimateConnection mcConnection;
 
 	protected NewMicroclimateConnectionPage() {
-		super("New Microclimate Connection");
-		setTitle("Create a Microclimate Connection");
-		setDescription("Create a connection to a Microclimate instance.");
+		super(Messages.NewConnectionPage_ShellTitle);
+		setTitle(Messages.NewConnectionPage_WizardTitle);
+		setDescription(Messages.NewConnectionPage_WizardDescription);
 	}
 
 	@Override
@@ -67,16 +69,16 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		GridData hostnamePortLabelData = new GridData(GridData.FILL, GridData.FILL, false, false);
 
 		Label hostnameLabel = new Label(hostPortGroup, SWT.NONE);
-		hostnameLabel.setText("Hostname:");
+		hostnameLabel.setText(Messages.NewConnectionPage_HostnameLabel);
 		hostnameLabel.setLayoutData(hostnamePortLabelData);
 
 		hostnameText = new Text(hostPortGroup, SWT.BORDER);
 		GridData hostnamePortTextData = new GridData(GridData.FILL, GridData.BEGINNING, true, false, 2, 1);
 		hostnameText.setLayoutData(hostnamePortTextData);
-		hostnameText.setText("localhost");
+		hostnameText.setText("localhost"); //$NON-NLS-1$
 
 		// grey this out (for now) because it's only ever localhost anyway
-		final String localhostOnly = "Only localhost is supported at this time";
+		final String localhostOnly = Messages.NewConnectionPage_OnlyLocalhostSupported;
 		hostnameText.setEnabled(false);
 		hostnameLabel.setToolTipText(localhostOnly);
 		// Doesn't work if hostnameText is disabled
@@ -89,7 +91,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 				removePreviousMCConnection();
 
 				setErrorMessage(null);
-				setMessage("Test your new connection to proceed");
+				setMessage(Messages.NewConnectionPage_TestToProceed);
 				getWizard().getContainer().updateButtons();
 			}
 		};
@@ -97,17 +99,17 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		hostnameText.addModifyListener(modifyListener);
 
 		Label portLabel = new Label(hostPortGroup, SWT.NONE);
-		portLabel.setText("Port:");
+		portLabel.setText(Messages.NewConnectionPage_PortLabel);
 		portLabel.setLayoutData(hostnamePortLabelData);
 
 		portText = new Text(hostPortGroup, SWT.BORDER);
 		portText.setLayoutData(hostnamePortTextData);
-		portText.setText("9090");
+		portText.setText("9090"); //$NON-NLS-1$
 
 		portText.addModifyListener(modifyListener);
 
 		final Button testConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
-		testConnectionBtn.setText("Test Connection");
+		testConnectionBtn.setText(Messages.NewConnectionPage_TestConnectionBtn);
 		testConnectionBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
@@ -124,8 +126,9 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		if (MicroclimateConnectionManager.activeConnectionsCount() > 0) {
 			testConnectionBtn.setEnabled(false);
 			String existingConnectionUrl = MicroclimateConnectionManager.activeConnections().get(0).baseUrl.toString();
-			setErrorMessage("You already have an existing Microclimate connection at " + existingConnectionUrl +
-					"\nAt this time, only one Microclimate connection is permitted.");
+			setErrorMessage(
+					NLS.bind(Messages.NewConnectionPage_ErrAConnectionAlreadyExists,
+					existingConnectionUrl));
 		}
 	}
 
@@ -151,7 +154,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		}
 		catch(NumberFormatException e) {
 			MCLogger.logError(e);
-			setErrorMessage(String.format("\"%s\" is not a valid port number", portStr));
+			setErrorMessage(NLS.bind(Messages.NewConnectionPage_NotValidPortNum, portStr));
 		}
 		catch(URISyntaxException e) {
 			MCLogger.logError(e);
@@ -163,22 +166,24 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		}
 
 		try {
-			MCLogger.log("Validating connection: " + uri);
+			MCLogger.log("Validating connection: " + uri); //$NON-NLS-1$
 
 			// Will throw an Exception if fails
 			mcConnection = new MicroclimateConnection(uri);
 
 			if(mcConnection != null) {
 				setErrorMessage(null);
-				setMessage("Connecting to " + mcConnection.baseUrl + " succeeded");
+				setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, mcConnection.baseUrl));
 			}
 		}
 		catch(Exception e) {
 			String msg = e.getMessage();
 			if (msg == null) {
 				// The exceptions we expect to get here should have good messages for the user.
-				MCLogger.logError("Unexpected exception", e);
-				msg = e.getClass().getSimpleName() + ": Could not connect to Microclimate at " + uri;
+				// Show a generic message if none is provided.
+				MCLogger.logError("Unexpected exception", e); //$NON-NLS-1$
+
+				msg = NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnectToMC, uri);
 			}
 			setErrorMessage(msg);
 		}

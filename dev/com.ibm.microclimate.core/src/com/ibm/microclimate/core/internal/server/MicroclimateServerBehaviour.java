@@ -25,6 +25,7 @@ import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.IStatusHandler;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 import org.json.JSONException;
@@ -34,6 +35,7 @@ import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
@@ -63,18 +65,20 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	@Override
 	public void initialize(IProgressMonitor monitor) {
-		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName());
+		MCLogger.log("Initializing MicroclimateServerBehaviour for " + getServer().getName()); //$NON-NLS-1$
 		setServerState(IServer.STATE_UNKNOWN);
 
-		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, "");
+		String projectID = getServer().getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""); //$NON-NLS-1$
 		if (projectID.isEmpty()) {
-			onInitializeFailure("No " + MicroclimateServer.ATTR_PROJ_ID + " attribute");
+			onInitializeFailure(NLS.bind(Messages.MicroclimateServerBehaviour_ErrMissingAttribute,
+					MicroclimateServer.ATTR_PROJ_ID));
 			return;
 		}
 
-		String mcConnectionBaseUrl = getServer().getAttribute(MicroclimateServer.ATTR_MCC_URL, "");
+		String mcConnectionBaseUrl = getServer().getAttribute(MicroclimateServer.ATTR_MCC_URL, ""); //$NON-NLS-1$
 		if (mcConnectionBaseUrl.isEmpty()) {
-			onInitializeFailure("No " + MicroclimateServer.ATTR_MCC_URL + " attribute");
+			onInitializeFailure(NLS.bind(Messages.MicroclimateServerBehaviour_ErrMissingAttribute,
+					MicroclimateServer.ATTR_MCC_URL));
 			return;
 		}
 		MicroclimateConnection mcConnection = MicroclimateConnectionManager.getActiveConnection(mcConnectionBaseUrl);
@@ -88,9 +92,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		app = mcConnection.getAppByID(projectID);
 		if (app == null) {
 			// TODO the user doesn't want to have to look up the project by ID
-			onInitializeFailure("Couldn't find project with ID " + projectID + " on Microclimate at "
-					+ mcConnection.baseUrl + ". Make sure the project has not been deleted or disabled.");
-			// getServer().delete();
+			onInitializeFailure(NLS.bind(Messages.MicroclimateServerBehaviour_MissingProjectID,
+					projectID, mcConnection.baseUrl));
 			onProjectDisableOrDelete();
 			return;
 		}
@@ -102,15 +105,16 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private void onInitializeFailure(String failMsg) {
-		MCLogger.logError("Creating Microclimate server failed at initialization: " + failMsg);
+		String msg = NLS.bind(Messages.MicroclimateServerBehaviour_ErrCreatingServerDialogMsg, failMsg);
+		MCLogger.logError(msg);
 		setServerState(IServer.STATE_UNKNOWN);
-		MCUtil.openDialog(true, "Error creating Microclimate server", failMsg);
+		MCUtil.openDialog(true, Messages.MicroclimateServerBehaviour_ErrCreatingServerDialogTitle, msg);
 	}
 
 	@Override
 	public IStatus canStop() {
 		// TODO when FW supports this
-		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Not yet supported", null);
+		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Not yet supported", null); //$NON-NLS-1$
 	}
 
 	@Override
@@ -121,20 +125,23 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	@Override
 	public IStatus canPublish() {
-		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Microclimate server does not support publish", null);
+		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0,
+				Messages.MicroclimateServerBehaviour_ServerDoesntSupportPublish, null);
 	}
 
 	@Override
 	public void dispose() {
-		MCLogger.log("Dispose " + getServer().getName());
+		MCLogger.log("Dispose " + getServer().getName()); //$NON-NLS-1$
 
 		if (ILaunchManager.DEBUG_MODE.equals(getServer().getMode()) && getServer().getServerState() == IServer.STATE_STARTED) {
 			MicroclimateApplication app = getApp();
-			MCUtil.openDialog(false, "Deleting Microclimate Server: " + getServer().getName(), "The server is in debug mode.  It will be restarted in run mode and then deleted.");
+			MCUtil.openDialog(false,
+					NLS.bind(Messages.MicroclimateServerBehaviour_DeletingServerModeSwitchTitle, getServer().getName()),
+					Messages.MicroclimateServerBehaviour_DeletingServerModeSwitchMsg);
 			try {
 				app.mcConnection.requestProjectRestart(app, ILaunchManager.RUN_MODE);
 			} catch (Exception e) {
-				MCLogger.logError("Restart in run mode for the " + app.name + " application failed.", e);
+				MCLogger.logError("Restart in run mode for the " + app.name + " application failed.", e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 
@@ -180,8 +187,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			}
 		}
 		catch(IOException | JSONException e) {
-			MCLogger.logError("Error setting project initial state", e);
-			MCUtil.openDialog(true, "Error setting server initial state", e.getMessage());
+			MCLogger.logError("Error setting project initial state", e); //$NON-NLS-1$
+			MCUtil.openDialog(true,
+					Messages.MicroclimateServerBehaviour_ErrSettingInitialStateDialogTitle,
+					e.getMessage());
 			setServerState(IServer.STATE_UNKNOWN);
 		}
 	}
@@ -190,7 +199,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			throws JSONException {
 
 		clearSuffix();
-		String appStatus = "";
+		String appStatus = ""; //$NON-NLS-1$
 		if (projectChangedEvent.has(MCConstants.KEY_APP_STATUS)) {
 			appStatus = projectChangedEvent.getString(MCConstants.KEY_APP_STATUS);
 			onAppStateUpdate(appStatus);
@@ -200,7 +209,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		if (!appStatus.equals(MCConstants.APPSTATE_STARTED) && !appStatus.equals(MCConstants.APPSTATE_STARTING) &&
 				projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
 
-			String detail = "";
+			String detail = ""; //$NON-NLS-1$
 			if (projectChangedEvent.has(MCConstants.KEY_DETAILED_BUILD_STATUS)) {
 				detail = projectChangedEvent.getString(MCConstants.KEY_DETAILED_BUILD_STATUS);
 			}
@@ -212,24 +221,28 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	private void onAppStateUpdate(String appStatus) {
 		int state = MCConstants.appStatusToServerState(appStatus);
 		if (state != getServer().getServerState()) {
-			MCLogger.log("Update state of " + getServer().getName() + " to " + appStatus);
+			MCLogger.log("Update state of " + getServer().getName() + " to " + appStatus); //$NON-NLS-1$ //$NON-NLS-2$
 			setServerState(state);
 		}
 	}
 
 	private void onBuildStateUpdate(String buildStatus, String buildStatusDetail) {
-		MCLogger.log(getServer().getName() + " has build status " + buildStatus + ", detail " + buildStatusDetail);
+		MCLogger.log(getServer().getName() +
+				" has build status " + buildStatus + 	//$NON-NLS-1$
+				", detail " + buildStatusDetail); 		//$NON-NLS-1$
 
 		final String status = MCConstants.buildStateToUserFriendly(buildStatus, buildStatusDetail);
 		setSuffix(status, IServer.STATE_STOPPED);
 	}
 
 	public void onProjectDisableOrDelete() {
-		setSuffix("Project has been deleted or disabled in Microclimate", IServer.STATE_STOPPED);
+		setSuffix(Messages.MicroclimateServerBehaviour_ProjectMissingServerSuffix, IServer.STATE_STOPPED);
 	}
 
 	public void onMicroclimateDisconnect(String microclimateUrl) {
-		setSuffix("Connection to Microclimate at " + microclimateUrl + " lost", IServer.STATE_UNKNOWN);
+		setSuffix(
+				NLS.bind(Messages.MicroclimateServerBehaviour_ConnectionLostServerSuffix, microclimateUrl),
+				IServer.STATE_UNKNOWN);
 	}
 
 	public void onMicroclimateReconnect() {
@@ -281,17 +294,16 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	public void restart(String launchMode) throws CoreException {
 		if (!isStarted()) {
 			MCLogger.logError("Cannot restart because server is not in started state");
-			String errorTitle = "Can only restart a Started server";
-			String errorMsg = "You can only restart a server if it is in the Started state. " +
-        			"Wait for the server to be Started and then try again.";
-			MCUtil.openDialog(true, errorTitle, errorMsg);
+			MCUtil.openDialog(true,
+					Messages.MicroclimateServerBehaviour_CantRestartDialogTitle,
+					Messages.MicroclimateServerBehaviour_CantRestartDialogMsg);
 			return;
         }
 
-		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode");
+		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		int currentState = getServer().getServerState();
-		MCLogger.log("Current status = " + MCConstants.serverStateToAppStatus(currentState));
+		MCLogger.log("Current status = " + MCConstants.serverStateToAppStatus(currentState)); //$NON-NLS-1$
 
 		if (IServer.STATE_STARTING == currentState) {
 			waitForStarted(null);
@@ -301,8 +313,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		try {
 			app.mcConnection.requestProjectRestart(app, launchMode);
 		} catch (JSONException | IOException e) {
-			MCLogger.logError("Error initiating project restart", e);
-			MCUtil.openDialog(true, "Error initiating project restart", e.getMessage());
+			MCLogger.logError("Error initiating project restart", e); //$NON-NLS-1$
+			MCUtil.openDialog(true,
+					Messages.MicroclimateServerBehaviour_ErrInitiatingRestartDialogTitle,
+					e.getMessage());
 			return;
 		}
 
@@ -314,7 +328,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 		ILaunchConfiguration launchConfig = getServer().getLaunchConfiguration(true, null);
 		if (launchConfig == null) {
-			MCLogger.logError("LaunchConfig was null!");
+			MCLogger.logError("LaunchConfig was null!"); //$NON-NLS-1$
 			return;
 		}
 
@@ -334,19 +348,19 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			if (!starting) {
 				// TODO I haven't seen this happen, but we should probably display something to the user in this case.
 				// What could cause this to happen?
-				MCLogger.logError("Server did not enter Starting state");
+				MCLogger.logError("Server did not enter Starting state"); //$NON-NLS-1$
 				return;
 			}
 
-			MCLogger.log("Preparing for debug mode");
+			MCLogger.log("Preparing for debug mode"); //$NON-NLS-1$
 			try {
 				IDebugTarget debugTarget = connectDebugger(launch, monitor);
 				if (debugTarget != null) {
 					setMode(ILaunchManager.DEBUG_MODE);
-					MCLogger.log("Debugger connect success");
+					MCLogger.log("Debugger connect success"); //$NON-NLS-1$
 				}
 				else {
-					MCLogger.logError("Debugger connect failure");
+					MCLogger.logError("Debugger connect failure"); //$NON-NLS-1$
 				}
 			} catch (IllegalConnectorArgumentsException | CoreException | IOException e) {
 				MCLogger.logError(e);
@@ -361,12 +375,12 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		try {
 			launchConfig = getServer().getLaunchConfiguration(true, null);
 			if (launchConfig == null) {
-				MCLogger.logError("LaunchConfig was null!");
+				MCLogger.logError("LaunchConfig was null!"); //$NON-NLS-1$
 				return;
 			}
 			launchConfig.launch(ILaunchManager.DEBUG_MODE, null);
 		} catch (CoreException e) {
-			MCLogger.logError("Launch config is null", e);
+			MCLogger.logError("Launch config is null", e); //$NON-NLS-1$
 		}
 	}
 
@@ -384,25 +398,25 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		final int pollRateMs = 1000;
 
 		// This is just for logging
-		String desiredStatesStr = "";
+		String desiredStatesStr = ""; //$NON-NLS-1$
 		if (desiredStates.length == 0) {
-			MCLogger.logError("No states passed to waitForState");
+			MCLogger.logError("No states passed to waitForState"); //$NON-NLS-1$
 			return false;
 		}
 		desiredStatesStr = MCConstants.serverStateToAppStatus(desiredStates[0]);
 		for (int i = 1; i < desiredStates.length; i++) {
-			desiredStatesStr += " or " + MCConstants.serverStateToAppStatus(desiredStates[i]);
+			desiredStatesStr += " or " + MCConstants.serverStateToAppStatus(desiredStates[i]); //$NON-NLS-1$
 		}
 		// End logging-only
 
 		while((System.currentTimeMillis() - startTime) < timeoutMs) {
 			if (monitor != null && monitor.isCanceled()) {
-				MCLogger.log("User cancelled waiting for server to be " + desiredStatesStr);
+				MCLogger.log("User cancelled waiting for server to be " + desiredStatesStr); //$NON-NLS-1$
 				break;
 			}
 
 			try {
-				MCLogger.log("Waiting for " + getServer().getName() + " to be: " + desiredStatesStr + ", is currently "
+				MCLogger.log("Waiting for " + getServer().getName() + " to be: " + desiredStatesStr + ", is currently " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						+ MCConstants.serverStateToAppStatus(getServer().getServerState()));
 
 				Thread.sleep(pollRateMs);
@@ -414,13 +428,13 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			// the ServerMonitorThread will update the state, so we just have to check it.
 			for (int desiredState : desiredStates) {
 				if (getServer().getServerState() == desiredState) {
-					MCLogger.log("Server is done switching to " + MCConstants.serverStateToAppStatus(desiredState));
+					MCLogger.log("Server is done switching to " + MCConstants.serverStateToAppStatus(desiredState)); //$NON-NLS-1$
 					return true;
 				}
 			}
 		}
 
-		MCLogger.logError("Server did not enter state(s): " + desiredStatesStr + " in " + timeoutMs + "ms");
+		MCLogger.logError("Server did not enter state(s): " + desiredStatesStr + " in " + timeoutMs + "ms"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		return false;
 	}
 
@@ -430,28 +444,28 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
     private IDebugTarget connectDebugger(ILaunch launch, IProgressMonitor monitor)
     		throws IllegalConnectorArgumentsException, CoreException, IOException {
 
-    	MCLogger.log("Beginning to try to connect debugger");
+    	MCLogger.log("Beginning to try to connect debugger"); //$NON-NLS-1$
 
 		// Here, we have to wait for the projectRestartResult event
 		// since its payload tells us the debug port to use
 		int debugPort = waitForDebugPort();
 
     	if (debugPort == -1) {
-    		MCLogger.logError("Couldn't get debug port for MC Server, or it was never set");
+    		MCLogger.logError("Couldn't get debug port for MC Server, or it was never set"); //$NON-NLS-1$
     		return null;
     	}
 
-    	MCLogger.log("Debugging on port " + debugPort);
+    	MCLogger.log("Debugging on port " + debugPort); //$NON-NLS-1$
 
 		int timeout = MicroclimateCorePlugin.getDefault().getPreferenceStore()
 				.getInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY)
 				* 1000;
-		MCLogger.log("Debugger connect timeout is " + timeout + "ms");
+		MCLogger.log("Debugger connect timeout is " + timeout + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		// Now prepare the Debug Connector, and try to attach it to the server's JVM
 		AttachingConnector connector = LaunchUtilities.getAttachingConnector();
 		if (connector == null) {
-			MCLogger.logError("Could not create debug connector");
+			MCLogger.logError("Could not create debug connector"); //$NON-NLS-1$
 		}
 
 		Map<String, Connector.Argument> connectorArgs = connector.defaultArguments();
@@ -470,7 +484,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 				while (itr-- > 0) {
 					if (monitor.isCanceled()) {
-						MCLogger.log("User cancelled debugger connecting");
+						MCLogger.log("User cancelled debugger connecting"); //$NON-NLS-1$
 						return null;
 					}
 					try {
@@ -480,7 +494,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					} catch (Exception e) {
 						ex = e;
 						if (itr % 8 == 0) {
-							MCLogger.log("Waiting for debugger attach.");
+							MCLogger.log("Waiting for debugger attach."); //$NON-NLS-1$
 						}
 					}
 					try {
@@ -505,8 +519,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					LaunchUtilities.setDebugTimeout(vm);
 
 					// This appears in the Debug view
-					final String debugName = "Debugging " + getServer().getName();
-			    	// TODO allow termination, or no? if so, need to give the user a way to start the server again.
+					final String debugName = NLS.bind(Messages.MicroclimateServerBehaviour_DebugLaunchConfigName,
+							getServer().getName());
+
 					debugTarget = LaunchUtilities
 							.createLocalJDTDebugTarget(launch, debugPort, null, vm, debugName, false);
 
@@ -517,7 +532,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			} catch (InterruptedIOException e) {
 				// timeout, consult status handler if there is one
 				IStatus status = new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID,
-						IJavaLaunchConfigurationConstants.ERR_VM_CONNECT_TIMEOUT, "", e);
+						IJavaLaunchConfigurationConstants.ERR_VM_CONNECT_TIMEOUT, "", e); //$NON-NLS-1$
 
 				IStatusHandler handler = DebugPlugin.getDefault().getStatusHandler(status);
 
@@ -546,7 +561,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		final long startTime = System.currentTimeMillis();
 
 		while (System.currentTimeMillis() < (startTime + getStartTimeoutMs())) {
-			MCLogger.log("Waiting for restart success socket event to set debug port");
+			MCLogger.log("Waiting for restart success socket event to set debug port"); //$NON-NLS-1$
 			try {
 				Thread.sleep(2500);
 			} catch (InterruptedException e) {
@@ -557,11 +572,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			// otherwise this might return old info
 			int port = app.getDebugPort();
 			if (port != -1) {
-				MCLogger.log("Debug port was retrieved successfully: " + port);
+				MCLogger.log("Debug port was retrieved successfully: " + port); //$NON-NLS-1$
 				return port;
 			}
 		}
-		MCLogger.logError("Timed out waiting for restart success");
+		MCLogger.logError("Timed out waiting for restart success"); //$NON-NLS-1$
 		return -1;
 	}
 

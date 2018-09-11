@@ -15,9 +15,11 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.osgi.util.NLS;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.Messages;
 
 public class MicroclimateReconnectJob {
 
@@ -27,7 +29,7 @@ public class MicroclimateReconnectJob {
 	 * To be used when an initial connection cannot be established when loading from prefs on Eclipse start-up.
 	 */
 	static void createAndStart(final URI url) {
-		final String msg = "Trying to reconnect to Microclimate at " + url;
+		final String msg = NLS.bind(Messages.MicroclimateReconnectJob_ReconnectJobName, url);
 
 		Job reconnectJob = Job.create(msg, new ICoreRunnable() {
 			@Override
@@ -54,7 +56,7 @@ public class MicroclimateReconnectJob {
 					}
 				}
 
-				MCLogger.log("Done waiting for Microclimate reconnect - monitor is canceled? " + monitor.isCanceled());
+				MCLogger.log("Done waiting for Microclimate reconnect - monitor is canceled? " + monitor.isCanceled()); //$NON-NLS-1$
 				monitor.done();
 			}
 
@@ -67,12 +69,12 @@ public class MicroclimateReconnectJob {
 					Thread.sleep(delay);
 					//i++;
 
-					MCLogger.log("Trying to reconnect to Microclimate at " + url);
+					MCLogger.log("Trying to reconnect to Microclimate at " + url); //$NON-NLS-1$
 
 					MicroclimateConnection newConnection = new MicroclimateConnection(url);
 					if (newConnection != null) {
 						// connection re-established!
-						MCLogger.log("Successfully re-connected to Microclimate at " + url);
+						MCLogger.log("Successfully re-connected to Microclimate at " + url); //$NON-NLS-1$
 						MicroclimateConnectionManager.remove(url.toString());
 						MicroclimateConnectionManager.add(newConnection);
 						return;
@@ -90,9 +92,8 @@ public class MicroclimateReconnectJob {
 					MCLogger.logError(e);
 					monitor.setCanceled(true);
 
-					MCUtil.openDialog(true, "Error reconnecting to Microclimate",
-							"Could not reconnect to " + url + ".\n" +
-							"Please re-create this connection in the Microclimate Connection preferences.");
+					MCUtil.openDialog(true, Messages.MicroclimateReconnectJob_ReconnectErrorDialogTitle,
+							NLS.bind(Messages.MicroclimateReconnectJob_ReconnectErrorDialogMsg, url));
 				}
 			}
 		});

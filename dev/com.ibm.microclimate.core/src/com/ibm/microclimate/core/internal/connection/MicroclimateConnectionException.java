@@ -12,6 +12,10 @@ package com.ibm.microclimate.core.internal.connection;
 import java.net.ConnectException;
 import java.net.URI;
 
+import org.eclipse.osgi.util.NLS;
+
+import com.ibm.microclimate.core.internal.Messages;
+
 /**
  * Custom exception to indicate that connecting to the Microclimate Socket at the given URL failed.
  *
@@ -25,7 +29,7 @@ public class MicroclimateConnectionException extends ConnectException {
 	public final String message;
 
 	public MicroclimateConnectionException(URI url) {
-		String msg = String.format("Connecting to Microclimate Socket at \"%s\" failed", url);
+		String msg = NLS.bind(Messages.MicroclimateConnectionException_ConnectingToMCFailed, url);
 
 		message = msg;
 		connectionUrl = url;
