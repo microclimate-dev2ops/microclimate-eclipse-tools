@@ -368,7 +368,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			// The path section can be split into multiple lines (over multiple GridLayout rows) if the path is too long
 
 			// arbitrary max path length that looks good
-			final int pathLineLength = 64;
+			final int pathLineLength = 80;
 
 			List<String> subPaths = MCUtil.splitPath(appToLink.fullLocalPath, pathLineLength);
 
