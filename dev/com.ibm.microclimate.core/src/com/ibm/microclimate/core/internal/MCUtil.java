@@ -10,7 +10,9 @@
 package com.ibm.microclimate.core.internal;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Scanner;
 
 import org.eclipse.core.runtime.IPath;
@@ -73,21 +75,25 @@ public class MCUtil {
 	}
 
 	/**
-	 * Splits the given string into separate strings of the given length (except the last one).
+	 * Splits the given Path into strings with a maximum length of the given length.
+	 * Splits only across separators, so individual path segments will remain intact.
 	 */
-	public static String[] splitStringIntoArray(String longString, int lineLength) {
-		int noSubstrings = longString.length() / lineLength + 1;
-		String[] result = new String[noSubstrings];
+	public static List<String> splitPath(IPath path, int length) {
+		List<String> result = new ArrayList<>();
 
-		int strIndex = 0;
-		int i = 0;
-		while (strIndex + lineLength < longString.length()) {
-			String sub = longString.substring(strIndex, strIndex + lineLength - 1);
-			strIndex += sub.length();
-			result[i++] = sub;
+		StringBuilder currentString = new StringBuilder().append(IPath.SEPARATOR);
+		for (String segment : path.segments()) {
+			if (currentString.length() + segment.length() > length) {
+				result.add(currentString.toString());
+				currentString = new StringBuilder();
+			}
+			currentString.append(segment).append(IPath.SEPARATOR);
 		}
-		// final line
-		result[i] = longString.substring(strIndex);
+
+		if (currentString.length() > 0) {
+			result.add(currentString.toString());
+		}
+
 		return result;
 	}
 
