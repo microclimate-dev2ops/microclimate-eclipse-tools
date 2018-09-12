@@ -349,6 +349,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	 */
 	public void doLaunch(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch,
 			IProgressMonitor monitor) {
+
 		if (ILaunchManager.DEBUG_MODE.equals(launchMode)) {
 			boolean starting = waitForState(getStartTimeoutMs(), null, IServer.STATE_STARTING);
 			if (!starting) {
@@ -367,6 +368,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				}
 				else {
 					MCLogger.logError("Debugger connect failure"); //$NON-NLS-1$
+
+					MCUtil.openDialog(true,
+							Messages.MicroclimateServerBehaviour_DebuggerConnectFailureDialogTitle,
+							Messages.MicroclimateServerBehaviour_DebuggerConnectFailureDialogMsg);
 				}
 			} catch (IllegalConnectorArgumentsException | CoreException | IOException e) {
 				MCLogger.logError(e);
