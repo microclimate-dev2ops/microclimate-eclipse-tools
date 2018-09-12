@@ -59,6 +59,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	private Set<MicroclimateServerConsole> consoles;
 
 	private String suffix = null;
+	private boolean isErrored;
 
 	// in seconds
 	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 3;
@@ -144,6 +145,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				MCLogger.logError("Restart in run mode for the " + app.name + " application failed.", e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
+
+		DebugPlugin.getDefault().getLaunchManager().removeLaunch(getServer().getLaunch());
 
 		// required to stop the auto publish thread
 		setServerState(IServer.STATE_STOPPED);
@@ -232,17 +235,17 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				", detail " + buildStatusDetail); 		//$NON-NLS-1$
 
 		final String status = MCConstants.buildStateToUserFriendly(buildStatus, buildStatusDetail);
-		setSuffix(status, IServer.STATE_STOPPED);
+		setSuffix(status, IServer.STATE_STOPPED, false);
 	}
 
 	public void onProjectDisableOrDelete() {
-		setSuffix(Messages.MicroclimateServerBehaviour_ProjectMissingServerSuffix, IServer.STATE_STOPPED);
+		setSuffix(Messages.MicroclimateServerBehaviour_ProjectMissingServerSuffix, IServer.STATE_STOPPED, true);
 	}
 
 	public void onMicroclimateDisconnect(String microclimateUrl) {
 		setSuffix(
 				NLS.bind(Messages.MicroclimateServerBehaviour_ConnectionLostServerSuffix, microclimateUrl),
-				IServer.STATE_UNKNOWN);
+				IServer.STATE_UNKNOWN, true);
 	}
 
 	public void onMicroclimateReconnect() {
@@ -256,9 +259,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	 * It is intended to be used if the server is not started because it is waiting for something,
 	 * or because of an error.
 	 */
-	private synchronized void setSuffix(String suffix, int newServerState) {
+	private synchronized void setSuffix(String suffix, int newServerState, boolean isError) {
 		// MCLogger.log("SetSuffix for server " + getServer().getName() + " to " + suffix);
 		this.suffix = suffix;
+		this.isErrored = isError;
 
 		forceRefreshServerDecorator(newServerState);
 	}
@@ -268,12 +272,17 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	 */
 	private synchronized void clearSuffix() {
 		suffix = null;
+		isErrored = false;
 		// This state will be overwritten immediately after.
 		forceRefreshServerDecorator(IServer.STATE_STOPPED);
 	}
 
 	public synchronized String getSuffix() {
 		return suffix;
+	}
+
+	public synchronized boolean isErrored() {
+		return isErrored;
 	}
 
 	/**
@@ -336,10 +345,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	/**
-	 * Request the MC server to restart in the given mode. Then wait for it to stop and start again, and attach
-	 * the debugger if restarting into debug mode.
-	 *
-	 * This is called by the MicroclimateServerLaunchConfigDelegate
+	 * Set the server into Debug or Run mode, and attach the debugger if necessary.
 	 */
 	public void doLaunch(ILaunchConfiguration launchConfig, String launchMode, ILaunch launch,
 			IProgressMonitor monitor) {
@@ -357,7 +363,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				IDebugTarget debugTarget = connectDebugger(launch, monitor);
 				if (debugTarget != null) {
 					setMode(ILaunchManager.DEBUG_MODE);
-					MCLogger.log("Debugger connect success"); //$NON-NLS-1$
+					MCLogger.log("Debugger connect success. Server should go into Debugging state soon."); //$NON-NLS-1$
 				}
 				else {
 					MCLogger.logError("Debugger connect failure"); //$NON-NLS-1$

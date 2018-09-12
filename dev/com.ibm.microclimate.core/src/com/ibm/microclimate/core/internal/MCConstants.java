@@ -139,7 +139,11 @@ public class MCConstants {
 			return "Build Succeeded";
 		}
 		else if (MCConstants.BUILD_STATUS_FAILED.equals(buildStatus)) {
-			return "Build Failed - Please check " + MCConstants.BUILD_LOG_SHORTNAME;
+			if (detailedBuildStatus == null || detailedBuildStatus.isEmpty()) {
+				detailedBuildStatus = "Please check " + MCConstants.BUILD_LOG_SHORTNAME;
+			}
+
+			return "Build Failed - " + detailedBuildStatus;
 		}
 		else if (MCConstants.BUILD_STATUS_QUEUED.equals(buildStatus)) {
 			return "Build Queued";
