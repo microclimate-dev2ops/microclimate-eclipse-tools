@@ -247,6 +247,16 @@ public class MicroclimateConnection {
 		MCLogger.logError("No project found with ID " + projectID); //$NON-NLS-1$
 		return null;
 	}
+	
+	public MicroclimateApplication getAppByName(String name) {
+		for (MicroclimateApplication app : getApps()) {
+			if (app.name.equals(name)) {
+				return app;
+			}
+		}
+		MCLogger.log("No application found for name " + name); //$NON-NLS-1$
+		return null;
+	}
 
 	public void requestProjectRestart(MicroclimateApplication app, String launchMode)
 			throws JSONException, IOException {
@@ -349,4 +359,36 @@ public class MicroclimateConnection {
 		URI uri = new URI(str);
 		return new MicroclimateConnection(uri);
 	}
+	
+	public void requestMicroprofileProjectCreate(String name)
+			throws JSONException, IOException {
+
+		String createEndpoint = MCConstants.APIPATH_PROJECTS_BASE;
+
+        URI url = baseUrl.resolve(createEndpoint);
+
+		JSONObject createProjectPayload = new JSONObject();
+		createProjectPayload.put(MCConstants.KEY_NAME, name);
+		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "java");
+		createProjectPayload.put(MCConstants.KEY_FRAMEWORK, "microprofile");
+		createProjectPayload.put(MCConstants.KEY_CONTEXTROOT, name);
+
+		HttpUtil.post(url, createProjectPayload);
+	}
+	
+	public void requestProjectDelete(String projectId)
+			throws JSONException, IOException {
+
+		String createEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/" + projectId;
+
+        URI url = baseUrl.resolve(createEndpoint);
+
+		HttpUtil.delete(url);
+	}
+	
+	public IPath getWorkspacePath() {
+		return localWorkspacePath;
+	}
+	
+	
 }
