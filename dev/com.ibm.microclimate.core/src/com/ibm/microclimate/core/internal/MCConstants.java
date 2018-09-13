@@ -19,7 +19,7 @@ public class MCConstants {
 
 			BUILD_LOG_SHORTNAME = "build.log",
 
-			MC_SERVER_BASE_NAME = "Microclimate Project: ",
+			MC_SERVER_BASE_NAME = "Microclimate Project - ",
 
 			// Portal API endpoints
 			APIPATH_PROJECTS_BASE = "api/v1/projects",

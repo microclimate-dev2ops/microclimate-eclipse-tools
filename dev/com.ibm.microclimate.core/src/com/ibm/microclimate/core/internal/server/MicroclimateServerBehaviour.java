@@ -103,6 +103,14 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 		// Set up our server consoles
 		consoles = MicroclimateServerConsole.createApplicationConsoles(app);
+
+		try {
+			// Right now, the project will always be in run mode. In the future, we will have to detect which mode
+			// it is already in, so we can connect the debugger if required.
+			getServer().getLaunchConfiguration(true, null).launch(ILaunchManager.RUN_MODE, null);
+		} catch (CoreException e) {
+			MCLogger.logError("Error doing initial launch", e);
+		}
 	}
 
 	private void onInitializeFailure(String failMsg) {
