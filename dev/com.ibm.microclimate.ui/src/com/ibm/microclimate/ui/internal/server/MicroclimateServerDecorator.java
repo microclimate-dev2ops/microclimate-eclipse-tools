@@ -58,11 +58,13 @@ public class MicroclimateServerDecorator extends LabelProvider implements ILight
             		server.loadAdapter(MicroclimateServerBehaviour.class, null);
 
             if (mcServer != null) {
-            	String err = mcServer.getSuffix();
-            	if (err != null) {
-            		ImageDescriptor img = MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.ERROR_ICON_PATH);
-            		decoration.addOverlay(img);
-            		decoration.addSuffix(" [" + err + "] ");
+            	String suffix = mcServer.getSuffix();
+            	if (suffix != null) {
+            		if (mcServer.isErrored()) {
+                		ImageDescriptor errImg = MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.ERROR_ICON_PATH);
+                		decoration.addOverlay(errImg);
+            		}
+            		decoration.addSuffix(" [" + suffix + "] ");
             	}
             }
         }

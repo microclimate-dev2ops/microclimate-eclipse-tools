@@ -191,7 +191,13 @@ public class MicroclimateSocket {
         // Update ports
         JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
-		// Ports object should always have an http port
+		// If the app is started, get the http port. If it's not started, this will be missing, and we can't proceed.
+        if (!portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
+        	MCLogger.log(String.format("No %s key - %s is not running.", 		//$NON-NLS-1$
+        			MCConstants.KEY_EXPOSED_PORT, app.name));
+        	return;
+        }
+
 		int port = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
 		if (port != -1) {
 			app.setHttpPort(port);
@@ -262,7 +268,9 @@ public class MicroclimateSocket {
 	private void onProjectDeletion(JSONObject event) throws JSONException {
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
-			MCLogger.logError("Failed to get serverBehaviour, aborting projectDeletion status update"); //$NON-NLS-1$
+			// This is normal if this project is not linked to an Eclipse server.
+			// It's an error if this project IS linked and above still returned null.
+			MCLogger.log("Failed to get serverBehaviour, aborting projectDeletion status update"); //$NON-NLS-1$
 			return;
 		}
 

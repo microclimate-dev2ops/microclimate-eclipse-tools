@@ -18,6 +18,7 @@ import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.debug.core.sourcelookup.ISourcePathComputerDelegate;
 import org.eclipse.debug.core.sourcelookup.containers.ProjectSourceContainer;
 
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 
 /**
@@ -41,12 +42,18 @@ public class MicroclimateSourcePathComputer implements ISourcePathComputerDelega
 		if (!projectName.isEmpty()) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 
+			if (project == null) {
+				MCLogger.logError("Could not find project with name " + projectName + " to add to source path");
+				return new ISourceContainer[0];
+			}
+
 			// What does the second boolean parameter 'referenced' mean ?
 			ISourceContainer projectSourceContainer = new ProjectSourceContainer(project, true);
-			// MCLogger.log("Source Container from project " + project.getName());
+			MCLogger.log("Adding source container from project " + project.getName());
 			return new ISourceContainer[] { projectSourceContainer };
 		}
 
+		MCLogger.logError("Could not retrieve project name from launch config " + config.getName());
 		return new ISourceContainer[0];
 	}
 

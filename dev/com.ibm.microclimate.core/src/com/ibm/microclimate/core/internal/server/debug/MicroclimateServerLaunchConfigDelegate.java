@@ -11,6 +11,7 @@ package com.ibm.microclimate.core.internal.server.debug;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -20,7 +21,6 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
@@ -36,19 +36,36 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
 	public void launch(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor)
 			throws CoreException {
 
+		try {
+			launchInner(config, launchMode, launch, monitor);
+		}
+		catch(CoreException e) {
+			monitor.setCanceled(true);
+			getLaunchManager().removeLaunch(launch);
+			throw e;
+		}
+	}
+
+	private void launchInner(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor)
+			throws CoreException {
+
         final IServer server = ServerUtil.getServer(config);
         if (server == null) {
-            MCLogger.logError("Could not find server from configuration " + config.getName()); //$NON-NLS-1$
-            return;
+        	String msg = "Could not find server from configuration " + config.getName();
+            MCLogger.logError(msg);
+            abort(msg, null, IStatus.ERROR);
         }
+
+        // Give the launch config the same name as the server
+        ILaunchConfigurationWorkingCopy configWc = config.getWorkingCopy();
+        configWc.rename(server.getName());
+        config = configWc.doSave();
 
         final MicroclimateServerBehaviour serverBehaviour = server.getAdapter(MicroclimateServerBehaviour.class);
 
         // Validate here that the server can actually be restarted.
-        String errorTitle = Messages.MicroclimateServerLaunchConfigDelegate_ErrStartingServerDialogTitle;
         String errorMsg = ""; //$NON-NLS-1$
-        if (server.getServerState() == IServer.STATE_UNKNOWN && serverBehaviour.getSuffix() != null) {
-        	errorTitle = Messages.MicroclimateServerLaunchConfigDelegate_ErrServerCantStart;
+        if (serverBehaviour.isErrored() && serverBehaviour.getSuffix() != null) {
         	errorMsg = serverBehaviour.getSuffix();
         }
         else if (serverBehaviour.getApp() == null) {
@@ -56,10 +73,14 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         }
 
         if (!errorMsg.isEmpty()) {
-        	MCUtil.openDialog(true, errorTitle, errorMsg);
+        	abort(errorMsg, null, IStatus.ERROR);
+        }
 
-        	monitor.setCanceled(true);
-        	return;
+        // Remove the old launch from the debug view.
+        ILaunch oldLaunch = server.getLaunch();
+        if (oldLaunch != null && !oldLaunch.equals(launch)) {
+        	MCLogger.log("Removing old launch");
+            getLaunchManager().removeLaunch(oldLaunch);
         }
 
 		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -72,7 +93,7 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         			+ server.getName());
         }
 
-        ILaunchConfigurationWorkingCopy configWc = config.getWorkingCopy();
+        configWc = config.getWorkingCopy();
         configWc.setAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, projectName);
         config = configWc.doSave();
 
@@ -82,5 +103,4 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         serverBehaviour.doLaunch(config, launchMode, launch, monitor);
         monitor.done();
 	}
-
 }

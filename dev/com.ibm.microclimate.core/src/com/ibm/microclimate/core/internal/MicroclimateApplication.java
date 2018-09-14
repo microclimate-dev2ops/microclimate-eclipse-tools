@@ -271,7 +271,7 @@ public class MicroclimateApplication {
 	 * set to something other than -1 before trying to connect.
 	 */
 	public synchronized void invalidatePorts() {
-		MCLogger.log("Invalidate ports for " + baseUrl.toString()); //$NON-NLS-1$
+		MCLogger.log("Invalidate ports for " + name); //$NON-NLS-1$
 		httpPort = -1;
 		debugPort = -1;
 	}

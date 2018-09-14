@@ -41,12 +41,14 @@ public class Messages extends NLS {
 	public static String MicroclimateServerBehaviour_MissingProjectID;
 	public static String MicroclimateServerBehaviour_ProjectMissingServerSuffix;
 	public static String MicroclimateServerBehaviour_ServerDoesntSupportPublish;
+	public static String MicroclimateServerBehaviour_DebuggerConnectFailureDialogTitle;
+	public static String MicroclimateServerBehaviour_DebuggerConnectFailureDialogMsg;
 
 	public static String MicroclimateServerConsole_ConsoleName;
 
 	public static String MicroclimateServerLaunchConfigDelegate_ErrInitServer;
-	public static String MicroclimateServerLaunchConfigDelegate_ErrServerCantStart;
-	public static String MicroclimateServerLaunchConfigDelegate_ErrStartingServerDialogTitle;
+	// public static String MicroclimateServerLaunchConfigDelegate_ErrServerCantStart;
+	// public static String MicroclimateServerLaunchConfigDelegate_ErrStartingServerDialogTitle;
 
 	public static String MicroclimateSocket_ErrRestartingProjectDialogMsg;
 	public static String MicroclimateSocket_ErrRestartingProjectDialogTitle;
