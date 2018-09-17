@@ -51,9 +51,15 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
 
         final IServer server = ServerUtil.getServer(config);
         if (server == null) {
-        	String msg = "Could not find server from configuration " + config.getName();
+        	String msg = "Could not find server from configuration " + config.getName();		// $NON-NLS-1$
             MCLogger.logError(msg);
             abort(msg, null, IStatus.ERROR);
+        }
+        else if (server.getServerState() == IServer.STATE_STARTING) {
+        	MCLogger.logError("Trying to start server that is Starting");		// $NON-NLS-1$
+
+        	abort(NLS.bind(Messages.MicroclimateServerLaunchConfigDelegate_CantLaunchNotStarted, server.getName()),
+        			null, IStatus.ERROR);
         }
 
         // Give the launch config the same name as the server
