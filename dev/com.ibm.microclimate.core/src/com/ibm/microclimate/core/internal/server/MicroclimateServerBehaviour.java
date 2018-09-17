@@ -359,7 +359,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			IProgressMonitor monitor) {
 
 		if (ILaunchManager.DEBUG_MODE.equals(launchMode)) {
-			boolean starting = waitForState(getStartTimeoutMs(), null, IServer.STATE_STARTING);
+			boolean starting = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING);
 			if (!starting) {
 				// TODO I haven't seen this happen, but we should probably display something to the user in this case.
 				// What could cause this to happen?
