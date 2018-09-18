@@ -47,11 +47,11 @@ public class Messages extends NLS {
 	public static String MicroclimateServerConsole_ConsoleName;
 
 	public static String MicroclimateServerLaunchConfigDelegate_ErrInitServer;
-	// public static String MicroclimateServerLaunchConfigDelegate_ErrServerCantStart;
-	// public static String MicroclimateServerLaunchConfigDelegate_ErrStartingServerDialogTitle;
+	public static String MicroclimateServerLaunchConfigDelegate_OnlyLaunchFromServers;
 
 	public static String MicroclimateSocket_ErrRestartingProjectDialogMsg;
 	public static String MicroclimateSocket_ErrRestartingProjectDialogTitle;
+
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
