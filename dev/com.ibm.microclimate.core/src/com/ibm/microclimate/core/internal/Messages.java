@@ -47,7 +47,7 @@ public class Messages extends NLS {
 	public static String MicroclimateServerConsole_ConsoleName;
 
 	public static String MicroclimateServerLaunchConfigDelegate_ErrInitServer;
-	public static String MicroclimateServerLaunchConfigDelegate_CantLaunchNotStarted;
+	public static String MicroclimateServerLaunchConfigDelegate_OnlyLaunchFromServers;
 
 	public static String MicroclimateSocket_ErrRestartingProjectDialogMsg;
 	public static String MicroclimateSocket_ErrRestartingProjectDialogTitle;

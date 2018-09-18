@@ -58,7 +58,9 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
         else if (server.getServerState() == IServer.STATE_STARTING) {
         	MCLogger.logError("Trying to start server that is Starting");		// $NON-NLS-1$
 
-        	abort(NLS.bind(Messages.MicroclimateServerLaunchConfigDelegate_CantLaunchNotStarted, server.getName()),
+        	// There are likely other scenarios where we could present the 'only launch from servers view' message,
+        	// but I'm not sure how to detect them at this point.
+        	abort(NLS.bind(Messages.MicroclimateServerLaunchConfigDelegate_OnlyLaunchFromServers, server.getName()),
         			null, IStatus.ERROR);
         }
 
