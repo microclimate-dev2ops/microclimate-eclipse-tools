@@ -103,4 +103,21 @@ public class HttpUtil {
 			}
 		}
 	}
+	
+	public static HttpResult delete(URI uri) throws IOException {
+		HttpURLConnection connection = null;
+
+		MCLogger.log("DELETE " + uri);
+		try {
+			connection = (HttpURLConnection) uri.toURL().openConnection();
+
+			connection.setRequestMethod("DELETE");
+
+			return new HttpResult(connection);
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
 }
