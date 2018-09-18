@@ -538,8 +538,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					LaunchUtilities.setDebugTimeout(vm);
 
 					// This appears in the Debug view
-					final String debugName = NLS.bind(Messages.MicroclimateServerBehaviour_DebugLaunchConfigName,
-							getServer().getName());
+					final String debugName = getDebugLaunchName(getServer(), debugPort);
 
 					debugTarget = LaunchUtilities
 							.createLocalJDTDebugTarget(launch, debugPort, null, vm, debugName, false);
@@ -568,6 +567,15 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			}
 		} while (retry);
 		return null;
+	}
+
+	private static String getDebugLaunchName(IServer server, int debugPort) {
+		return NLS.bind(Messages.MicroclimateServerBehaviour_DebugLaunchConfigName,
+				new Object[] {
+						server.getName(),
+						server.getHost(),
+						debugPort
+				});
 	}
 
     /**
