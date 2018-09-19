@@ -94,8 +94,8 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 	private void validate() {
 		String invalidReason = null;
 
+		String timeoutText = debugTimeoutText.getText().trim();
 		boolean goodDebugTimeout = false;
-		String timeoutText = debugTimeoutText.getText();
 		try {
 			int timeout = Integer.parseInt(timeoutText);
 			goodDebugTimeout = timeout > 0;
@@ -119,8 +119,11 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 		prefs.setValue(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY, showLinkFinishDialogBtn.getSelection());
 
 		// validate in validate() that this is a good integer
-		int debugTimeout = Integer.parseInt(debugTimeoutText.getText());
+		int debugTimeout = Integer.parseInt(debugTimeoutText.getText().trim());
 		prefs.setValue(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY, debugTimeout);
+
+		// removes any trimmed space
+		debugTimeoutText.setText("" + debugTimeout);
 
 		return true;
 	}
