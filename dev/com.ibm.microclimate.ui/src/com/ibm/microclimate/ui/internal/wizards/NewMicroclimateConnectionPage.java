@@ -15,10 +15,13 @@ import java.net.URISyntaxException;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -72,16 +75,23 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		hostnameLabel.setText(Messages.NewConnectionPage_HostnameLabel);
 		hostnameLabel.setLayoutData(hostnamePortLabelData);
 
-		hostnameText = new Text(hostPortGroup, SWT.BORDER);
+		// Only localhost supported now so make read only and set to localhost
+		hostnameText = new Text(hostPortGroup, SWT.BORDER | SWT.READ_ONLY);
 		GridData hostnamePortTextData = new GridData(GridData.FILL, GridData.BEGINNING, true, false, 2, 1);
 		hostnameText.setLayoutData(hostnamePortTextData);
+		Color bg = hostnameText.getBackground();
+		Color fg = hostnameText.getForeground();
+        final Color gray = new Color(bg.getDevice(), (bg.getRed() + fg.getRed()) / 2, (bg.getGreen() + fg.getGreen()) / 2, (bg.getBlue() + fg.getBlue()) / 2);
+        hostnameText.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent event) {
+                gray.dispose();
+            }
+        });
+        hostnameText.setForeground(gray);
 		hostnameText.setText("localhost"); //$NON-NLS-1$
-
-		// grey this out (for now) because it's only ever localhost anyway
 		final String localhostOnly = Messages.NewConnectionPage_OnlyLocalhostSupported;
-		hostnameText.setEnabled(false);
 		hostnameLabel.setToolTipText(localhostOnly);
-		// Doesn't work if hostnameText is disabled
 		hostnameText.setToolTipText(localhostOnly);
 
 		// Invalidate the wizard when the host or port are changed so that the user has to test the connection again.
@@ -117,6 +127,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 				testConnectionBtn.setEnabled(false);
 				testConnection();
 				testConnectionBtn.setEnabled(true);
+				testConnectionBtn.setFocus();
 			}
 		});
 		testConnectionBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
@@ -129,6 +140,8 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 			setErrorMessage(
 					NLS.bind(Messages.NewConnectionPage_ErrAConnectionAlreadyExists,
 					existingConnectionUrl));
+		} else {
+			testConnectionBtn.setFocus();
 		}
 	}
 
