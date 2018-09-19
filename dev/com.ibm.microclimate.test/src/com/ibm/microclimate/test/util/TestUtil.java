@@ -1,5 +1,9 @@
 package com.ibm.microclimate.test.util;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -72,5 +76,33 @@ public class TestUtil {
 //			}
 //		} 
 //    }
+    
+    
+    public static void updateFile(String path, String originalString, String replaceString) throws Exception{
+        File fileNeedsUpdate = new File(path);
+        BufferedReader br = null;
+        FileWriter writer = null;
 
+		try {
+		    br = new BufferedReader(new FileReader(fileNeedsUpdate));
+		    String line;
+		    StringBuilder stringbuilder = new StringBuilder();;
+		
+		    while ((line = br.readLine())!= null){
+		        stringbuilder.append(line + System.lineSeparator());
+		    }
+		
+		    String Content = stringbuilder.toString();
+		    String newContent = Content.replaceAll(originalString, replaceString);
+		    writer = new FileWriter(fileNeedsUpdate);
+		
+		    writer.write(newContent);
+		} finally {
+	        if(br != null)
+	        	br.close();
+	        if(writer != null)
+	        	writer.close();
+	    }
+    }
+    
 }
