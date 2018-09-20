@@ -216,16 +216,19 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projInfoName.setText(""); //$NON-NLS-1$
 		GridData infoData = new GridData(GridData.FILL, GridData.FILL, true, false);
 		projInfoName.setLayoutData(infoData);
+		projInfoName.setBackground(projectComposite.getBackground());
 
 		projInfoTypeLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoTypeLabel);
 		projInfoType = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoType.setText(""); //$NON-NLS-1$
 		projInfoType.setLayoutData(infoData);
+		projInfoType.setBackground(projectComposite.getBackground());
 
 		projInfoUrlLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoUrlLabel);
 		projInfoUrl = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoUrl.setText(""); //$NON-NLS-1$
 		projInfoUrl.setLayoutData(infoData);
+		projInfoUrl.setBackground(projectComposite.getBackground());
 
 		projInfoPathLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoPathLabel);
 
