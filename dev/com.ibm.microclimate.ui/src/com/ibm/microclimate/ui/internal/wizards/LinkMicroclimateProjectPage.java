@@ -71,9 +71,9 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private Label projInfoUrlLabel;
 	private Label projInfoPathLabel;
 
-	private Label projInfoName;
-	private Label projInfoType;
-	private Label projInfoUrl;
+	private Text projInfoName;
+	private Text projInfoType;
+	private Text projInfoUrl;
 
 	private Text[] projInfoPaths = new Text[0];
 	private Label[] projInfoSpacers = new Label[0];
@@ -212,18 +212,18 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projectComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 
 		projInfoNameLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjectInfoNameLabel);
-		projInfoName = new Label(projectComposite, SWT.NONE);
+		projInfoName = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoName.setText(""); //$NON-NLS-1$
 		GridData infoData = new GridData(GridData.FILL, GridData.FILL, true, false);
 		projInfoName.setLayoutData(infoData);
 
 		projInfoTypeLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoTypeLabel);
-		projInfoType = new Label(projectComposite, SWT.NONE);
+		projInfoType = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoType.setText(""); //$NON-NLS-1$
 		projInfoType.setLayoutData(infoData);
 
 		projInfoUrlLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoUrlLabel);
-		projInfoUrl = new Label(projectComposite, SWT.NONE);
+		projInfoUrl = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoUrl.setText(""); //$NON-NLS-1$
 		projInfoUrl.setLayoutData(infoData);
 

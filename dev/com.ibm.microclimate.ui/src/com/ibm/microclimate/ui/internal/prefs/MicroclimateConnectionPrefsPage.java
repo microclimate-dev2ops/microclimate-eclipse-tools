@@ -73,20 +73,14 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 	@Override
 	protected Control createContents(Composite parent) {
 
-		parent.setLayout(new GridLayout(1, true));
+		parent.setLayout(new GridLayout(2, false));
 
-		Composite composite = new Composite(parent, SWT.CENTER);
-		composite.setLayout(new GridLayout(2, false));
-		composite.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, true));
-		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
-		composite.setLayoutData(data);
-
-		Label existingConnections = new Label(composite, SWT.NONE);
+		Label existingConnections = new Label(parent, SWT.NONE);
 		existingConnections.setText(Messages.ConnectionPrefsPage_TableTitleLabel);
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1);
 		existingConnections.setLayoutData(gridData);
 
-		connectionsTable = new Table(composite, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
+		connectionsTable = new Table(parent, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
 		connectionsTable.setLinesVisible(true);
 		connectionsTable.setHeaderVisible(true);
 		gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2);
@@ -108,7 +102,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		connectedCol.setWidth(gridData.widthHint - urlsCol.getWidth() - linkedProjectsCol.getWidth());
 		*/
 
-		Button addButton = new Button(composite, SWT.PUSH);
+		Button addButton = new Button(parent, SWT.PUSH);
 		addButton.setText(Messages.ConnectionPrefsPage_AddBtn);
 		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
 		addButton.setLayoutData(gridData);
@@ -120,7 +114,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 			}
 		});
 
-		Button removeButton = new Button(composite, SWT.PUSH);
+		Button removeButton = new Button(parent, SWT.PUSH);
 		removeButton.setText(Messages.ConnectionPrefsPage_RemoveBtn);
 		gridData = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
 		removeButton.setLayoutData(gridData);
