@@ -26,7 +26,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 public class OpenAppAction implements IObjectActionDelegate {
 

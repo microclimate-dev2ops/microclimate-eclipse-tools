@@ -22,7 +22,7 @@ import org.eclipse.wst.server.core.model.ServerDelegate;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.Messages;
+import com.ibm.microclimate.core.internal.messages.Messages;
 
 /**
  * @author timetchells@ibm.com

@@ -21,11 +21,11 @@ import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 import com.ibm.microclimate.core.internal.server.console.SocketConsole;
 

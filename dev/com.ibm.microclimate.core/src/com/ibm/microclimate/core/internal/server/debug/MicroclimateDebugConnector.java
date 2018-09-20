@@ -18,8 +18,8 @@ import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;

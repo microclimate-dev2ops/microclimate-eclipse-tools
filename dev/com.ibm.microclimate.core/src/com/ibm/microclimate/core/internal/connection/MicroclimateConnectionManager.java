@@ -32,10 +32,10 @@ import org.eclipse.wst.server.core.ServerCore;
 import org.json.JSONException;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.Messages;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;;
 
 /**

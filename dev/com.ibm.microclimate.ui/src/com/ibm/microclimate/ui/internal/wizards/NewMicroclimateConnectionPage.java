@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Text;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
  * This simple page allows the user to add new Microclimate connections, by entering a hostname and port and

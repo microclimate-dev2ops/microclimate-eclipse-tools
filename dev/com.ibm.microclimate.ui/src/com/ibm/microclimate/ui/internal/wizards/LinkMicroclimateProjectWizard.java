@@ -34,7 +34,7 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
  * This wizard allows the user to select a Microclimate project, then links it the Eclipse project whose context menu

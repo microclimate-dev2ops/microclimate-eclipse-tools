@@ -29,13 +29,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.constants.AppState;
+import com.ibm.microclimate.core.internal.constants.BuildStatus;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.console.MicroclimateConsoleFactory;
 import com.ibm.microclimate.core.internal.server.debug.MicroclimateDebugConnector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
@@ -211,7 +213,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 
 		// Update build status if the project is not started or starting.
-		if (!appStatus.equals(MCConstants.APPSTATE_STARTED) && !appStatus.equals(MCConstants.APPSTATE_STARTING) &&
+		if (!appStatus.equals(AppState.STARTED.appState) && !appStatus.equals(AppState.STARTING.appState) &&
 				projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
 
 			String detail = ""; //$NON-NLS-1$
@@ -224,7 +226,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private void onAppStateUpdate(String appStatus) {
-		int state = MCConstants.appStatusToServerState(appStatus);
+		int state = AppState.convert(appStatus);
 		if (state != getServer().getServerState()) {
 			MCLogger.log("Update state of " + getServer().getName() + " to " + appStatus); //$NON-NLS-1$ //$NON-NLS-2$
 			setServerState(state);
@@ -236,7 +238,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				" has build status " + buildStatus + 	//$NON-NLS-1$
 				", detail " + buildStatusDetail); 		//$NON-NLS-1$
 
-		final String status = MCConstants.buildStateToUserFriendly(buildStatus, buildStatusDetail);
+		final String status = BuildStatus.toUserFriendly(buildStatus, buildStatusDetail);
 		setSuffix(status, IServer.STATE_STOPPED, false);
 	}
 
@@ -314,7 +316,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		MCLogger.log(String.format("Restarting %s in %s mode", getServer().getHost(), launchMode)); //$NON-NLS-1$
 
 		int currentState = getServer().getServerState();
-		MCLogger.log("Current status = " + MCConstants.serverStateToAppStatus(currentState)); //$NON-NLS-1$
+		MCLogger.log("Current status = " + AppState.convert(currentState)); //$NON-NLS-1$
 
 		try {
 			app.mcConnection.requestProjectRestart(app, launchMode);
@@ -408,9 +410,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCLogger.logError("No states passed to waitForState"); //$NON-NLS-1$
 			return false;
 		}
-		desiredStatesStr = MCConstants.serverStateToAppStatus(desiredStates[0]);
+		desiredStatesStr = AppState.convert(desiredStates[0]);
 		for (int i = 1; i < desiredStates.length; i++) {
-			desiredStatesStr += " or " + MCConstants.serverStateToAppStatus(desiredStates[i]); //$NON-NLS-1$
+			desiredStatesStr += " or " + AppState.convert(desiredStates[i]); //$NON-NLS-1$
 		}
 		// End logging-only
 
@@ -421,8 +423,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			}
 
 			try {
-				MCLogger.log("Waiting for " + getServer().getName() + " to be: " + desiredStatesStr + ", is currently " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						+ MCConstants.serverStateToAppStatus(getServer().getServerState()));
+				MCLogger.log(String.format("Waiting for %s to be: %s, is currently %s", 		//$NON-NLS-1$
+						getServer().getName(), desiredStatesStr, AppState.convert(getServer().getServerState())));
 
 				Thread.sleep(pollRateMs);
 			}
@@ -433,7 +435,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			// the ServerMonitorThread will update the state, so we just have to check it.
 			for (int desiredState : desiredStates) {
 				if (getServer().getServerState() == desiredState) {
-					MCLogger.log("Server is done switching to " + MCConstants.serverStateToAppStatus(desiredState)); //$NON-NLS-1$
+					MCLogger.log("Server is done switching to " + AppState.convert(desiredState)); //$NON-NLS-1$
 					return true;
 				}
 			}

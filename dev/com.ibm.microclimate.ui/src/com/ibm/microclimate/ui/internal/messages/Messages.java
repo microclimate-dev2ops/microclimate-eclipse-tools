@@ -1,9 +1,9 @@
-package com.ibm.microclimate.ui.internal;
+package com.ibm.microclimate.ui.internal.messages;
 
 import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
-	private static final String BUNDLE_NAME = "com.ibm.microclimate.ui.internal.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "com.ibm.microclimate.ui.internal.messages.messages"; //$NON-NLS-1$
 
 	public static String LinkWizard_DontShowThisAgain;
 	public static String LinkWizard_GenericErrorCreatingServer;

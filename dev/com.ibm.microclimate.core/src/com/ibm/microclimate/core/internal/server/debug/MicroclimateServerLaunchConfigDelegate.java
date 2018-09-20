@@ -21,7 +21,7 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.Messages;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 

@@ -17,6 +17,7 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -29,9 +30,10 @@ import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 public class MicroclimateApplication {
 
 	public final MicroclimateConnection mcConnection;
-	public final String projectID, name, projectType, host;
+	public final String projectID, name, host;
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
+	public final ProjectType projectType;
 
 	public final IPath buildLogPath;	// can, but shouldn't, be null
 	public final boolean hasAppLog;
@@ -44,7 +46,7 @@ public class MicroclimateApplication {
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, String projectType, String pathInWorkspace,
+			String id, String name, ProjectType projectType, String pathInWorkspace,
 			int httpPort, String contextRoot, String buildLogPath, boolean hasAppLog)
 					throws MalformedURLException {
 
@@ -127,19 +129,11 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isLinkable() {
-		return isRunning() && isMicroprofileProject() && !isLinked();
+		return isRunning() && !isLinked();
 	}
 
 	public boolean isRunning() {
 		return baseUrl != null;
-	}
-
-	public boolean isMicroprofileProject() {
-		return MCConstants.PROJECT_TYPE_LIBERTY.equals(projectType);
-	}
-
-	public String getUserFriendlyType() {
-		return MCConstants.projectTypeToUserFriendly(projectType);
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

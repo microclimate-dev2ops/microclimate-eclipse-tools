@@ -38,7 +38,7 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 import com.ibm.microclimate.ui.internal.prefs.MicroclimateConnectionPrefsPage;
 
 /**
@@ -363,7 +363,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			MCLogger.log("Found app with matching path " + appToLink.name); //$NON-NLS-1$
 
 			projInfoName.setText(appToLink.name);
-			projInfoType.setText(appToLink.getUserFriendlyType());
+			projInfoType.setText(appToLink.projectType.userFriendlyType);
 
 			String baseUrl = Messages.LinkPage_ProjNotRunning;
 			if (appToLink.getBaseUrl() != null) {
@@ -476,9 +476,6 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
 			// but then we'd have to give them a way to start the project from Eclipse.
 			return Messages.LinkPage_ErrMsgNotRunning;
-		}
-		else if (!appToLink.isMicroprofileProject()) {
-			return Messages.LinkPage_ErrMsgOnlyMicroprofileSupported;
 		}
 		else {
 			// should never happen - handle all possible reasons for invalidity above

@@ -17,7 +17,7 @@ import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
  * This wizard, which can be launched through the MC Preferences page or as a prerequisite to Linking a project,

@@ -26,12 +26,12 @@ import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateApplicationFactory;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
@@ -266,7 +266,7 @@ public class MicroclimateConnection {
 	public void requestProjectRestart(MicroclimateApplication app, String launchMode)
 			throws JSONException, IOException {
 
-		String restartEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/" 	//$NON-NLS-1$
+		String restartEndpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
 				+ app.projectID + "/" 										//$NON-NLS-1$
 				+ MCConstants.APIPATH_RESTART;
 
@@ -321,7 +321,7 @@ public class MicroclimateConnection {
 	public void requestProjectBuild(MicroclimateApplication app)
 			throws JSONException, IOException {
 
-		String buildEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/" 	//$NON-NLS-1$
+		String buildEndpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
 				+ app.projectID + "/" 									//$NON-NLS-1$
 				+ MCConstants.APIPATH_BUILD;
 
@@ -389,7 +389,7 @@ public class MicroclimateConnection {
 	public void requestMicroprofileProjectCreate(String name)
 			throws JSONException, IOException {
 
-		String createEndpoint = MCConstants.APIPATH_PROJECTS_BASE;
+		String createEndpoint = MCConstants.APIPATH_PROJECT_LIST;
 
         URI url = baseUrl.resolve(createEndpoint);
 
@@ -405,7 +405,7 @@ public class MicroclimateConnection {
 	public void requestProjectDelete(String projectId)
 			throws JSONException, IOException {
 
-		String createEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/" + projectId;
+		String createEndpoint = MCConstants.APIPATH_PROJECT_LIST + "/" + projectId;
 
         URI url = baseUrl.resolve(createEndpoint);
 

@@ -18,9 +18,9 @@ import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
 
 /**
  *

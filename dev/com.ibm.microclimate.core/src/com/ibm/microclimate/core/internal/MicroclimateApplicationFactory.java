@@ -9,6 +9,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.constants.AppState;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 
 public class MicroclimateApplicationFactory {
 	/**
@@ -30,9 +33,10 @@ public class MicroclimateApplicationFactory {
 				String name = appJso.getString(MCConstants.KEY_NAME);
 				String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
 
-				String type = MCConstants.PROJECT_TYPE_UNKNOWN;
+				ProjectType type = ProjectType.UNKNOWN;
 				try {
-					type = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
+					String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
+					type = ProjectType.fromInternalType(typeStr);
 				}
 				catch(JSONException e) {
 					// Sometimes (seems to be when project is disabled) this value is missing -
@@ -47,7 +51,7 @@ public class MicroclimateApplicationFactory {
 				// Is the app started?
 				// If so, get the port. If not, leave port set to -1, this indicates the app is not started.
 				if (appJso.has(MCConstants.KEY_APP_STATUS)
-						&& MCConstants.APPSTATE_STARTED.equals(appJso.getString(MCConstants.KEY_APP_STATUS))) {
+						&& AppState.STARTED.appState.equals(appJso.getString(MCConstants.KEY_APP_STATUS))) {
 
 					try {
 						String httpPortStr = appJso.getJSONObject(MCConstants.KEY_PORTS)
