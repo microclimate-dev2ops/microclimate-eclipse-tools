@@ -63,7 +63,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private Combo connectionsCombo;
 	private Combo projectsCombo;
 
-	private Label mcProjInfoTitle;
+	private Text mcProjInfoTitle;
 	private Button refreshProjectsBtn;
 
 	private Label projInfoNameLabel;
@@ -177,9 +177,10 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		Label spacer = new Label(composite, SWT.NONE);
 		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false));;
 
-		mcProjInfoTitle = new Label(composite, SWT.NONE);
+		mcProjInfoTitle = new Text(composite, SWT.READ_ONLY);
 		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false, 2, 1));
 		mcProjInfoTitle.setText(Messages.LinkPage_ProjectInfoLabel);
+		mcProjInfoTitle.setBackground(composite.getBackground());
 
 		refreshProjectsBtn = new Button(composite, SWT.PUSH);
 		refreshProjectsBtn.setText(Messages.LinkPage_RefreshBtn);
