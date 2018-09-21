@@ -12,8 +12,7 @@
       id="com.ibm.microclimate.base"
       label="%featureName"
       version="1.0.0.qualifier"
-      provider-name="%providerName"
-      plugin="com.ibm.microclimate.core">
+      provider-name="%providerName">
 
    <description>
       %description
