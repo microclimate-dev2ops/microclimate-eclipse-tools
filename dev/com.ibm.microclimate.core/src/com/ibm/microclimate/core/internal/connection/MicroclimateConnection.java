@@ -179,6 +179,11 @@ public class MicroclimateConnection {
 			return null;
 		}
 		String workspaceLoc = env.getString(MCConstants.KEY_ENV_WORKSPACE_LOC);
+		String os = System.getProperty("os.name"); //$NON-NLS-1$
+		if (os != null && os.toLowerCase().startsWith("windows") && workspaceLoc.startsWith("/")) { //$NON-NLS-1$
+			String device = workspaceLoc.substring(1, 2);
+			workspaceLoc = device + ":" + workspaceLoc.substring(2); //$NON-NLS-1$
+		}
 		return new Path(workspaceLoc);
 	}
 
