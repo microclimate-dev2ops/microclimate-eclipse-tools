@@ -313,6 +313,27 @@ public class MicroclimateConnection {
 		MCLogger.log("Didn't find status info for project " + app.name); //$NON-NLS-1$
 		return null;
 	}
+	
+	/**
+	 * Request a build on an application
+	 * @param app The app to build
+	 */
+	public void requestProjectBuild(MicroclimateApplication app)
+			throws JSONException, IOException {
+
+		String buildEndpoint = MCConstants.APIPATH_PROJECTS_BASE + "/" 	//$NON-NLS-1$
+				+ app.projectID + "/" 									//$NON-NLS-1$
+				+ MCConstants.APIPATH_BUILD;
+
+		URI url = baseUrl.resolve(buildEndpoint);
+
+		JSONObject buildPayload = new JSONObject();
+		buildPayload.put(MCConstants.KEY_ACTION, MCConstants.VALUE_ACTION_BUILD);
+
+		// This initiates the build
+		HttpUtil.post(url, buildPayload);
+	}
+
 
 	/**
 	 * Called by the MicroclimateSocket when the socket.io connection goes down.

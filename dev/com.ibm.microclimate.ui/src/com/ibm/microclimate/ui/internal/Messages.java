@@ -64,6 +64,8 @@ public class Messages extends NLS {
 
 	public static String OpenAppAction_CantOpenNotRunningAppMsg;
 	public static String OpenAppAction_CantOpenNotRunningAppTitle;
+	public static String StartBuildAction_AppNotStartedMsg;
+	public static String StartBuildAction_AppNotStartedTitle;
 
 	static {
 		// initialize resource bundle
