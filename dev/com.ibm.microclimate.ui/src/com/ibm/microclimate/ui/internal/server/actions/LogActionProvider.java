@@ -21,9 +21,7 @@ package com.ibm.microclimate.ui.internal.server.actions;
 
 import java.util.Iterator;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -33,12 +31,9 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
-import org.eclipse.ui.navigator.ICommonMenuConstants;
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
-import com.ibm.microclimate.ui.internal.Messages;
 
 /**
  * From com.ibm.ws.st.ui.internal.actions.LogActionProvider
@@ -87,7 +82,8 @@ public class LogActionProvider extends CommonActionProvider implements ISelectio
     		return;
     	}
 
-        MenuManager openLogsMenu = new MenuManager(Messages.LogActionProvider_OpenLogFileCategory, "OpenLogFiles"); //$NON-NLS-2$
+    	/*
+        MenuManager openLogsMenu = new MenuManager(Messages.LogActionProvider_OpenLogFileCategory, "OpenLogFiles");
 
     	for (IPath logFilePath : mcServerBehaviour.getApp().getLogFilePaths()) {
     		String name = logFilePath.lastSegment();
@@ -100,5 +96,6 @@ public class LogActionProvider extends CommonActionProvider implements ISelectio
     	}
 
         menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, openLogsMenu);
+        */
     }
 }

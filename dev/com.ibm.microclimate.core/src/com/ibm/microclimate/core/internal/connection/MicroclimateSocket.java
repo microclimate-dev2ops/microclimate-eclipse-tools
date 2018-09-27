@@ -9,8 +9,11 @@
 
 package com.ibm.microclimate.core.internal.connection;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
@@ -24,6 +27,7 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.server.console.SocketConsole;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -48,16 +52,19 @@ public class MicroclimateSocket {
 
 	private volatile boolean hasConnected = false;
 
+	private Set<SocketConsole> socketConsoles = new HashSet<>();
+
 	// Track the previous Exception so we don't spam the logs with the same connection failure message
 	private Exception previousException;
 
 	// SocketIO Event names
 	private static final String
-			EVENT_PROJECT_CHANGED = "projectChanged", //$NON-NLS-1$
-			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged", //$NON-NLS-1$
-			EVENT_PROJECT_RESTART = "projectRestartResult", //$NON-NLS-1$
-			EVENT_PROJECT_CLOSED = "projectClosed", //$NON-NLS-1$
-			EVENT_PROJECT_DELETION = "projectDeletion"; //$NON-NLS-1$
+			EVENT_PROJECT_CHANGED = "projectChanged", 				//$NON-NLS-1$
+			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged", 	//$NON-NLS-1$
+			EVENT_PROJECT_RESTART = "projectRestartResult", 		//$NON-NLS-1$
+			EVENT_PROJECT_CLOSED = "projectClosed", 				//$NON-NLS-1$
+			EVENT_PROJECT_DELETION = "projectDeletion", 			//$NON-NLS-1$
+			EVENT_CONTAINER_LOGS = "container-logs";				//$NON-NLS-1$
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 
@@ -169,6 +176,21 @@ public class MicroclimateSocket {
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectDeletion(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
+			}
+		})
+		.on(EVENT_CONTAINER_LOGS, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				// can't print this whole thing because the logs strings flood the output
+				// MCLogger.log(EVENT_CONTAINER_LOGS + ": " + arg0[0].toString()); //$NON-NLS-1$
+				MCLogger.log(EVENT_CONTAINER_LOGS);
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onLogUpdate(event);
 				} catch (JSONException e) {
 					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -289,6 +311,32 @@ public class MicroclimateSocket {
 		}
 
 		return server;
+	}
+
+	public void registerSocketConsole(SocketConsole console) {
+		MCLogger.log("Register socketConsole for projectID " + console.projectID);
+		this.socketConsoles.add(console);
+	}
+
+	public void deregisterSocketConsole(SocketConsole console) {
+		this.socketConsoles.remove(console);
+	}
+
+	private void onLogUpdate(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		String logContents = event.getString(MCConstants.KEY_LOGS);
+		MCLogger.log("Updates logs for project " + projectID);
+
+		for (SocketConsole console : this.socketConsoles) {
+			if (console.projectID.equals(projectID)) {
+				try {
+					console.update(logContents);
+				}
+				catch(IOException e) {
+					MCLogger.logError("Error updating console " + console.getName(), e);	// $NON-NLS-1$
+				}
+			}
+		}
 	}
 
 	private int parsePort(String portStr) {

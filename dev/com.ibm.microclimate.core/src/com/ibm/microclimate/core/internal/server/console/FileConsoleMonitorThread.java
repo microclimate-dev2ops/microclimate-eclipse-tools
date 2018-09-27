@@ -22,7 +22,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
  * This thread periodically checks the given input stream for new contents, and if it has changed,
  * propagates the new text to the given output stream.
  */
-public class MicroclimateServerLogMonitorThread extends Thread {
+public class FileConsoleMonitorThread extends Thread {
 
 	private static final int DELAY_MS = 1000;
 
@@ -34,7 +34,7 @@ public class MicroclimateServerLogMonitorThread extends Thread {
 
 	private volatile boolean run = true;
 
-	public MicroclimateServerLogMonitorThread(String consoleName, File inputFile, IOConsoleOutputStream output) {
+	public FileConsoleMonitorThread(String consoleName, File inputFile, IOConsoleOutputStream output) {
 
 		this.inputFile = inputFile;
 		this.output = output;
