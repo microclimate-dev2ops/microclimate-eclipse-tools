@@ -30,7 +30,8 @@ public class MicroclimateConsoleFactory {
 				consoles.add(buildConsole);
 				onNewConsole(buildConsole);
 			} catch (FileNotFoundException e) {
-				MCUtil.openDialog(true, Messages.FileNotFoundTitle, Messages.FileNotFoundMsg);
+				MCUtil.openDialog(true, Messages.FileNotFoundTitle,
+						NLS.bind(Messages.FileNotFoundMsg, app.buildLogPath));
 			}
 		}
 		else {

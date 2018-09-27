@@ -33,7 +33,7 @@ public class MicroclimateApplication {
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 
-	public final String buildLogPath;	// can, but shouldn't, be null
+	public final IPath buildLogPath;	// can, but shouldn't, be null
 	public final boolean hasAppLog;
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -55,7 +55,14 @@ public class MicroclimateApplication {
 		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
-		this.buildLogPath = buildLogPath;
+
+		if (buildLogPath != null) {
+			this.buildLogPath = MCUtil.appendPathWithoutDupe(mcConnection.localWorkspacePath, buildLogPath);
+		}
+		else {
+			MCLogger.logError("No build log provided for app " + name);
+			this.buildLogPath = null;
+		}
 		this.hasAppLog = hasAppLog;
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
