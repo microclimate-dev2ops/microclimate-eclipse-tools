@@ -7,38 +7,16 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-/*******************************************************************************
- * Copyright (c) 2016 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
 package com.ibm.microclimate.ui.internal.server.actions;
-
-import java.util.Iterator;
-
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.navigator.CommonActionProvider;
-import org.eclipse.ui.navigator.ICommonActionExtensionSite;
-import org.eclipse.wst.server.core.IServer;
-
-import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  * From com.ibm.ws.st.ui.internal.actions.LogActionProvider
  *
  */
+/*
+ */
+// Commented out for 18.09
+/*
 public class LogActionProvider extends CommonActionProvider implements ISelectionChangedListener {
 
     protected MicroclimateServerBehaviour mcServerBehaviour;
@@ -82,7 +60,7 @@ public class LogActionProvider extends CommonActionProvider implements ISelectio
     		return;
     	}
 
-    	/*
+
         MenuManager openLogsMenu = new MenuManager(Messages.LogActionProvider_OpenLogFileCategory, "OpenLogFiles");
 
     	for (IPath logFilePath : mcServerBehaviour.getApp().getLogFilePaths()) {
@@ -96,6 +74,6 @@ public class LogActionProvider extends CommonActionProvider implements ISelectio
     	}
 
         menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, openLogsMenu);
-        */
+
     }
-}
+}*/
