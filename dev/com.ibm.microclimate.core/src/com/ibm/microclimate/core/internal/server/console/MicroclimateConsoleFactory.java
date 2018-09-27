@@ -43,6 +43,9 @@ public class MicroclimateConsoleFactory {
 			consoles.add(appConsole);
 			onNewConsole(appConsole);
 		}
+		else {
+			MCLogger.logError("No app log is available for " + app.name); 			// $NON-NLS-1$
+		}
 
 		return consoles;
 	}
