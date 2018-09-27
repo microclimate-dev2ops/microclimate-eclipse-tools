@@ -26,6 +26,7 @@ public class MCConstants {
 			APIPATH_PROJECT_LIST = "api/v1/projects",
 			APIPATH_ENV = "api/v1/environment",
 			APIPATH_RESTART = "restart",
+			APIPATH_BUILD = "build",
 
 			// App statuses
 			APPSTATE_STARTED = "started",
@@ -65,6 +66,9 @@ public class MCConstants {
 			KEY_FRAMEWORK = "framework",
 
 			KEY_START_MODE = "startMode",
+			
+			KEY_ACTION = "action",
+			VALUE_ACTION_BUILD = "build",
 
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success",
