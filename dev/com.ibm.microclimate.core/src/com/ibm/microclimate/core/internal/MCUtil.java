@@ -52,9 +52,13 @@ public class MCUtil {
 		return result;
 	}
 
+	public static boolean isWindows() {
+		String os = System.getProperty("os.name");
+		return os != null && os.toLowerCase().startsWith("windows");
+	}
+
 	public static boolean pathEquals(IPath path, IPath path2) {
-		String os = System.getProperty("os.name"); //$NON-NLS-1$
-		if (os != null && os.toLowerCase().startsWith("windows")) { //$NON-NLS-1$
+		if (isWindows()) {
 			// case-insensitivity on windows
 			String pathStr = path.toOSString();
 			String pathStr2 = path2.toOSString();

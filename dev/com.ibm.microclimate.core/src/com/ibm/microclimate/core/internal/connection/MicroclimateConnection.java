@@ -31,6 +31,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.MicroclimateApplicationFactory;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
@@ -45,7 +46,7 @@ public class MicroclimateConnection {
 	public final URI baseUrl;
 	public final IPath localWorkspacePath;
 
-	private final MicroclimateSocket mcSocket;
+	public final MicroclimateSocket mcSocket;
 
 	private List<MicroclimateApplication> apps = Collections.emptyList();
 
@@ -179,8 +180,7 @@ public class MicroclimateConnection {
 			return null;
 		}
 		String workspaceLoc = env.getString(MCConstants.KEY_ENV_WORKSPACE_LOC);
-		String os = System.getProperty("os.name"); //$NON-NLS-1$
-		if (os != null && os.toLowerCase().startsWith("windows") && workspaceLoc.startsWith("/")) { //$NON-NLS-1$
+		if (MCUtil.isWindows() && workspaceLoc.startsWith("/")) { //$NON-NLS-1$
 			String device = workspaceLoc.substring(1, 2);
 			workspaceLoc = device + ":" + workspaceLoc.substring(2); //$NON-NLS-1$
 		}
@@ -205,7 +205,7 @@ public class MicroclimateConnection {
 		}
 
 		try {
-			apps = MicroclimateApplication.getAppsFromProjectsJson(this, projectsResponse);
+			apps = MicroclimateApplicationFactory.getAppsFromProjectsJson(this, projectsResponse);
 			MCLogger.log("App list update success"); //$NON-NLS-1$
 		}
 		catch(Exception e) {
@@ -252,7 +252,7 @@ public class MicroclimateConnection {
 		MCLogger.logError("No project found with ID " + projectID); //$NON-NLS-1$
 		return null;
 	}
-	
+
 	public MicroclimateApplication getAppByName(String name) {
 		for (MicroclimateApplication app : getApps()) {
 			if (app.name.equals(name)) {
@@ -313,7 +313,7 @@ public class MicroclimateConnection {
 		MCLogger.log("Didn't find status info for project " + app.name); //$NON-NLS-1$
 		return null;
 	}
-	
+
 	/**
 	 * Request a build on an application
 	 * @param app The app to build
@@ -385,7 +385,7 @@ public class MicroclimateConnection {
 		URI uri = new URI(str);
 		return new MicroclimateConnection(uri);
 	}
-	
+
 	public void requestMicroprofileProjectCreate(String name)
 			throws JSONException, IOException {
 
@@ -401,7 +401,7 @@ public class MicroclimateConnection {
 
 		HttpUtil.post(url, createProjectPayload);
 	}
-	
+
 	public void requestProjectDelete(String projectId)
 			throws JSONException, IOException {
 
@@ -411,10 +411,10 @@ public class MicroclimateConnection {
 
 		HttpUtil.delete(url);
 	}
-	
+
 	public IPath getWorkspacePath() {
 		return localWorkspacePath;
 	}
-	
-	
+
+
 }
