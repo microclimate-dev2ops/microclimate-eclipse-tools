@@ -61,12 +61,12 @@ public class MCConstants {
 
 			KEY_ENV_WORKSPACE_LOC = "workspace_location",
 			KEY_ENV_MC_VERSION = "microclimate_version",
-			
+
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",
 
 			KEY_START_MODE = "startMode",
-			
+
 			KEY_ACTION = "action",
 			VALUE_ACTION_BUILD = "build",
 
@@ -129,6 +129,8 @@ public class MCConstants {
 		}
 	}
 
+	public static final String BUILD_IN_PROGRESS_SUFFIX = "Build In Progress";
+
 	/**
 	 * Convert a raw buildStatus to a user-friendly one.
 	 */
@@ -136,7 +138,7 @@ public class MCConstants {
 		detailedBuildStatus = detailedBuildStatus.trim();
 
 		if (MCConstants.BUILD_STATUS_INPROGRESS.equals(buildStatus)) {
-			String inProgress = "Build In Progress";
+			String inProgress = BUILD_IN_PROGRESS_SUFFIX;
 			if (detailedBuildStatus != null && !detailedBuildStatus.isEmpty()) {
 				inProgress += " - " + detailedBuildStatus;
 			}

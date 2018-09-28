@@ -12,10 +12,12 @@ package com.ibm.microclimate.ui.internal.server.actions;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.wst.server.core.IServer;
 
+import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
@@ -39,7 +41,7 @@ public class StartBuildAction implements IObjectActionDelegate {
 			if (obj instanceof IServer) {
 				IServer srv = (IServer) obj;
 				mcServer = (MicroclimateServerBehaviour) srv.loadAdapter(MicroclimateServerBehaviour.class, null);
-				action.setEnabled(mcServer != null && mcServer.isStarted());
+				action.setEnabled(mcServer != null);
 				return;
 			}
 		}
@@ -55,17 +57,22 @@ public class StartBuildAction implements IObjectActionDelegate {
 		}
 
 		MicroclimateApplication app = mcServer.getApp();
-		// Shouldn't happen because the action is disabled for non-started servers, but just in case:
-		if (app == null || !mcServer.isStarted() || app.getBaseUrl() == null) {
-			MCUtil.openDialog(true, Messages.StartBuildAction_AppNotStartedTitle,
-					Messages.StartBuildAction_AppNotStartedMsg);
+		if (app == null) {
+			// don't think this will happen
+			MCUtil.openDialog(true, Messages.StartBuildAction_AppMissingTitle, Messages.StartBuildAction_AppMissingMsg);
 			return;
 		}
-
-		try {
-			app.mcConnection.requestProjectBuild(app);
-		} catch (Exception e) {
-			MCLogger.logError("Error requesting build for application: " + app.name, e); //$NON-NLS-1$
+		else if (!mcServer.isStarted() && mcServer.getSuffix().contains(MCConstants.BUILD_IN_PROGRESS_SUFFIX)) {
+			MCUtil.openDialog(false, Messages.StartBuildAction_AlreadyBuildingTitle,
+					NLS.bind(Messages.StartBuildAction_AlreadyBuildingMsg, app.name));
+			return;
+		}
+		else {
+			try {
+				app.mcConnection.requestProjectBuild(app);
+			} catch (Exception e) {
+				MCLogger.logError("Error requesting build for application: " + app.name, e); //$NON-NLS-1$
+			}
 		}
 	}
 
