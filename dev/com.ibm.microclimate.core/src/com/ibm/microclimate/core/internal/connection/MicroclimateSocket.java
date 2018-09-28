@@ -325,7 +325,7 @@ public class MicroclimateSocket {
 	private void onLogUpdate(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		String logContents = event.getString(MCConstants.KEY_LOGS);
-		MCLogger.log("Updates logs for project " + projectID);
+		MCLogger.log("Update logs for project " + projectID);
 
 		for (SocketConsole console : this.socketConsoles) {
 			if (console.projectID.equals(projectID)) {

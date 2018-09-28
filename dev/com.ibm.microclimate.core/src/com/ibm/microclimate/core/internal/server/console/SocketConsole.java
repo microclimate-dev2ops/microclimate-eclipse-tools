@@ -46,21 +46,28 @@ public class SocketConsole extends IOConsole {
 			isInitialized = true;
 		}
 
+		String newContents = "";
 		int diff = contents.length() - previousLength;
-		if (diff < 0) {
-			MCLogger.logError("Negative console diff");
-			diff = 0;
-		}
-
-		MCLogger.log(diff + " new characters to write to " + this.getName());		// $NON-NLS-1$
 		if (diff == 0) {
+			// nothing to do
 			return;
 		}
+		else if (diff < 0) {
+			// The app log was cleared
+			// eg if the dockerfile was changed and the container had to be rebuilt
+			MCLogger.log("Console was cleared");
+			clearConsole();
+			// write the whole new console
+			newContents = contents;
+		}
+		else {
+			// write only the new characters to the console
+			newContents = contents.substring(previousLength, previousLength + diff);
+		}
 
-		String newContents = contents.substring(previousLength, previousLength + diff);
+		MCLogger.log(newContents.length() + " new characters to write to " + this.getName());		// $NON-NLS-1$
 		outputStream.write(newContents);
 		previousLength = contents.length();
-
 	}
 
 	@Override
