@@ -11,17 +11,10 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
@@ -40,7 +33,8 @@ public class MicroclimateApplication {
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 
-	private final Set<IPath> logPaths;
+	public final IPath buildLogPath;	// can, but shouldn't, be null
+	public final boolean hasAppLog;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -51,7 +45,7 @@ public class MicroclimateApplication {
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
 			String id, String name, String projectType, String pathInWorkspace,
-			int httpPort, String contextRoot)
+			int httpPort, String contextRoot, String buildLogPath, boolean hasAppLog)
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
@@ -61,7 +55,15 @@ public class MicroclimateApplication {
 		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
-		this.logPaths = new HashSet<>();
+
+		if (buildLogPath != null) {
+			this.buildLogPath = MCUtil.appendPathWithoutDupe(mcConnection.localWorkspacePath, buildLogPath);
+		}
+		else {
+			MCLogger.logError("No build log provided for app " + name);
+			this.buildLogPath = null;
+		}
+		this.hasAppLog = hasAppLog;
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
 		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
@@ -80,102 +82,6 @@ public class MicroclimateApplication {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Parse the given projectsJson from the Microclimate server to construct a list of applications on that server.
-	 */
-	public static List<MicroclimateApplication> getAppsFromProjectsJson(MicroclimateConnection mcConnection,
-			String projectsJson)
-					throws JSONException, NumberFormatException, MalformedURLException {
-
-		List<MicroclimateApplication> apps = new ArrayList<>();
-
-		MCLogger.log(projectsJson);
-		JSONArray appArray = new JSONArray(projectsJson);
-
-		for(int i = 0; i < appArray.length(); i++) {
-			JSONObject appJso = appArray.getJSONObject(i);
-			try {
-				// MCLogger.log("app: " + appJso.toString());
-				String name = appJso.getString(MCConstants.KEY_NAME);
-				String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
-
-				String type = MCConstants.PROJECT_TYPE_UNKNOWN;
-				try {
-					type = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
-				}
-				catch(JSONException e) {
-					// Sometimes (seems to be when project is disabled) this value is missing -
-					// see https://github.ibm.com/dev-ex/portal/issues/425
-					MCLogger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
-				}
-
-				String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
-
-				int httpPort = -1;
-
-				// Is the app started?
-				// If so, get the port. If not, leave port set to -1, this indicates the app is not started.
-				if (appJso.has(MCConstants.KEY_APP_STATUS)
-						&& MCConstants.APPSTATE_STARTED.equals(appJso.getString(MCConstants.KEY_APP_STATUS))) {
-
-					try {
-						String httpPortStr = appJso.getJSONObject(MCConstants.KEY_PORTS)
-								.getString(MCConstants.KEY_EXPOSED_PORT);
-						httpPort = Integer.parseInt(httpPortStr);
-					}
-					catch(JSONException e) {
-						// Indicates the app is not started
-						MCLogger.log(name + " has not bound to a port"); //$NON-NLS-1$
-					}
-					catch(NumberFormatException e) {
-						MCLogger.logError("Error parsing port from " + appJso, e); //$NON-NLS-1$
-					}
-				}
-				else {
-					MCLogger.log(name + " is not running"); //$NON-NLS-1$
-				}
-
-				String contextRoot = null;
-				if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
-					contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
-				}
-
-				MicroclimateApplication mcApp =
-						new MicroclimateApplication(mcConnection, id, name, type, loc, httpPort, contextRoot);
-				apps.add(mcApp);
-
-				if (appJso.has(MCConstants.KEY_LOGS)) {
-					JSONObject logsJso = appJso.getJSONObject(MCConstants.KEY_LOGS);
-					if (logsJso.has(MCConstants.KEY_LOG_BUILD)) {
-						String buildLogPath = logsJso.getJSONObject(MCConstants.KEY_LOG_BUILD)
-								.getString(MCConstants.KEY_LOG_FILE);
-
-						mcApp.addLogPath(buildLogPath);
-					}
-
-					if (logsJso.has(MCConstants.KEY_LOG_APP)) {
-						// TODO I'm not sure if this will always be an array, but it seems to be for Liberty projects
-						JSONArray appLogsJso = logsJso.getJSONObject(MCConstants.KEY_LOG_APP)
-								.getJSONArray(MCConstants.KEY_LOG_FILE);
-
-						for (int j = 0; j < appLogsJso.length(); j++) {
-							String appLogPath = appLogsJso.getString(j);
-							mcApp.addLogPath(appLogPath);
-						}
-					}
-				}
-				else {
-					MCLogger.logError("Project JSON didn't have logs key: " + appJso); //$NON-NLS-1$
-				}
-			}
-			catch(JSONException e) {
-				MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
-			}
-		}
-
-		return apps;
 	}
 
 	private void setBaseUrl() throws MalformedURLException {
@@ -199,10 +105,6 @@ public class MicroclimateApplication {
 	 */
 	public URL getBaseUrl() {
 		return baseUrl;
-	}
-
-	public Set<IPath> getLogFilePaths() {
-		return logPaths;
 	}
 
 	public synchronized int getHttpPort() {
@@ -240,15 +142,6 @@ public class MicroclimateApplication {
 		return MCConstants.projectTypeToUserFriendly(projectType);
 	}
 
-	/**
-	 * @param pathStr - The log path as extracted from the JSON, ie starting with /microclimate-workspace/
-	 */
-	private void addLogPath(String pathStr) {
-		IPath path = MCUtil.appendPathWithoutDupe(mcConnection.localWorkspacePath, pathStr);
-		// MCLogger.log("Add log path " + path);
-		logPaths.add(path);
-	}
-
 	public synchronized void setHttpPort(int httpPort) {
 		MCLogger.log("Set HTTP port for " + baseUrl + " to " + httpPort); //$NON-NLS-1$ //$NON-NLS-2$
 		this.httpPort = httpPort;
@@ -283,3 +176,4 @@ public class MicroclimateApplication {
 				projectID, name, projectType, fullLocalPath.toOSString());
 	}
 }
+

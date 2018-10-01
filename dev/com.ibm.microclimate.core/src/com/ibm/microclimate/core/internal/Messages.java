@@ -44,7 +44,11 @@ public class Messages extends NLS {
 	public static String MicroclimateServerBehaviour_DebuggerConnectFailureDialogTitle;
 	public static String MicroclimateServerBehaviour_DebuggerConnectFailureDialogMsg;
 
-	public static String MicroclimateServerConsole_ConsoleName;
+	public static String BuildConsoleName;
+	public static String AppConsoleName;
+
+	public static String FileNotFoundTitle;
+	public static String FileNotFoundMsg;
 
 	public static String MicroclimateServerLaunchConfigDelegate_ErrInitServer;
 	public static String MicroclimateServerLaunchConfigDelegate_OnlyLaunchFromServers;

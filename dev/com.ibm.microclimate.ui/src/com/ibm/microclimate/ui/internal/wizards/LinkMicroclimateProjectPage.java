@@ -63,7 +63,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private Combo connectionsCombo;
 	private Combo projectsCombo;
 
-	private Label mcProjInfoTitle;
+	private Text mcProjInfoTitle;
 	private Button refreshProjectsBtn;
 
 	private Label projInfoNameLabel;
@@ -71,9 +71,9 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 	private Label projInfoUrlLabel;
 	private Label projInfoPathLabel;
 
-	private Label projInfoName;
-	private Label projInfoType;
-	private Label projInfoUrl;
+	private Text projInfoName;
+	private Text projInfoType;
+	private Text projInfoUrl;
 
 	private Text[] projInfoPaths = new Text[0];
 	private Label[] projInfoSpacers = new Label[0];
@@ -177,9 +177,10 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		Label spacer = new Label(composite, SWT.NONE);
 		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false));;
 
-		mcProjInfoTitle = new Label(composite, SWT.NONE);
+		mcProjInfoTitle = new Text(composite, SWT.READ_ONLY);
 		mcProjInfoTitle.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false, 2, 1));
 		mcProjInfoTitle.setText(Messages.LinkPage_ProjectInfoLabel);
+		mcProjInfoTitle.setBackground(composite.getBackground());
 
 		refreshProjectsBtn = new Button(composite, SWT.PUSH);
 		refreshProjectsBtn.setText(Messages.LinkPage_RefreshBtn);
@@ -212,20 +213,23 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 		projectComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 
 		projInfoNameLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjectInfoNameLabel);
-		projInfoName = new Label(projectComposite, SWT.NONE);
+		projInfoName = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoName.setText(""); //$NON-NLS-1$
 		GridData infoData = new GridData(GridData.FILL, GridData.FILL, true, false);
 		projInfoName.setLayoutData(infoData);
+		projInfoName.setBackground(projectComposite.getBackground());
 
 		projInfoTypeLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoTypeLabel);
-		projInfoType = new Label(projectComposite, SWT.NONE);
+		projInfoType = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoType.setText(""); //$NON-NLS-1$
 		projInfoType.setLayoutData(infoData);
+		projInfoType.setBackground(projectComposite.getBackground());
 
 		projInfoUrlLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoUrlLabel);
-		projInfoUrl = new Label(projectComposite, SWT.NONE);
+		projInfoUrl = new Text(projectComposite, SWT.READ_ONLY);
 		projInfoUrl.setText(""); //$NON-NLS-1$
 		projInfoUrl.setLayoutData(infoData);
+		projInfoUrl.setBackground(projectComposite.getBackground());
 
 		projInfoPathLabel = createProjInfoLabel(projectComposite, Messages.LinkPage_ProjInfoPathLabel);
 

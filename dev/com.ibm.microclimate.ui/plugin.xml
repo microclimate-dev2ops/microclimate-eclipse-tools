@@ -86,6 +86,12 @@
 			icon="%DEFAULT_ICON_PATH"
 			label="%ACTION_OPEN_APP"
 			class="com.ibm.microclimate.ui.internal.server.actions.OpenAppAction"/>
+		<action
+			id="com.ibm.microclimate.ui.internal.popupMenu.startBuild"
+			enablesFor="1"
+			icon="%DEFAULT_ICON_PATH"
+			label="%ACTION_START_BUILD"
+			class="com.ibm.microclimate.ui.internal.server.actions.StartBuildAction"/>
 		</objectContribution>
 	</extension>
 	
@@ -113,7 +119,8 @@
 	      typeIds="microclimate.server"/>
 	</extension>
 	
-	<extension point="org.eclipse.ui.navigator.navigatorContent">
+	<!-- Commented out for 18.09 -->
+	<!--extension point="org.eclipse.ui.navigator.navigatorContent">
 		<navigatorContent
 			id="com.ibm.microclimate.ui.internal.server.content"
 			name="Microclimate Server NavigatorContent"
@@ -127,25 +134,12 @@
 				value="%MICROCLIMATE_SERVER_ID"/>
 			</enablement>
 			
-			<!--enablement>
-				<adapt type="com.ibm.microclimate.core.server.MicroclimateServer"/>
-			</enablement-->
-			
-			<!--triggerPoints>
-				<adapt type="org.eclipse.wst.server.core.IServer"> 
-				<test
-				forcePluginActivation="true"
-				property="org.eclipse.wst.server.ui.serverType"
-				value="microclimate.server"/>
-				</adapt>
-			</triggerPoints-->
-			
 			<actionProvider
 				dependsOn="org.eclipse.wst.server.ui.ServersView.ServerActionProvider"
 				class="com.ibm.microclimate.ui.internal.server.actions.LogActionProvider">
 			</actionProvider>
 		</navigatorContent>
-	</extension>
+	</extension-->
 
  	<!--extension
 		point="org.eclipse.ui.newWizards">

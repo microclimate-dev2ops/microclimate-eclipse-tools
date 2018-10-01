@@ -22,6 +22,7 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.ui.console.IOConsole;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 import org.json.JSONException;
@@ -35,7 +36,7 @@ import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
-import com.ibm.microclimate.core.internal.server.console.MicroclimateServerConsole;
+import com.ibm.microclimate.core.internal.server.console.MicroclimateConsoleFactory;
 import com.ibm.microclimate.core.internal.server.debug.MicroclimateDebugConnector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 
@@ -49,7 +50,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 	// Only set these once, in initialize().
 	private MicroclimateApplication app;
-	private Set<MicroclimateServerConsole> consoles;
+	private Set<IOConsole> consoles;
 
 	private String suffix = null;
 	private boolean isErrored;
@@ -95,7 +96,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		setInitialState();
 
 		// Set up our server consoles
-		consoles = MicroclimateServerConsole.createApplicationConsoles(app);
+		consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
 
 		try {
 			// Right now, the project will always be in run mode. In the future, we will have to detect which mode
@@ -153,7 +154,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		setServerState(IServer.STATE_STOPPED);
 
 		if (consoles != null) {
-			for (MicroclimateServerConsole console : consoles) {
+			for (IOConsole console : consoles) {
 				console.destroy();
 			}
 		}

@@ -80,7 +80,7 @@
 
             <!-- Add Main feature here -->
             <category name="was4d"
-                label="Microclimate Developer Tools"
+                label="Microclimate Developer Tools Beta"
                 description="Tools for working with Microclimate applications in Eclipse">
 
                 <!-- Features list file -->
