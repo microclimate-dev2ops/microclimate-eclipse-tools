@@ -129,11 +129,15 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isLinkable() {
-		return isRunning() && !isLinked();
+		return isRunning() && !isLinked() && isSupportedProject();
 	}
 
 	public boolean isRunning() {
 		return baseUrl != null;
+	}
+
+	public boolean isSupportedProject() {
+		return projectType.equals(ProjectType.LIBERTY) || projectType.equals(ProjectType.SPRING);
 	}
 
 	public synchronized void setHttpPort(int httpPort) {
