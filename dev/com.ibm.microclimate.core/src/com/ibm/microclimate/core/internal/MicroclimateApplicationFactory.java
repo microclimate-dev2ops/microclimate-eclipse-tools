@@ -35,12 +35,16 @@ public class MicroclimateApplicationFactory {
 
 				ProjectType type = ProjectType.UNKNOWN;
 				try {
-					String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
+					// from portal: projectType and buildType are equivalent - however
+					// buildType is always present, projectType is missing for disabled/stopped projects
+					// We should use projectType if it gets fixed
+					// see see https://github.ibm.com/dev-ex/portal/issues/520
+					// String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
+
+					String typeStr = appJso.getString(MCConstants.KEY_BUILD_TYPE);
 					type = ProjectType.fromInternalType(typeStr);
 				}
 				catch(JSONException e) {
-					// Sometimes (seems to be when project is disabled) this value is missing -
-					// see https://github.ibm.com/dev-ex/portal/issues/425
 					MCLogger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
 				}
 

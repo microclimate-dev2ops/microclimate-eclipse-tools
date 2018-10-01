@@ -28,7 +28,8 @@ public class MCConstants {
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
 			KEY_NAME = "name",
-			KEY_PROJECT_TYPE = "projectType",
+			// KEY_PROJECT_TYPE = "projectType",
+			KEY_BUILD_TYPE = "buildType",
 			KEY_LOC_DISK = "locOnDisk",
 			KEY_CONTEXTROOT = "contextroot",
 
