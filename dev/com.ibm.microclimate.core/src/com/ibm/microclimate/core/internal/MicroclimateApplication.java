@@ -137,7 +137,7 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isSupportedProject() {
-		return projectType.equals(ProjectType.LIBERTY) || projectType.equals(ProjectType.SPRING);
+		return mcConnection.supportsProjectType(projectType);
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

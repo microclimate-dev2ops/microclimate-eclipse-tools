@@ -19,6 +19,9 @@ public class MCConstants {
 
 			MC_SERVER_BASE_NAME = "Microclimate Project - ",
 
+			// Version string returned by development builds of MC
+			VERSION_LATEST = "latest",
+
 			// Portal API endpoints
 			APIPATH_PROJECT_LIST = "api/v1/projects",
 			APIPATH_ENV = "api/v1/environment",
@@ -67,5 +70,10 @@ public class MCConstants {
 
 	// Microclimate 18.09 is required
 	// otherwise we will be missing the Workspace ENV data and the project restart endpoint.
-	public static final int REQUIRED_MC_VERSION = 1809;
+	public static final int
+			// This version supports only Liberty projects.
+			REQUIRED_MC_VERSION = 1809,
+			// This version supports both Spring and Liberty projects.
+			SPRING_MC_VERSION = 1810;
+
 }

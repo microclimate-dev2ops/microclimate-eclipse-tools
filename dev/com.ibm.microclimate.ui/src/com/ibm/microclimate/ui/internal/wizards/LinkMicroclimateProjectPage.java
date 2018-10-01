@@ -479,7 +479,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			return Messages.LinkPage_ErrMsgNotRunning;
 		}
 		else if (!appToLink.isSupportedProject()) {
-			return "A project that is invalid is selected. This project is not one of the supported project types."
+			return "A project that is invalid is selected. This project is not one of the supported project types. "
 					+ "Only Liberty and Spring projects are supported.";
 		}
 		else {
