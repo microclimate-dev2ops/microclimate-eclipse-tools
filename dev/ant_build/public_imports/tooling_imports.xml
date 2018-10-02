@@ -19,7 +19,7 @@
   <property name="skip.import.validation" value="true"/>
   <property name="javac.source.file.encoding" value="Cp1252" />
 
-  <!-- Skip findbugs and chkpii for all OLT builds for the moment -->
+  <!-- Skip findbugs and chkpii for all MDT builds for the moment -->
   <property name="skip.findbugs" value="true"/>
   <var name="skip.chkpii" value="false"/>
   <var name="translation.needed" value="true"/>
