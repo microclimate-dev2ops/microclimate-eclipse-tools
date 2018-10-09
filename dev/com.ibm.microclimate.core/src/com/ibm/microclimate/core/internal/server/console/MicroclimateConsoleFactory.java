@@ -43,6 +43,7 @@ public class MicroclimateConsoleFactory {
 			IOConsole appConsole = new SocketConsole(appLogName, app);
 			consoles.add(appConsole);
 			onNewConsole(appConsole);
+			ConsolePlugin.getDefault().getConsoleManager().showConsoleView(appConsole);
 		}
 		else {
 			MCLogger.logError("No app log is available for " + app.name); 			// $NON-NLS-1$
