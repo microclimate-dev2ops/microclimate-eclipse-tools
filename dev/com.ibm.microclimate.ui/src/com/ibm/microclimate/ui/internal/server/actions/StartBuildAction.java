@@ -17,12 +17,12 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.wst.server.core.IServer;
 
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 public class StartBuildAction implements IObjectActionDelegate {
 
@@ -62,7 +62,7 @@ public class StartBuildAction implements IObjectActionDelegate {
 			MCUtil.openDialog(true, Messages.StartBuildAction_AppMissingTitle, Messages.StartBuildAction_AppMissingMsg);
 			return;
 		}
-		else if (!mcServer.isStarted() && mcServer.getSuffix().contains(MCConstants.BUILD_IN_PROGRESS_SUFFIX)) {
+		else if (!mcServer.isStarted() && mcServer.getSuffix().contains(BuildStatus.BUILD_INPROGRESS_SUFFIX)) {
 			MCUtil.openDialog(false, Messages.StartBuildAction_AlreadyBuildingTitle,
 					NLS.bind(Messages.StartBuildAction_AlreadyBuildingMsg, app.name));
 			return;

@@ -1,9 +1,9 @@
-package com.ibm.microclimate.core.internal;
+package com.ibm.microclimate.core.internal.messages;
 
 import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
-	private static final String BUNDLE_NAME = "com.ibm.microclimate.core.internal.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "com.ibm.microclimate.core.internal.messages.messages"; //$NON-NLS-1$
 
 	public static String MicroclimateConnection_ErrConnection_AlreadyExists;
 	public static String MicroclimateConnection_ErrConnection_OldVersion;

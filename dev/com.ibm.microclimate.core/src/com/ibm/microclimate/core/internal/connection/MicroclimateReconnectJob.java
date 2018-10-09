@@ -19,7 +19,7 @@ import org.eclipse.osgi.util.NLS;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.Messages;
+import com.ibm.microclimate.core.internal.messages.Messages;
 
 public class MicroclimateReconnectJob {
 

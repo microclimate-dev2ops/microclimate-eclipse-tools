@@ -14,7 +14,7 @@ import java.net.URI;
 
 import org.eclipse.osgi.util.NLS;
 
-import com.ibm.microclimate.core.internal.Messages;
+import com.ibm.microclimate.core.internal.messages.Messages;
 
 /**
  * Custom exception to indicate that connecting to the Microclimate Socket at the given URL failed.

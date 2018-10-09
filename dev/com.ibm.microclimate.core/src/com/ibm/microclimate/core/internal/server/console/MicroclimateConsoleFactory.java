@@ -12,8 +12,8 @@ import org.eclipse.ui.console.IOConsole;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.messages.Messages;
 
 public class MicroclimateConsoleFactory {
 

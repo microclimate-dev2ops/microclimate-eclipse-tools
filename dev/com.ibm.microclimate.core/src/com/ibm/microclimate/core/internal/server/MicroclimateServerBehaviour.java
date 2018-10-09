@@ -10,8 +10,6 @@
 package com.ibm.microclimate.core.internal.server;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
@@ -22,9 +20,7 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.core.IStatusHandler;
 import org.eclipse.debug.core.model.IDebugTarget;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.console.IOConsole;
 import org.eclipse.wst.server.core.IServer;
@@ -33,18 +29,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
-import com.ibm.microclimate.core.internal.MCConstants;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.Messages;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.constants.AppState;
+import com.ibm.microclimate.core.internal.constants.BuildStatus;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.console.MicroclimateConsoleFactory;
-import com.ibm.microclimate.core.internal.server.debug.LaunchUtilities;
-import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.connect.AttachingConnector;
-import com.sun.jdi.connect.Connector;
+import com.ibm.microclimate.core.internal.server.debug.MicroclimateDebugConnector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 
 /**
@@ -218,7 +213,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 
 		// Update build status if the project is not started or starting.
-		if (!appStatus.equals(MCConstants.APPSTATE_STARTED) && !appStatus.equals(MCConstants.APPSTATE_STARTING) &&
+		if (!appStatus.equals(AppState.STARTED.appState) && !appStatus.equals(AppState.STARTING.appState) &&
 				projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
 
 			String detail = ""; //$NON-NLS-1$
@@ -231,7 +226,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private void onAppStateUpdate(String appStatus) {
-		int state = MCConstants.appStatusToServerState(appStatus);
+		int state = AppState.convert(appStatus);
 		if (state != getServer().getServerState()) {
 			MCLogger.log("Update state of " + getServer().getName() + " to " + appStatus); //$NON-NLS-1$ //$NON-NLS-2$
 			setServerState(state);
@@ -243,7 +238,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				" has build status " + buildStatus + 	//$NON-NLS-1$
 				", detail " + buildStatusDetail); 		//$NON-NLS-1$
 
-		final String status = MCConstants.buildStateToUserFriendly(buildStatus, buildStatusDetail);
+		final String status = BuildStatus.toUserFriendly(buildStatus, buildStatusDetail);
 		setSuffix(status, IServer.STATE_STOPPED, false);
 	}
 
@@ -318,15 +313,10 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			return;
         }
 
-		MCLogger.log("Restarting " + getServer().getHost() + " in " + launchMode + " mode"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		MCLogger.log(String.format("Restarting %s in %s mode", getServer().getHost(), launchMode)); //$NON-NLS-1$
 
 		int currentState = getServer().getServerState();
-		MCLogger.log("Current status = " + MCConstants.serverStateToAppStatus(currentState)); //$NON-NLS-1$
-
-		if (IServer.STATE_STARTING == currentState) {
-			waitForStarted(null);
-			// throw new CoreException "Wait for Started before restarting?"
-		}
+		MCLogger.log("Current status = " + AppState.convert(currentState)); //$NON-NLS-1$
 
 		try {
 			app.mcConnection.requestProjectRestart(app, launchMode);
@@ -370,7 +360,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 
 			MCLogger.log("Preparing for debug mode"); //$NON-NLS-1$
 			try {
-				IDebugTarget debugTarget = connectDebugger(launch, monitor);
+				IDebugTarget debugTarget = MicroclimateDebugConnector.connectDebugger(this, launch, monitor);
 				if (debugTarget != null) {
 					setMode(ILaunchManager.DEBUG_MODE);
 					MCLogger.log("Debugger connect success. Server should go into Debugging state soon."); //$NON-NLS-1$
@@ -384,6 +374,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 				}
 			} catch (IllegalConnectorArgumentsException | CoreException | IOException e) {
 				MCLogger.logError(e);
+
 			}
 		} else {
 			setMode(ILaunchManager.RUN_MODE);
@@ -404,10 +395,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 	}
 
-	private boolean waitForStarted(IProgressMonitor monitor) {
-		return waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTED);
-	}
-
 	/**
 	 * Wait for the server to enter the given state(s). The server state is updated by the MonitorThread.
 	 *
@@ -423,9 +410,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			MCLogger.logError("No states passed to waitForState"); //$NON-NLS-1$
 			return false;
 		}
-		desiredStatesStr = MCConstants.serverStateToAppStatus(desiredStates[0]);
+		desiredStatesStr = AppState.convert(desiredStates[0]);
 		for (int i = 1; i < desiredStates.length; i++) {
-			desiredStatesStr += " or " + MCConstants.serverStateToAppStatus(desiredStates[i]); //$NON-NLS-1$
+			desiredStatesStr += " or " + AppState.convert(desiredStates[i]); //$NON-NLS-1$
 		}
 		// End logging-only
 
@@ -436,8 +423,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			}
 
 			try {
-				MCLogger.log("Waiting for " + getServer().getName() + " to be: " + desiredStatesStr + ", is currently " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						+ MCConstants.serverStateToAppStatus(getServer().getServerState()));
+				MCLogger.log(String.format("Waiting for %s to be: %s, is currently %s", 		//$NON-NLS-1$
+						getServer().getName(), desiredStatesStr, AppState.convert(getServer().getServerState())));
 
 				Thread.sleep(pollRateMs);
 			}
@@ -448,7 +435,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			// the ServerMonitorThread will update the state, so we just have to check it.
 			for (int desiredState : desiredStates) {
 				if (getServer().getServerState() == desiredState) {
-					MCLogger.log("Server is done switching to " + MCConstants.serverStateToAppStatus(desiredState)); //$NON-NLS-1$
+					MCLogger.log("Server is done switching to " + AppState.convert(desiredState)); //$NON-NLS-1$
 					return true;
 				}
 			}
@@ -458,161 +445,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		return false;
 	}
 
-	/**
-	 * From com.ibm.ws.st.core.internal.launch.BaseLibertyLaunchConfiguration.connectAndWait
-	 */
-    private IDebugTarget connectDebugger(ILaunch launch, IProgressMonitor monitor)
-    		throws IllegalConnectorArgumentsException, CoreException, IOException {
-
-    	MCLogger.log("Beginning to try to connect debugger"); //$NON-NLS-1$
-
-		// Here, we have to wait for the projectRestartResult event
-		// since its payload tells us the debug port to use
-		int debugPort = waitForDebugPort();
-
-    	if (debugPort == -1) {
-    		MCLogger.logError("Couldn't get debug port for MC Server, or it was never set"); //$NON-NLS-1$
-    		return null;
-    	}
-
-    	MCLogger.log("Debugging on port " + debugPort); //$NON-NLS-1$
-
-		int timeout = MicroclimateCorePlugin.getDefault().getPreferenceStore()
-				.getInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY)
-				* 1000;
-		MCLogger.log("Debugger connect timeout is " + timeout + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
-
-		// Now prepare the Debug Connector, and try to attach it to the server's JVM
-		AttachingConnector connector = LaunchUtilities.getAttachingConnector();
-		if (connector == null) {
-			MCLogger.logError("Could not create debug connector"); //$NON-NLS-1$
-		}
-
-		Map<String, Connector.Argument> connectorArgs = connector.defaultArguments();
-        connectorArgs = LaunchUtilities.configureConnector(connectorArgs, getServer().getHost(), debugPort);
-
-		boolean retry = false;
-		do {
-			try {
-				VirtualMachine vm = null;
-				Exception ex = null;
-				int itr = timeout * 4; // We want to check 4 times per second
-
-				if (itr <= 0) {
-					itr = 2;
-				}
-
-				while (itr-- > 0) {
-					if (monitor.isCanceled()) {
-						MCLogger.log("User cancelled debugger connecting"); //$NON-NLS-1$
-						return null;
-					}
-					try {
-						vm = connector.attach(connectorArgs);
-						itr = 0;
-						ex = null;
-					} catch (Exception e) {
-						ex = e;
-						if (itr % 8 == 0) {
-							MCLogger.log("Waiting for debugger attach."); //$NON-NLS-1$
-						}
-					}
-					try {
-						Thread.sleep(250);
-					} catch (InterruptedException e1) {
-						// do nothing
-					}
-				}
-
-				if (ex instanceof IllegalConnectorArgumentsException) {
-					throw (IllegalConnectorArgumentsException) ex;
-				}
-				if (ex instanceof InterruptedIOException) {
-					throw (InterruptedIOException) ex;
-				}
-				if (ex instanceof IOException) {
-					throw (IOException) ex;
-				}
-
-				IDebugTarget debugTarget = null;
-				if (vm != null) {
-					LaunchUtilities.setDebugTimeout(vm);
-
-					// This appears in the Debug view
-					final String debugName = getDebugLaunchName(getServer(), debugPort);
-
-					debugTarget = LaunchUtilities
-							.createLocalJDTDebugTarget(launch, debugPort, null, vm, debugName, false);
-
-					monitor.worked(1);
-					monitor.done();
-				}
-				return debugTarget;
-			} catch (InterruptedIOException e) {
-				// timeout, consult status handler if there is one
-				IStatus status = new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID,
-						IJavaLaunchConfigurationConstants.ERR_VM_CONNECT_TIMEOUT, "", e); //$NON-NLS-1$
-
-				IStatusHandler handler = DebugPlugin.getDefault().getStatusHandler(status);
-
-				retry = false;
-				if (handler == null) {
-					// if there is no handler, throw the exception
-					throw new CoreException(status);
-				}
-
-				Object result = handler.handleStatus(status, this);
-				if (result instanceof Boolean) {
-					retry = ((Boolean) result).booleanValue();
-				}
-			}
-		} while (retry);
-		return null;
-	}
-
-	private static String getDebugLaunchName(IServer server, int debugPort) {
-		return NLS.bind(Messages.MicroclimateServerBehaviour_DebugLaunchConfigName,
-				new Object[] {
-						server.getName(),
-						server.getHost(),
-						debugPort
-				});
-	}
-
-    /**
-     * The debug port is set by FileWatcher emitting a 'projectRestartResult' event (see MicroclimateSocket class).
-     * Make sure to call app.invalidatePorts() when the app is restarted, otherwise this might return an outdated port.
-     *
-     * @return The debug port, or -1 if waiting for the restart event times out.
-     */
-	private int waitForDebugPort() {
-		final long startTime = System.currentTimeMillis();
-
-		while (System.currentTimeMillis() < (startTime + getStartTimeoutMs())) {
-			MCLogger.log("Waiting for restart success socket event to set debug port"); //$NON-NLS-1$
-			try {
-				Thread.sleep(2500);
-			} catch (InterruptedException e) {
-				MCLogger.logError(e);
-			}
-
-			// Make sure that app.invalidatePorts() was called when it needed to be,
-			// otherwise this might return old info
-			int port = app.getDebugPort();
-			if (port != -1) {
-				MCLogger.log("Debug port was retrieved successfully: " + port); //$NON-NLS-1$
-				return port;
-			}
-		}
-		MCLogger.logError("Timed out waiting for restart success"); //$NON-NLS-1$
-		return -1;
-	}
-
-	private int getStartTimeoutMs() {
+	public int getStartTimeoutMs() {
 		return getServer().getStartTimeout() * 1000;
 	}
 
-	private int getStopTimeoutMs() {
+	public int getStopTimeoutMs() {
 		return getServer().getStopTimeout() * 1000;
 	}
 

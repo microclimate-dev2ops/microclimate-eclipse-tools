@@ -27,7 +27,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
  * @author timetchells@ibm.com

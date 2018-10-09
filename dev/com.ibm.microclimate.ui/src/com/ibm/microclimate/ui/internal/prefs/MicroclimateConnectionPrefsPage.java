@@ -36,7 +36,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
-import com.ibm.microclimate.ui.internal.Messages;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 import com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard;
 import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
 
