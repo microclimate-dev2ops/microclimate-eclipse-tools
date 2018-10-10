@@ -11,6 +11,7 @@ Automatic-Module-Name: com.ibm.microclimate.test
 Bundle-ActivationPolicy: lazy
 Import-Package: com.ibm.microclimate.core.internal,
  com.ibm.microclimate.core.internal.connection,
+ com.ibm.microclimate.core.internal.constants,
  com.ibm.microclimate.core.internal.server,
  junit.framework,
  io.socket.client,

@@ -2,15 +2,15 @@ package com.ibm.microclimate.test;
 
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 
-public class LibertyDebugTest extends BaseDebugTest {
+public class SpringDebugTest extends BaseDebugTest {
 
 	static {
-		projectName = "libertydebugtest";
-		projectType = ProjectType.LIBERTY;
-		relativeURL = "/v1/example";
+		projectName = "springdebugtest";
+		projectType = ProjectType.SPRING;
+		relativeURL = "/v1";
 		srcPath = "src/main/java/application/rest/v1/Example.java";
 		currentText = "Congratulations";
 		newText = "Hello";
-		dockerfile = "Dockerfile-lang";
+		dockerfile = "Dockerfile";
 	}
 }
