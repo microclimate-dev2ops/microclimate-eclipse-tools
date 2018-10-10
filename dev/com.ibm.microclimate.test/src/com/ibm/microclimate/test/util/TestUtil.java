@@ -77,6 +77,31 @@ public class TestUtil {
 //		} 
 //    }
     
+    public static void prependToFile(String path, String content) throws Exception {
+    	File fileNeedsUpdate = new File(path);
+        BufferedReader br = null;
+        FileWriter writer = null;
+
+		try {
+		    br = new BufferedReader(new FileReader(fileNeedsUpdate));
+		    String line;
+		    StringBuilder stringbuilder = new StringBuilder();;
+		    
+		    stringbuilder.append(content);
+		
+		    while ((line = br.readLine())!= null){
+		        stringbuilder.append(line + System.lineSeparator());
+		    }
+		
+		    writer = new FileWriter(fileNeedsUpdate);
+		    writer.write(stringbuilder.toString());
+		} finally {
+	        if(br != null)
+	        	br.close();
+	        if(writer != null)
+	        	writer.close();
+	    }
+    }
     
     public static void updateFile(String path, String originalString, String replaceString) throws Exception{
         File fileNeedsUpdate = new File(path);

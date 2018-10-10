@@ -398,6 +398,20 @@ public class MicroclimateConnection {
 		URI uri = new URI(str);
 		return new MicroclimateConnection(uri);
 	}
+	
+	public void requestProjectCreate(ProjectType type, String name)
+			throws JSONException, IOException {
+		switch(type) {
+		case LIBERTY:
+			requestMicroprofileProjectCreate(name);
+			break;
+		case SPRING:
+			requestSpringProjectCreate(name);
+			break;
+		default:
+			MCLogger.log("Creation of projects with type " + type + " is not supported.");
+		}	
+	}
 
 	public void requestMicroprofileProjectCreate(String name)
 			throws JSONException, IOException {
@@ -411,6 +425,21 @@ public class MicroclimateConnection {
 		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "java");
 		createProjectPayload.put(MCConstants.KEY_FRAMEWORK, "microprofile");
 		createProjectPayload.put(MCConstants.KEY_CONTEXTROOT, name);
+
+		HttpUtil.post(url, createProjectPayload);
+	}
+	
+	public void requestSpringProjectCreate(String name)
+			throws JSONException, IOException {
+
+		String createEndpoint = MCConstants.APIPATH_PROJECT_LIST;
+
+        URI url = baseUrl.resolve(createEndpoint);
+
+		JSONObject createProjectPayload = new JSONObject();
+		createProjectPayload.put(MCConstants.KEY_NAME, name);
+		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "java");
+		createProjectPayload.put(MCConstants.KEY_FRAMEWORK, "spring");
 
 		HttpUtil.post(url, createProjectPayload);
 	}
