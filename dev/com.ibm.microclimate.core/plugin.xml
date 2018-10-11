@@ -36,6 +36,7 @@
       name="%LAUNCH_CONFIG_NAME"
       delegate="com.ibm.microclimate.core.internal.server.debug.MicroclimateServerLaunchConfigDelegate"
       modes="run, debug"
+      public="false"
       sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
       sourcePathComputerId="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"/>
 </extension>

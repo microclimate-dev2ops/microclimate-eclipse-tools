@@ -12,6 +12,7 @@ package com.ibm.microclimate.core.internal.server.debug;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -55,11 +56,11 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
             MCLogger.logError(msg);
             abort(msg, null, IStatus.ERROR);
         }
-        else if (server.getServerState() == IServer.STATE_STARTING) {
-        	MCLogger.logError("Trying to start server that is Starting");		// $NON-NLS-1$
-
-        	// There are likely other scenarios where we could present the 'only launch from servers view' message,
-        	// but I'm not sure how to detect them at this point.
+        
+        ILaunch oldLaunch = server.getLaunch();
+        if (oldLaunch != null && DebugPlugin.getDefault().getLaunchManager().isRegistered(oldLaunch)) {
+        	// If the Servers view was used to launch then there should be no launch left around.  If there
+        	// is a launch then some other method was used which is an error.
         	abort(NLS.bind(Messages.MicroclimateServerLaunchConfigDelegate_OnlyLaunchFromServers, server.getName()),
         			null, IStatus.ERROR);
         }
@@ -82,13 +83,6 @@ public class MicroclimateServerLaunchConfigDelegate extends AbstractJavaLaunchCo
 
         if (!errorMsg.isEmpty()) {
         	abort(errorMsg, null, IStatus.ERROR);
-        }
-
-        // Remove the old launch from the debug view.
-        ILaunch oldLaunch = server.getLaunch();
-        if (oldLaunch != null && !oldLaunch.equals(launch)) {
-        	MCLogger.log("Removing old launch");
-            getLaunchManager().removeLaunch(oldLaunch);
         }
 
 		MCLogger.log("Launching " + server.getName() + " in " + launchMode + " mode"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

@@ -327,6 +327,16 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 					e.getMessage());
 			return;
 		}
+		
+		// The restart was initiated successfully so remove any old launches
+		MicroclimateServerBehaviour mcServerBehaviour = app.getLinkedServer();
+		if (mcServerBehaviour != null) {
+			ILaunch launch = mcServerBehaviour.getServer().getLaunch();
+			if (launch != null) {
+				MCLogger.log("Removing old launch");
+				DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);
+			}
+		}
 
 		// Restarts are only valid if the server is Started. So, we go from Started -> Stopped -> Starting,
 		// then connect the debugger if required (Liberty won't leave 'Starting' state until the debugger is connected),
@@ -350,11 +360,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 			IProgressMonitor monitor) {
 
 		if (ILaunchManager.DEBUG_MODE.equals(launchMode)) {
-			boolean starting = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING);
-			if (!starting) {
+			boolean isValidState = waitForState(getStartTimeoutMs(), monitor, IServer.STATE_STARTING, IServer.STATE_STARTED);
+			if (!isValidState) {
 				// TODO I haven't seen this happen, but we should probably display something to the user in this case.
 				// What could cause this to happen?
-				MCLogger.logError("Server did not enter Starting state"); //$NON-NLS-1$
+				MCLogger.logError("Server did not enter Starting or Started state"); //$NON-NLS-1$
 				return;
 			}
 
@@ -396,9 +406,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	/**
-	 * Wait for the server to enter the given state(s). The server state is updated by the MonitorThread.
+	 * Wait for the server to enter one of the given state(s). The server state is updated by the MonitorThread.
 	 *
-	 * @return true if the server entered the state in time, false otherwise.
+	 * @return true if the server entered one of the states in time, false otherwise.
 	 */
 	private boolean waitForState(int timeoutMs, IProgressMonitor monitor, int... desiredStates) {
 		final long startTime = System.currentTimeMillis();
