@@ -289,7 +289,12 @@ public class MicroclimateConnection {
 		restartProjectPayload.put(MCConstants.KEY_START_MODE, launchMode);
 
 		// This initiates the restart
-		HttpUtil.post(url, restartProjectPayload);
+		HttpResult result = HttpUtil.post(url, restartProjectPayload);
+		if (!result.isGoodResponse) {
+			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
+					result.responseCode, result.error);
+			throw new IOException(msg);
+		}
 		app.invalidatePorts();
 	}
 

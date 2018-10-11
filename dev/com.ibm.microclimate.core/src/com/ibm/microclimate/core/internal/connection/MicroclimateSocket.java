@@ -15,6 +15,11 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.osgi.util.NLS;
@@ -230,9 +235,21 @@ public class MicroclimateSocket {
 			app.setDebugPort(debugPort);
 			if (serverBehaviour.getServer().getMode() == ILaunchManager.DEBUG_MODE && debugPort != -1) {
 				// If the debug connection is lost then reconnect
-				ILaunch launch = serverBehaviour.getServer().getLaunch();
-				if (launch == null || launch.getLaunchMode() != ILaunchManager.DEBUG_MODE) {
-					serverBehaviour.reconnectDebug(null);
+				final ILaunch launch = serverBehaviour.getServer().getLaunch();
+				if (launch == null || launch.getLaunchMode() != ILaunchManager.DEBUG_MODE || launch.getDebugTarget() == null) {
+					if (launch != null) {
+						// Remove the old launch
+						DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);
+					}
+					Job job = new Job("Reconnect debugger") {
+						@Override
+						protected IStatus run(IProgressMonitor monitor) {
+							serverBehaviour.reconnectDebug(monitor);
+							return Status.OK_STATUS;
+						}
+					};
+					job.setPriority(Job.LONG);
+					job.schedule();
 				}
 			}
 		} else {
