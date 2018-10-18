@@ -478,10 +478,6 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			// but then we'd have to give them a way to start the project from Eclipse.
 			return Messages.LinkPage_ErrMsgNotRunning;
 		}
-		else if (!appToLink.isSupportedProject()) {
-			return "A project that is invalid is selected. This project is not one of the supported project types. "
-					+ "Only Liberty and Spring projects are supported.";
-		}
 		else {
 			// should never happen - handle all possible reasons for invalidity above
 			return Messages.LinkPage_ErrMsgFallThrough;

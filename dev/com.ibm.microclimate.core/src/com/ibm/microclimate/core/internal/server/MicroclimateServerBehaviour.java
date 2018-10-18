@@ -117,6 +117,15 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	@Override
+	public IStatus canRestart(String mode) {
+		if (app.isSupportedProject()) {
+			return Status.OK_STATUS;
+		} else {
+			return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Restart not supported for project type: " + app.projectType, null); //$NON-NLS-1$
+		}
+	}
+
+	@Override
 	public IStatus canStop() {
 		// TODO when FW supports this
 		return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, 0, "Not yet supported", null); //$NON-NLS-1$
@@ -215,7 +224,6 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		// Update build status if the project is not started or starting.
 		if (!appStatus.equals(AppState.STARTED.appState) && !appStatus.equals(AppState.STARTING.appState) &&
 				projectChangedEvent.has(MCConstants.KEY_BUILD_STATUS)) {
-
 			String detail = ""; //$NON-NLS-1$
 			if (projectChangedEvent.has(MCConstants.KEY_DETAILED_BUILD_STATUS)) {
 				detail = projectChangedEvent.getString(MCConstants.KEY_DETAILED_BUILD_STATUS);
