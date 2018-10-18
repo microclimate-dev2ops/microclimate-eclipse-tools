@@ -129,7 +129,7 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isLinkable() {
-		return isRunning() && !isLinked() && isSupportedProject();
+		return isRunning() && !isLinked();
 	}
 
 	public boolean isRunning() {
