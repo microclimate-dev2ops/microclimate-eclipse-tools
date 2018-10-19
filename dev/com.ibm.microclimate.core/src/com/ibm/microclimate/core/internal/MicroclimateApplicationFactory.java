@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * IBM Confidential
+ * OCO Source Materials
+ * (C) Copyright IBM Corp. 2018 All Rights Reserved.
+ * The source code for this program is not published or otherwise
+ * divested of its trade secrets, irrespective of what has
+ * been deposited with the U.S. Copyright Office.
+ *******************************************************************************/
+
 package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
@@ -9,9 +18,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
+import com.ibm.microclimate.core.internal.constants.StartMode;
 
 public class MicroclimateApplicationFactory {
 	/**
@@ -50,30 +59,6 @@ public class MicroclimateApplicationFactory {
 
 				String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
 
-				int httpPort = -1;
-
-				// Is the app started?
-				// If so, get the port. If not, leave port set to -1, this indicates the app is not started.
-				if (appJso.has(MCConstants.KEY_APP_STATUS)
-						&& AppState.STARTED.appState.equals(appJso.getString(MCConstants.KEY_APP_STATUS))) {
-
-					try {
-						String httpPortStr = appJso.getJSONObject(MCConstants.KEY_PORTS)
-								.getString(MCConstants.KEY_EXPOSED_PORT);
-						httpPort = Integer.parseInt(httpPortStr);
-					}
-					catch(JSONException e) {
-						// Indicates the app is not started
-						MCLogger.log(name + " has not bound to a port"); //$NON-NLS-1$
-					}
-					catch(NumberFormatException e) {
-						MCLogger.logError("Error parsing port from " + appJso, e); //$NON-NLS-1$
-					}
-				}
-				else {
-					MCLogger.log(name + " is not running"); //$NON-NLS-1$
-				}
-
 				String contextRoot = null;
 				if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
 					contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
@@ -87,14 +72,55 @@ public class MicroclimateApplicationFactory {
 						buildLogPath = logsJso.getJSONObject(MCConstants.KEY_LOG_BUILD)
 								.getString(MCConstants.KEY_LOG_FILE);
 					}
-
+					
 					if (logsJso.has(MCConstants.KEY_LOG_APP)) {
 						hasAppLog = true;
 					}
 				}
-
-				MicroclimateApplication mcApp = new MicroclimateApplication(mcConnection, id, name, type, loc,
-						httpPort, contextRoot, buildLogPath, hasAppLog);
+				
+				MicroclimateApplication mcApp = new MicroclimateApplication(mcConnection, id, name, type, loc, contextRoot, buildLogPath, hasAppLog);
+				
+				// Set the initial app status
+				if (appJso.has(MCConstants.KEY_APP_STATUS)) {
+					String appStatus = appJso.getString(MCConstants.KEY_APP_STATUS);
+					if (appStatus != null) {
+						mcApp.setAppStatus(appStatus);
+					}
+				}
+				
+				// Get the ports if they are available
+				try {
+					if (appJso.has(MCConstants.KEY_PORTS)) {
+						JSONObject portsObj = appJso.getJSONObject(MCConstants.KEY_PORTS);
+	
+						if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
+							String httpPort = portsObj.getString(MCConstants.KEY_EXPOSED_PORT);
+							if (httpPort != null && !httpPort.isEmpty()) {
+								int portNum = MCUtil.parsePort(httpPort);
+								if (portNum != -1) {
+									mcApp.setHttpPort(portNum);
+								}
+							}
+						}
+	
+						if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
+							String debugPort = portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT);
+							if (debugPort != null && !debugPort.isEmpty()) {
+								int portNum = MCUtil.parsePort(debugPort);
+								if (portNum != -1) {
+									mcApp.setDebugPort(portNum);
+								}
+							}
+						}
+					}
+				} catch (Exception e) {
+					MCLogger.logError("Failed to get the ports for application: " + name, e);
+				}
+				
+				// Set the start mode
+				StartMode startMode = StartMode.get(appJso);
+				mcApp.setStartMode(startMode);
+				
 				apps.add(mcApp);
 			}
 			catch(JSONException e) {

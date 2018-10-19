@@ -37,6 +37,7 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManag
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.console.MicroclimateConsoleFactory;
 import com.ibm.microclimate.core.internal.server.debug.MicroclimateDebugConnector;
@@ -101,9 +102,11 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
 
 		try {
-			// Right now, the project will always be in run mode. In the future, we will have to detect which mode
-			// it is already in, so we can connect the debugger if required.
-			getServer().getLaunchConfiguration(true, null).launch(ILaunchManager.RUN_MODE, null);
+			String launchMode = app.getStartMode().launchMode;
+			if (launchMode == ILaunchManager.DEBUG_MODE && !app.projectType.isDebuggable) {
+				launchMode = ILaunchManager.RUN_MODE;
+			}
+			getServer().getLaunchConfiguration(true, null).launch(launchMode, null);
 		} catch (CoreException e) {
 			MCLogger.logError("Error doing initial launch", e);
 		}
@@ -234,6 +237,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private void onAppStateUpdate(String appStatus) {
+		app.setAppStatus(appStatus);
 		int state = AppState.convert(appStatus);
 		if (state != getServer().getServerState()) {
 			MCLogger.log("Update state of " + getServer().getName() + " to " + appStatus); //$NON-NLS-1$ //$NON-NLS-2$

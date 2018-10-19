@@ -17,7 +17,9 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
+import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -37,6 +39,9 @@ public class MicroclimateApplication {
 
 	public final IPath buildLogPath;	// can, but shouldn't, be null
 	public final boolean hasAppLog;
+	
+	private StartMode startMode;
+	private String appStatus;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -47,14 +52,13 @@ public class MicroclimateApplication {
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
 			String id, String name, ProjectType projectType, String pathInWorkspace,
-			int httpPort, String contextRoot, String buildLogPath, boolean hasAppLog)
+			String contextRoot, String buildLogPath, boolean hasAppLog)
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
 		this.projectID = id;
 		this.name = name;
 		this.projectType = projectType;
-		this.httpPort = httpPort;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
 
@@ -99,6 +103,14 @@ public class MicroclimateApplication {
 			baseUrl = new URL(baseUrl, contextRoot);
 		}
 	}
+	
+	public synchronized void setAppStatus(String appStatus) {
+		this.appStatus = appStatus;
+	}
+	
+	public synchronized void setStartMode(StartMode startMode) {
+		this.startMode = startMode;
+	}
 
 	// Getters for our project state fields
 
@@ -108,6 +120,10 @@ public class MicroclimateApplication {
 	public URL getBaseUrl() {
 		return baseUrl;
 	}
+	
+	public synchronized String getAppStatus() {
+		return appStatus;
+	}
 
 	public synchronized int getHttpPort() {
 		return httpPort;
@@ -115,6 +131,10 @@ public class MicroclimateApplication {
 
 	public synchronized int getDebugPort() {
 		return debugPort;
+	}
+	
+	public synchronized StartMode getStartMode() {
+		return startMode;
 	}
 
 	public boolean isLinked() {
@@ -129,7 +149,11 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isLinkable() {
-		return isRunning() && !isLinked();
+		return isActive() && !isLinked();
+	}
+	
+	public boolean isActive() {
+		return AppState.STARTING.stateMatches(getAppStatus()) || AppState.STARTED.stateMatches(getAppStatus());
 	}
 
 	public boolean isRunning() {

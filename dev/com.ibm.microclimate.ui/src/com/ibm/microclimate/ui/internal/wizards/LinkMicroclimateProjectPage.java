@@ -38,6 +38,7 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 import com.ibm.microclimate.ui.internal.prefs.MicroclimateConnectionPrefsPage;
 
@@ -473,9 +474,7 @@ public class LinkMicroclimateProjectPage extends WizardPage {
 			return NLS.bind(Messages.LinkPage_ErrMsgProjAlreadyLinked,
 					appToLink.getLinkedServer().getServer().getName());
 		}
-		else if (!appToLink.isRunning()) {
-			// TODO this really shouldn't be a problem. A user could create a server for a stopped project,
-			// but then we'd have to give them a way to start the project from Eclipse.
+		else if (!appToLink.isActive()) {
 			return Messages.LinkPage_ErrMsgNotRunning;
 		}
 		else {

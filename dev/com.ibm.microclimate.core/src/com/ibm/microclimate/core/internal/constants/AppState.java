@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * IBM Confidential
+ * OCO Source Materials
+ * (C) Copyright IBM Corp. 2018 All Rights Reserved.
+ * The source code for this program is not published or otherwise
+ * divested of its trade secrets, irrespective of what has
+ * been deposited with the U.S. Copyright Office.
+ *******************************************************************************/
+
 package com.ibm.microclimate.core.internal.constants;
 
 import org.eclipse.wst.server.core.IServer;
@@ -22,6 +31,10 @@ public enum AppState {
 	private AppState(int serverState, String appState) {
 		this.serverState = serverState;
 		this.appState = appState;
+	}
+	
+	public boolean stateMatches(String appState) {
+		return this.appState.equals(appState);
 	}
 
 	/**
@@ -49,4 +62,5 @@ public enum AppState {
 		MCLogger.logError("Unrecognized server state " + appState);
 		return -1;
 	}
+	
 }

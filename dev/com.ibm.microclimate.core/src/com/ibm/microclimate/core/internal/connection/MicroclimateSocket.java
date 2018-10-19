@@ -30,6 +30,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 import com.ibm.microclimate.core.internal.server.console.SocketConsole;
@@ -225,13 +226,13 @@ public class MicroclimateSocket {
         	return;
         }
 
-		int port = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
+		int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
 		if (port != -1) {
 			app.setHttpPort(port);
 		}
 
 		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
-			int debugPort = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
+			int debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
 			app.setDebugPort(debugPort);
 			if (serverBehaviour.getServer().getMode() == ILaunchManager.DEBUG_MODE && debugPort != -1) {
 				// If the debug connection is lost then reconnect
@@ -290,18 +291,21 @@ public class MicroclimateSocket {
 		JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
 		// ports object should always have an http port
-		int port = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
+		int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
 		if (port != -1) {
 			serverBehaviour.getApp().setHttpPort(port);
 		}
 
 		// Debug port will obviously be missing if the restart was into Run mode.
 		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
-			int debugPort = parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
+			int debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
 			if (debugPort != -1) {
 				serverBehaviour.getApp().setDebugPort(debugPort);
 			}
 		}
+		
+		StartMode startMode = StartMode.get(event);
+		serverBehaviour.getApp().setStartMode(startMode);
 	}
 
 	private void onProjectDeletion(JSONObject event) throws JSONException {
@@ -353,16 +357,6 @@ public class MicroclimateSocket {
 					MCLogger.logError("Error updating console " + console.getName(), e);	// $NON-NLS-1$
 				}
 			}
-		}
-	}
-
-	private int parsePort(String portStr) {
-		try {
-			return Integer.parseInt(portStr);
-		}
-		catch(NumberFormatException e) {
-			MCLogger.logError(String.format("Couldn't parse port from \"%s\"", portStr), e); //$NON-NLS-1$
-			return -1;
 		}
 	}
 
