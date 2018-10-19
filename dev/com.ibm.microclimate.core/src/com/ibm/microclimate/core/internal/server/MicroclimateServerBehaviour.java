@@ -22,6 +22,9 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.IOConsole;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
@@ -97,10 +100,7 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		}
 
 		setInitialState();
-
-		// Set up our server consoles
-		consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
-
+		
 		try {
 			String launchMode = app.getStartMode().launchMode;
 			if (launchMode == ILaunchManager.DEBUG_MODE && !app.projectType.isDebuggable) {
@@ -110,6 +110,9 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		} catch (CoreException e) {
 			MCLogger.logError("Error doing initial launch", e);
 		}
+		
+		// Set up our server consoles
+		consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
 	}
 
 	private void onInitializeFailure(String failMsg) {
@@ -168,9 +171,8 @@ public class MicroclimateServerBehaviour extends ServerBehaviourDelegate {
 		setServerState(IServer.STATE_STOPPED);
 
 		if (consoles != null) {
-			for (IOConsole console : consoles) {
-				console.destroy();
-			}
+			IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
+			consoleManager.removeConsoles(consoles.toArray(new IConsole[consoles.size()]));
 		}
 	}
 

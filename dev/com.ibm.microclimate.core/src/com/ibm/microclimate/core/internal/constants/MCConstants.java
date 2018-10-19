@@ -36,6 +36,8 @@ public class MCConstants {
 			KEY_LOC_DISK = "locOnDisk",
 			KEY_CONTEXTROOT = "contextroot",
 
+			KEY_BUILD_LOG = "build-log",
+			KEY_BUILD_LOG_LAST_MODIFIED = "build-log-last-modified",
 			KEY_LOGS = "logs",
 			KEY_LOG_BUILD = "build",
 			KEY_LOG_APP = "app",

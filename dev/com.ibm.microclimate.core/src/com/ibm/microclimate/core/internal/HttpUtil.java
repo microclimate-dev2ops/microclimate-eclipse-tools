@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 
@@ -35,10 +37,14 @@ public class HttpUtil {
 		public final String response;
 		// Can be null
 		public final String error;
+		
+		private final Map<String, List<String>> headerFields;
 
 		public HttpResult(HttpURLConnection connection) throws IOException {
 			responseCode = connection.getResponseCode();
 			isGoodResponse = responseCode > 199 && responseCode < 300;
+			
+			headerFields = isGoodResponse ? connection.getHeaderFields() : null;
 
 			// Read error first because sometimes if there is an error, connection.getInputStream() throws an exception
 			InputStream eis = connection.getErrorStream();
@@ -61,6 +67,17 @@ public class HttpUtil {
 			else {
 				response = null;
 			}
+		}
+		
+		public String getHeader(String key) {
+			if (headerFields == null) {
+				return null;
+			}
+			List<String> list = headerFields.get(key);
+			if (list == null || list.isEmpty()) {
+				return null;
+			}
+			return list.get(0);
 		}
 	}
 
@@ -95,6 +112,23 @@ public class HttpUtil {
 
 			DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
 			payloadStream.write(payload.toString().getBytes());
+
+			return new HttpResult(connection);
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
+	
+	public static HttpResult head(URI uri) throws IOException {
+		HttpURLConnection connection = null;
+
+		MCLogger.log("HEAD " + uri);
+		try {
+			connection = (HttpURLConnection) uri.toURL().openConnection();
+
+			connection.setRequestMethod("HEAD");
 
 			return new HttpResult(connection);
 		} finally {
