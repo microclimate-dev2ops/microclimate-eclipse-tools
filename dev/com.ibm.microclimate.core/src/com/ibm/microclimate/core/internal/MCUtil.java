@@ -120,4 +120,15 @@ public class MCUtil {
 
 		return resultBuilder.toString();
 	}
+	
+	public static int parsePort(String portStr) {
+		try {
+			return Integer.parseInt(portStr);
+		}
+		catch(NumberFormatException e) {
+			MCLogger.logError(String.format("Couldn't parse port from \"%s\"", portStr), e); //$NON-NLS-1$
+			return -1;
+		}
+	}
+
 }
