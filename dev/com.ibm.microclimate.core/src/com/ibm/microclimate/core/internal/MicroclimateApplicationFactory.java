@@ -64,21 +64,7 @@ public class MicroclimateApplicationFactory {
 					contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
 				}
 
-				String buildLogPath = null;
-				boolean hasAppLog = false;
-				if (appJso.has(MCConstants.KEY_LOGS)) {
-					JSONObject logsJso = appJso.getJSONObject(MCConstants.KEY_LOGS);
-					if (logsJso.has(MCConstants.KEY_LOG_BUILD)) {
-						buildLogPath = logsJso.getJSONObject(MCConstants.KEY_LOG_BUILD)
-								.getString(MCConstants.KEY_LOG_FILE);
-					}
-					
-					if (logsJso.has(MCConstants.KEY_LOG_APP)) {
-						hasAppLog = true;
-					}
-				}
-				
-				MicroclimateApplication mcApp = new MicroclimateApplication(mcConnection, id, name, type, loc, contextRoot, buildLogPath, hasAppLog);
+				MicroclimateApplication mcApp = new MicroclimateApplication(mcConnection, id, name, type, loc, contextRoot);
 				
 				// Set the initial app status
 				if (appJso.has(MCConstants.KEY_APP_STATUS)) {

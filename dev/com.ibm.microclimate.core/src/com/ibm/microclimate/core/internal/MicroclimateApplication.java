@@ -37,9 +37,6 @@ public class MicroclimateApplication {
 	public final IPath fullLocalPath;
 	public final ProjectType projectType;
 
-	public final IPath buildLogPath;	// can, but shouldn't, be null
-	public final boolean hasAppLog;
-	
 	private StartMode startMode;
 	private String appStatus;
 
@@ -51,8 +48,7 @@ public class MicroclimateApplication {
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace,
-			String contextRoot, String buildLogPath, boolean hasAppLog)
+			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot)
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
@@ -61,15 +57,6 @@ public class MicroclimateApplication {
 		this.projectType = projectType;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
-
-		if (buildLogPath != null) {
-			this.buildLogPath = MCUtil.appendPathWithoutDupe(mcConnection.localWorkspacePath, buildLogPath);
-		}
-		else {
-			MCLogger.logError("No build log provided for app " + name);
-			this.buildLogPath = null;
-		}
-		this.hasAppLog = hasAppLog;
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
 		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
@@ -162,6 +149,10 @@ public class MicroclimateApplication {
 
 	public boolean isSupportedProject() {
 		return mcConnection.supportsProjectType(projectType);
+	}
+	
+	public boolean hasBuildLog() {
+		return (projectType != ProjectType.NODE);
 	}
 
 	public synchronized void setHttpPort(int httpPort) {
