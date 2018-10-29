@@ -9,10 +9,6 @@
 
 package com.ibm.microclimate.core.internal;
 
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,97 +19,149 @@ import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 
 public class MicroclimateApplicationFactory {
+	
 	/**
-	 * Parse the given projectsJson from the Microclimate server to construct a list of applications on that server.
+	 * Process the json for all projects, create or update applications as needed.
 	 */
-	public static List<MicroclimateApplication> getAppsFromProjectsJson(MicroclimateConnection mcConnection,
-			String projectsJson)
-					throws JSONException, NumberFormatException, MalformedURLException {
-
-		List<MicroclimateApplication> apps = new ArrayList<>();
-
-		MCLogger.log(projectsJson);
-		JSONArray appArray = new JSONArray(projectsJson);
-
-		for(int i = 0; i < appArray.length(); i++) {
-			JSONObject appJso = appArray.getJSONObject(i);
-			try {
-				// MCLogger.log("app: " + appJso.toString());
-				String name = appJso.getString(MCConstants.KEY_NAME);
-				String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
-
-				ProjectType type = ProjectType.UNKNOWN;
-				try {
-					// from portal: projectType and buildType are equivalent - however
-					// buildType is always present, projectType is missing for disabled/stopped projects
-					// We should use projectType if it gets fixed
-					// see see https://github.ibm.com/dev-ex/portal/issues/520
-					// String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
-
-					String typeStr = appJso.getString(MCConstants.KEY_BUILD_TYPE);
-					type = ProjectType.fromInternalType(typeStr);
-				}
-				catch(JSONException e) {
-					MCLogger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
-				}
-
-				String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
-
-				String contextRoot = null;
-				if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
-					contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
-				}
-
-				MicroclimateApplication mcApp = new MicroclimateApplication(mcConnection, id, name, type, loc, contextRoot);
-				
-				// Set the initial app status
-				if (appJso.has(MCConstants.KEY_APP_STATUS)) {
-					String appStatus = appJso.getString(MCConstants.KEY_APP_STATUS);
-					if (appStatus != null) {
-						mcApp.setAppStatus(appStatus);
-					}
-				}
-				
-				// Get the ports if they are available
-				try {
-					if (appJso.has(MCConstants.KEY_PORTS)) {
-						JSONObject portsObj = appJso.getJSONObject(MCConstants.KEY_PORTS);
+	public static void getAppsFromProjectsJson(MicroclimateConnection mcConnection, String projectsJson) {
+		getAppsFromProjectsJson(mcConnection, projectsJson, null);
+	}
 	
-						if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
-							String httpPort = portsObj.getString(MCConstants.KEY_EXPOSED_PORT);
-							if (httpPort != null && !httpPort.isEmpty()) {
-								int portNum = MCUtil.parsePort(httpPort);
-								if (portNum != -1) {
-									mcApp.setHttpPort(portNum);
-								}
-							}
-						}
+	/**
+	 * Process the json for the given projectID or all projects if projectID is null.
+	 */
+	public static void getAppsFromProjectsJson(MicroclimateConnection mcConnection,
+			String projectsJson, String projectID) {
+
+		try {
+			MCLogger.log(projectsJson);
+			JSONArray appArray = new JSONArray(projectsJson);
 	
-						if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
-							String debugPort = portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT);
-							if (debugPort != null && !debugPort.isEmpty()) {
-								int portNum = MCUtil.parsePort(debugPort);
-								if (portNum != -1) {
-									mcApp.setDebugPort(portNum);
-								}
+			for(int i = 0; i < appArray.length(); i++) {
+				JSONObject appJso = appArray.getJSONObject(i);
+				try {
+					String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
+					// If a project id was passed in then only process the JSON object for that project
+					if (projectID == null || projectID.equals(id)) {
+						MicroclimateApplication app = mcConnection.getAppByID(id);
+						if (app != null) {
+							updateApp(app, appJso);
+						} else {
+							app = createApp(mcConnection, appJso);
+							if (app != null) {
+								mcConnection.addApp(app);
 							}
 						}
 					}
 				} catch (Exception e) {
-					MCLogger.logError("Failed to get the ports for application: " + name, e);
+					MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
 				}
-				
-				// Set the start mode
-				StartMode startMode = StartMode.get(appJso);
-				mcApp.setStartMode(startMode);
-				
-				apps.add(mcApp);
+			}
+		} catch (Exception e) {
+			MCLogger.logError("Error parsing json for project array.", e); //$NON-NLS-1$
+		}
+	}
+	
+	/**
+	 * Use the static information in the JSON object to create the application.
+	 */
+	public static MicroclimateApplication createApp(MicroclimateConnection mcConnection, JSONObject appJso) {
+		try {
+			// MCLogger.log("app: " + appJso.toString());
+			String name = appJso.getString(MCConstants.KEY_NAME);
+			String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
+
+			ProjectType type = ProjectType.UNKNOWN;
+			try {
+				// from portal: projectType and buildType are equivalent - however
+				// buildType is always present, projectType is missing for disabled/stopped projects
+				// We should use projectType if it gets fixed
+				// see see https://github.ibm.com/dev-ex/portal/issues/520
+				// String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
+
+				String typeStr = appJso.getString(MCConstants.KEY_BUILD_TYPE);
+				type = ProjectType.fromInternalType(typeStr);
 			}
 			catch(JSONException e) {
-				MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
+				MCLogger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
 			}
-		}
 
-		return apps;
+			String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
+
+			String contextRoot = null;
+			if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
+				contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
+			}
+
+			MicroclimateApplication mcApp = MicroclimateObjectFactory.createMicroclimateApplication(mcConnection, id, name, type, loc, contextRoot);
+			
+			updateApp(mcApp, appJso);
+			return mcApp;
+		} catch(JSONException e) {
+			MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
+		} catch (Exception e) {
+			MCLogger.logError("Error creating new application for project.", e); //$NON-NLS-1$
+		}
+		return null;
+	}
+	
+	/**
+	 * Update the application with the dynamic information in the JSON object.
+	 */
+	public static void updateApp(MicroclimateApplication mcApp, JSONObject appJso) {
+		try {
+			// Set the app status
+			if (appJso.has(MCConstants.KEY_APP_STATUS)) {
+				String appStatus = appJso.getString(MCConstants.KEY_APP_STATUS);
+				if (appStatus != null) {
+					mcApp.setAppStatus(appStatus);
+				}
+			}
+			
+			// Set the build status
+			if (appJso.has(MCConstants.KEY_BUILD_STATUS)) {
+				String buildStatus = appJso.getString(MCConstants.KEY_BUILD_STATUS);
+				String detail = ""; //$NON-NLS-1$
+				if (appJso.has(MCConstants.KEY_DETAILED_BUILD_STATUS)) {
+					detail = appJso.getString(MCConstants.KEY_DETAILED_BUILD_STATUS);
+				}
+				mcApp.setBuildStatus(buildStatus, detail);
+			}
+			
+			// Get the ports if they are available
+			try {
+				if (appJso.has(MCConstants.KEY_PORTS) && (appJso.get(MCConstants.KEY_PORTS) instanceof JSONObject)) {
+					JSONObject portsObj = appJso.getJSONObject(MCConstants.KEY_PORTS);
+	
+					if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
+						String httpPort = portsObj.getString(MCConstants.KEY_EXPOSED_PORT);
+						if (httpPort != null && !httpPort.isEmpty()) {
+							int portNum = MCUtil.parsePort(httpPort);
+							if (portNum != -1) {
+								mcApp.setHttpPort(portNum);
+							}
+						}
+					}
+	
+					if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
+						String debugPort = portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT);
+						if (debugPort != null && !debugPort.isEmpty()) {
+							int portNum = MCUtil.parsePort(debugPort);
+							if (portNum != -1) {
+								mcApp.setDebugPort(portNum);
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				MCLogger.logError("Failed to get the ports for application: " + mcApp.name, e);
+			}
+			
+			// Set the start mode
+			StartMode startMode = StartMode.get(appJso);
+			mcApp.setStartMode(startMode);
+		} catch(JSONException e) {
+			MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
+		}
 	}
 }

@@ -22,6 +22,7 @@ Export-Package: com.ibm.microclimate.core,
  com.ibm.microclimate.core.internal.connection,
  com.ibm.microclimate.core.internal.constants,
  com.ibm.microclimate.core.internal.server,
+ com.ibm.microclimate.core.internal.server.console,
  io.socket.client,
  io.socket.emitter,
  org.json

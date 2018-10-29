@@ -55,6 +55,21 @@ public class Messages extends NLS {
 
 	public static String MicroclimateSocket_ErrRestartingProjectDialogMsg;
 	public static String MicroclimateSocket_ErrRestartingProjectDialogTitle;
+	
+	public static String AppStateStarting;
+	public static String AppStateStarted;
+	public static String AppStateStopping;
+	public static String AppStateStopped;
+	public static String AppStateUnknown;
+	public static String AppStateDebugging;
+	
+	public static String BuildStateQueued;
+	public static String BuildStateInProgress;
+	public static String BuildStateSuccess;
+	public static String BuildStateFailed;
+	public static String BuildStateUnknown;
+	
+	public static String DebugLaunchError;
 
 	static {
 		// initialize resource bundle

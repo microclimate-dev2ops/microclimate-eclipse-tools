@@ -19,6 +19,7 @@ import org.eclipse.osgi.util.NLS;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
 public class MicroclimateReconnectJob {
@@ -71,7 +72,7 @@ public class MicroclimateReconnectJob {
 
 					MCLogger.log("Trying to reconnect to Microclimate at " + url); //$NON-NLS-1$
 
-					MicroclimateConnection newConnection = new MicroclimateConnection(url);
+					MicroclimateConnection newConnection = MicroclimateObjectFactory.createMicroclimateConnection(url);
 					if (newConnection != null) {
 						// connection re-established!
 						MCLogger.log("Successfully re-connected to Microclimate at " + url); //$NON-NLS-1$

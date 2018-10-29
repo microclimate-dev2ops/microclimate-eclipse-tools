@@ -16,6 +16,7 @@ import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.ibm.microclimate.core.internal.IUpdateHandler;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
@@ -37,6 +38,8 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 
 	// The shared instance
 	private static MicroclimateCorePlugin plugin;
+	
+	private static IUpdateHandler updateHandler;
 
 	/**
 	 * The constructor
@@ -84,6 +87,14 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	public static ImageDescriptor getIcon(String path) {
 		final URL url = MicroclimateCorePlugin.getDefault().getBundle().getEntry(DEFAULT_ICON_PATH);
 		return ImageDescriptor.createFromURL(url);
+	}
+	
+	public static void setUpdateHandler(IUpdateHandler handler) {
+		updateHandler = handler;
+	}
+	
+	public static IUpdateHandler getUpdateHandler() {
+		return updateHandler;
 	}
 
 }

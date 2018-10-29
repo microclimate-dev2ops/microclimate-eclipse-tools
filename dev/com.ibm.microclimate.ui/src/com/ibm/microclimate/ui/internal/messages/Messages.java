@@ -69,7 +69,12 @@ public class Messages extends NLS {
 	public static String StartBuildAction_AppMissingMsg;
 	public static String StartBuildAction_AlreadyBuildingTitle;
 	public static String StartBuildAction_AlreadyBuildingMsg;
-
+	
+	public static String MicroclimateConnectionLabel;
+	
+	public static String RestartInDebugMode;
+	public static String RestartInRunMode;
+	public static String ErrorOnRestartDialogTitle;
 
 	static {
 		// initialize resource bundle

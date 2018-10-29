@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.internal.messages.Messages;
@@ -182,7 +183,7 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 			MCLogger.log("Validating connection: " + uri); //$NON-NLS-1$
 
 			// Will throw an Exception if fails
-			mcConnection = new MicroclimateConnection(uri);
+			mcConnection = MicroclimateObjectFactory.createMicroclimateConnection(uri);
 
 			if(mcConnection != null) {
 				setErrorMessage(null);

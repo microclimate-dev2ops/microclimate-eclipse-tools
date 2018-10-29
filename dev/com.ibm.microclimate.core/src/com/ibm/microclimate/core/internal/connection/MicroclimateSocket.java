@@ -15,13 +15,6 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,6 +42,8 @@ import io.socket.emitter.Emitter;
  *
  */
 public class MicroclimateSocket {
+	
+	private final MicroclimateConnection mcConnection;
 
 	public final Socket socket;
 
@@ -65,6 +60,7 @@ public class MicroclimateSocket {
 
 	// SocketIO Event names
 	private static final String
+			EVENT_PROJECT_CREATION = "projectCreation",				//$NON-NLS-1$
 			EVENT_PROJECT_CHANGED = "projectChanged", 				//$NON-NLS-1$
 			EVENT_PROJECT_STATUS_CHANGE = "projectStatusChanged", 	//$NON-NLS-1$
 			EVENT_PROJECT_RESTART = "projectRestartResult", 		//$NON-NLS-1$
@@ -73,7 +69,8 @@ public class MicroclimateSocket {
 			EVENT_CONTAINER_LOGS = "container-logs";				//$NON-NLS-1$
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
-
+		this.mcConnection = mcConnection;
+		
 		socketUri = mcConnection.baseUrl;
 
 		socket = IO.socket(socketUri);
@@ -120,6 +117,19 @@ public class MicroclimateSocket {
 			public void call(Object... arg0) {
 				// Don't think this is ever used
 				MCLogger.log("SocketIO EVENT_MESSAGE " + arg0[0].toString()); //$NON-NLS-1$
+			}
+		})
+		.on(EVENT_PROJECT_CREATION, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				MCLogger.log(EVENT_PROJECT_CREATION + ": " + arg0[0].toString()); //$NON-NLS-1$
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onProjectCreation(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
 			}
 		})
 		.on(EVENT_PROJECT_CHANGED, new Emitter.Listener() {
@@ -207,15 +217,21 @@ public class MicroclimateSocket {
 
 		MCLogger.log("Created MicroclimateSocket connected to " + socketUri); //$NON-NLS-1$
 	}
+	
+	private void onProjectCreation(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		mcConnection.refreshApps(projectID);
+		MCUtil.updateConnection(mcConnection, true);
+	}
 
 	private void onProjectChanged(JSONObject event) throws JSONException {
-		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
-		if (serverBehaviour == null) {
-			// This is OK. It will happen if the project that's changed is not linked to a server.
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			MCLogger.logError("No application found matching the project id for the project changed event: " + projectID);
 			return;
 		}
-        MicroclimateApplication app = serverBehaviour.getApp();
-
+	
         // Update ports
         JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
@@ -227,31 +243,13 @@ public class MicroclimateSocket {
         }
 
 		int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
-		if (port != -1) {
-			app.setHttpPort(port);
-		}
+		app.setHttpPort(port);
 
 		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
 			int debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
 			app.setDebugPort(debugPort);
-			if (serverBehaviour.getServer().getMode() == ILaunchManager.DEBUG_MODE && debugPort != -1) {
-				// If the debug connection is lost then reconnect
-				final ILaunch launch = serverBehaviour.getServer().getLaunch();
-				if (launch == null || launch.getLaunchMode() != ILaunchManager.DEBUG_MODE || launch.getDebugTarget() == null) {
-					if (launch != null) {
-						// Remove the old launch
-						DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);
-					}
-					Job job = new Job("Reconnect debugger") {
-						@Override
-						protected IStatus run(IProgressMonitor monitor) {
-							serverBehaviour.reconnectDebug(monitor);
-							return Status.OK_STATUS;
-						}
-					};
-					job.setPriority(Job.LONG);
-					job.schedule();
-				}
+			if (StartMode.DEBUG_MODES.contains(app.getStartMode()) && debugPort != -1) {
+				app.reconnectDebugger();
 			}
 		} else {
 			app.setDebugPort(-1);
@@ -259,6 +257,32 @@ public class MicroclimateSocket {
 	}
 
 	private void onProjectStatusChanged(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			// Likely a new project is being created
+			mcConnection.refreshApps(projectID);
+			MCUtil.updateConnection(mcConnection, true);
+			return;
+		}
+		
+		if (event.has(MCConstants.KEY_APP_STATUS)) {
+			String appStatus = event.getString(MCConstants.KEY_APP_STATUS);
+			app.setAppStatus(appStatus);
+		}
+
+		// Update build status if the project is not started or starting.
+		if (event.has(MCConstants.KEY_BUILD_STATUS)) {
+			String buildStatus = event.getString(MCConstants.KEY_BUILD_STATUS);
+			String detail = ""; //$NON-NLS-1$
+			if (event.has(MCConstants.KEY_DETAILED_BUILD_STATUS)) {
+				detail = event.getString(MCConstants.KEY_DETAILED_BUILD_STATUS);
+			}
+			app.setBuildStatus(buildStatus, detail);
+		}
+		
+		MCUtil.updateApplication(app, false);
+		
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
 			// This is OK. It will happen if the project that's changed is not linked to a server.
@@ -266,24 +290,24 @@ public class MicroclimateSocket {
 		}
 
 		serverBehaviour.updateServerState(event);
+		
 	}
 
 	private void onProjectRestart(JSONObject event) throws JSONException {
-		// The restart event doesn't provide a project state. We just update the ports here
-		// The project state events will be received separately and handled normally.
-		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
-		if (serverBehaviour == null) {
-			MCLogger.logError("Failed to get serverBehaviour, aborting state update triggered by restart"); //$NON-NLS-1$
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			MCLogger.logError("No application found matching the project id for the project restart event: " + projectID);
 			return;
 		}
-
+		
 		String status = event.getString(MCConstants.KEY_STATUS);
 		if (!MCConstants.REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
 			MCLogger.logError("Project restart failed on the server: " + event.toString()); //$NON-NLS-1$
 			MCUtil.openDialog(true,
 					Messages.MicroclimateSocket_ErrRestartingProjectDialogTitle,
 					NLS.bind(Messages.MicroclimateSocket_ErrRestartingProjectDialogMsg,
-							serverBehaviour.getServer().getName(), status));
+							app.name, status));
 			return;
 		}
 
@@ -293,22 +317,36 @@ public class MicroclimateSocket {
 		// ports object should always have an http port
 		int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
 		if (port != -1) {
-			serverBehaviour.getApp().setHttpPort(port);
+			app.setHttpPort(port);
 		}
 
 		// Debug port will obviously be missing if the restart was into Run mode.
+		int debugPort = -1;
 		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
-			int debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
+			debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
 			if (debugPort != -1) {
-				serverBehaviour.getApp().setDebugPort(debugPort);
+				app.setDebugPort(debugPort);
 			}
 		}
 		
 		StartMode startMode = StartMode.get(event);
-		serverBehaviour.getApp().setStartMode(startMode);
+		app.setStartMode(startMode);
+		
+		if (StartMode.DEBUG_MODES.contains(startMode) && debugPort != -1) {
+			app.connectDebugger();
+		}
 	}
 
 	private void onProjectDeletion(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.removeApp(projectID);
+		if (app == null) {
+			MCLogger.logError("No application found for project being deleted: " + projectID);
+			return;
+		}
+		MCUtil.updateConnection(mcConnection, true);
+		app.dispose();
+		
 		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
 		if (serverBehaviour == null) {
 			// This is normal if this project is not linked to an Eclipse server.

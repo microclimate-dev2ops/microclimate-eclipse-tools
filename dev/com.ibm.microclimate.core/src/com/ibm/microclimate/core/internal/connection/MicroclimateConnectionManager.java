@@ -9,8 +9,7 @@
 
 package com.ibm.microclimate.core.internal.connection;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -29,11 +28,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerCore;
-import org.json.JSONException;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;;
@@ -137,6 +136,7 @@ public class MicroclimateConnectionManager {
 			MCLogger.logError("Tried to remove MCConnection " + baseUrl + ", but it didn't exist"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		instance().writeToPreferences();
+		MCUtil.updateAll();
 		return removeResult;
 	}
 
@@ -212,7 +212,8 @@ public class MicroclimateConnectionManager {
 
 			try {
 				// Assume all connections are active. If they are broken they will be handled in the catch below.
-				MicroclimateConnection connection = MicroclimateConnection.fromPrefsString(line);
+				URI uri = new URI(line);
+				MicroclimateConnection connection = MicroclimateObjectFactory.createMicroclimateConnection(uri);
 				add(connection);
 			}
 			catch (MicroclimateConnectionException mce) {
@@ -220,7 +221,7 @@ public class MicroclimateConnectionManager {
 				brokenConnections.add(mce.connectionUrl.toString());
 				MicroclimateReconnectJob.createAndStart(mce.connectionUrl);
 			}
-			catch (JSONException | IOException | URISyntaxException e) {
+			catch (Exception e) {
 				MCLogger.logError("Error loading MCConnection from preferences", e); //$NON-NLS-1$
 			}
 		}

@@ -9,6 +9,8 @@
 
 package com.ibm.microclimate.core.internal.constants;
 
+import java.util.EnumSet;
+
 import org.eclipse.debug.core.ILaunchManager;
 import org.json.JSONObject;
 
@@ -19,6 +21,8 @@ public enum StartMode {
 	RUN("run", ILaunchManager.RUN_MODE),
 	DEBUG("debug", ILaunchManager.DEBUG_MODE),
 	DEBUG_INIT("debugInit", ILaunchManager.DEBUG_MODE);
+	
+	public static final EnumSet<StartMode> DEBUG_MODES = EnumSet.of(DEBUG, DEBUG_INIT);
 
 	public final String startMode;
 	public final String launchMode;
