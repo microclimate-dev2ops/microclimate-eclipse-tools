@@ -5,11 +5,11 @@ import java.util.List;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.constants.AppState;
 
 public class MicroclimateUtil {
 	
@@ -36,13 +36,6 @@ public class MicroclimateUtil {
 	}
 	
 	public static void cleanup(MicroclimateConnection connection) throws Exception {
-		// Delete servers for linked projects
-		List<MicroclimateApplication> linkedApps = connection.getLinkedApps();
-		for (MicroclimateApplication app: linkedApps) {
-			ServerBehaviourDelegate serverBehaviour = app.getLinkedServer();
-			serverBehaviour.getServer().delete();
-		}
-		
 		// Delete eclipse projects
 		List<MicroclimateApplication> allApps = connection.getApps();
 		for (MicroclimateApplication app: allApps) {
@@ -68,6 +61,16 @@ public class MicroclimateUtil {
 		}
 		
 		MicroclimateConnectionManager.removeConnection(connection.baseUrl.toString());
+	}
+	
+	public static boolean waitForAppState(MicroclimateApplication app, AppState state, long timeout, long interval) {
+		TestUtil.wait(new Condition() {
+			@Override
+			public boolean test() {
+				return app.getAppState() == state;
+			}
+		}, timeout, interval);
+		return app.getAppState() == state;
 	}
 
 }

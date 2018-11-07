@@ -38,9 +38,6 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
 /**
  * This simple page allows the user to add new Microclimate connections, by entering a hostname and port and
  * validating that Microclimate is indeed reachable at the given address.
- *
- * @author timetchells@ibm.com
- *
  */
 public class NewMicroclimateConnectionPage extends WizardPage {
 

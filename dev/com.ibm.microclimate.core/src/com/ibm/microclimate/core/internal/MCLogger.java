@@ -18,7 +18,7 @@ import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 
 /**
- * @author timetchells@ibm.com
+ * Logging utility
  */
 public class MCLogger implements DebugOptionsListener {
 

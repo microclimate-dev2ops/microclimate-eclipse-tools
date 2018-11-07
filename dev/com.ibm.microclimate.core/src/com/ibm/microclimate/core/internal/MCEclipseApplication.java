@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * IBM Confidential
+ * OCO Source Materials
+ * (C) Copyright IBM Corp. 2018 All Rights Reserved.
+ * The source code for this program is not published or otherwise
+ * divested of its trade secrets, irrespective of what has
+ * been deposited with the U.S. Copyright Office.
+ *******************************************************************************/
+
 package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
@@ -27,6 +36,9 @@ import com.ibm.microclimate.core.internal.launch.MicroclimateLaunchConfigDelegat
 import com.ibm.microclimate.core.internal.messages.Messages;
 
 public class MCEclipseApplication extends MicroclimateApplication {
+	
+	// in seconds
+	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 3;
 	
 	// Consoles, null if not showing
 	private Set<? extends IConsole> consoles = null;
@@ -72,7 +84,7 @@ public class MCEclipseApplication extends MicroclimateApplication {
 			        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
 			        MicroclimateLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
 			        ILaunchConfiguration launchConfig = workingCopy.doSave();
-		            ILaunch launch = launchConfig.launch("debug", monitor);
+		            ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);
 		            app.setLaunch(launch);
 		            return Status.OK_STATUS;
 				} catch (Exception e) {

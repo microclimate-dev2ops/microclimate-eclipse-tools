@@ -13,22 +13,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.wst.server.core.IServer;
-import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
-import com.ibm.microclimate.core.internal.server.MicroclimateServer;
-import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
- * Data type class to represent a Microclimate Application / Project
- *
- * @author timetchells@ibm.com
- *
+ * Represents a Microclimate Application / Project
  */
 public class MicroclimateApplication {
 
@@ -70,15 +63,6 @@ public class MicroclimateApplication {
 		this.startMode = StartMode.RUN;
 		this.appState = AppState.UNKNOWN;
 		this.buildStatus = BuildStatus.UNKOWN;
-	}
-
-	public static MicroclimateServerBehaviour getServerWithProjectID(String projectID) {
-		for (IServer server : ServerCore.getServers()) {
-			if (projectID.equals(server.getAttribute(MicroclimateServer.ATTR_PROJ_ID, ""))) { //$NON-NLS-1$
-				return server.getAdapter(MicroclimateServerBehaviour.class);
-			}
-		}
-		return null;
 	}
 
 	private void setBaseUrl() throws MalformedURLException {
@@ -147,21 +131,6 @@ public class MicroclimateApplication {
 		return startMode;
 	}
 
-	public boolean isLinked() {
-		return getLinkedServer() != null;
-	}
-
-	public MicroclimateServerBehaviour getLinkedServer() {
-		// Before, we kept a reference to the linked IServer, which was set by the ServerBehaviour on initialize,
-		// and unset on dispose. This new approach removes bugs associated with errors in that state,
-		// but means re-acquiring the server each time it is requested, which is not efficient.
-		return getServerWithProjectID(projectID);
-	}
-
-	public boolean isLinkable() {
-		return isActive() && !isLinked();
-	}
-	
 	public boolean isActive() {
 		return getAppState() == AppState.STARTING || getAppState() == AppState.STARTED;
 	}
@@ -196,7 +165,7 @@ public class MicroclimateApplication {
 	/**
 	 * Invalidate fields that can change when the application is restarted.
 	 * On restart success, these will be updated by the Socket handler for that event.
-	 * This is done because the server will wait for the ports to be
+	 * This is done because the application will wait for the ports to be
 	 * set to something other than -1 before trying to connect.
 	 */
 	public synchronized void invalidatePorts() {

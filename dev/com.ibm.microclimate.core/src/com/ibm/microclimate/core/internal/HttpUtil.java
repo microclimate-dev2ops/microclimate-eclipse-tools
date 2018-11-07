@@ -21,9 +21,6 @@ import org.json.JSONObject;
 
 /**
  * Static utilities to allow easy HTTP communication, and make diagnosing and handling errors a bit easier.
- *
- * @author timetchells@ibm.com
- *
  */
 public class HttpUtil {
 

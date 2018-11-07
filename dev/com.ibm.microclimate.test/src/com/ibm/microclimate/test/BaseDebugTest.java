@@ -8,28 +8,27 @@ import java.util.Set;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.TextConsole;
-import org.eclipse.wst.server.core.IServer;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import com.ibm.microclimate.core.internal.HttpUtil;
+import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
+import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
-import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
-import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
+import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.test.util.ImportUtil;
 import com.ibm.microclimate.test.util.MicroclimateUtil;
-import com.ibm.microclimate.test.util.ServerUtil;
 import com.ibm.microclimate.test.util.TestUtil;
 
 import junit.framework.TestCase;
@@ -74,22 +73,24 @@ public abstract class BaseDebugTest extends TestCase {
     }
     
     @Test
-    public void test02_linkProjectToMicroclimate() throws Exception {
-    	IServer server = MicroclimateServerFactory.create(connection.getAppByName(projectName));
-    	// Make sure the server behaviour gets created so that its initialize method gets called.
-    	// The initialize method sets the initial server state.
-    	MicroclimateServerBehaviour mcServerBehaviour = (MicroclimateServerBehaviour) server.loadAdapter(MicroclimateServerBehaviour.class, null);
-    	assertNotNull("Server behaviour should be created.", mcServerBehaviour);
-    	assertTrue("Server should be in started state.  Current state is: " + server.getServerState(), ServerUtil.waitForServerState(server, IServer.STATE_STARTED, 120, 2));
-    	assertNotNull("Should be able to get the server from the app.", connection.getAppByName(projectName).getLinkedServer());
+    public void test02_checkApp() throws Exception {
+    	MicroclimateApplication app = connection.getAppByName(projectName);
+    	assertTrue("App should be in started state.  Current state is: " + app.getAppState(), MicroclimateUtil.waitForAppState(app, AppState.STARTED, 120, 2));
     	pingApp(currentText);
-    	checkMode(ILaunchManager.RUN_MODE);
+    	checkMode(StartMode.RUN);
+    	showConsoles();
+    	// Application log is only updated every 20 seconds
+    	try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// Ignore
+		}
     	checkConsoles();
     }
     
     @Test
     public void test03_switchToDebugMode() throws Exception {
-    	switchMode(ILaunchManager.DEBUG_MODE);
+    	switchMode(StartMode.DEBUG);
     	pingApp(currentText);
     	checkConsoles();
     }
@@ -101,12 +102,11 @@ public abstract class BaseDebugTest extends TestCase {
     	TestUtil.updateFile(path.toOSString(), currentText, newText);
     	currentText = newText;
     	MicroclimateApplication app = connection.getAppByName(projectName);
-    	MicroclimateServerBehaviour serverBehaviour = app.getLinkedServer();
     	// For Java builds the states can go by quickly so don't do an assert on this
-    	ServerUtil.waitForServerState(serverBehaviour.getServer(), IServer.STATE_STOPPED, 120, 1);
-    	assertTrue("Server should be in started state", ServerUtil.waitForServerState(serverBehaviour.getServer(), IServer.STATE_STARTED, 120, 1));
+    	MicroclimateUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
+    	assertTrue("App should be in started state", MicroclimateUtil.waitForAppState(app, AppState.STARTED, 120, 1));
     	pingApp(currentText);
-    	checkMode(ILaunchManager.DEBUG_MODE);
+    	checkMode(StartMode.DEBUG);
     	checkConsoles();
     }
     
@@ -116,19 +116,18 @@ public abstract class BaseDebugTest extends TestCase {
     	path = path.append(dockerfile);
     	TestUtil.prependToFile(path.toOSString(), "# no comment\n");
     	MicroclimateApplication app = connection.getAppByName(projectName);
-    	MicroclimateServerBehaviour serverBehaviour = app.getLinkedServer();
-    	assertTrue("Server should be in stopped state", ServerUtil.waitForServerState(serverBehaviour.getServer(), IServer.STATE_STOPPED, 120, 1));
-    	assertTrue("Server should be in starting state", ServerUtil.waitForServerState(serverBehaviour.getServer(), IServer.STATE_STARTING, 600, 1));
-    	assertTrue("Server should be in started state", ServerUtil.waitForServerState(serverBehaviour.getServer(), IServer.STATE_STARTED, 300, 1));
+    	assertTrue("App should be in stopped state", MicroclimateUtil.waitForAppState(app, AppState.STOPPED, 120, 1));
+    	assertTrue("App should be in starting state", MicroclimateUtil.waitForAppState(app, AppState.STARTING, 600, 1));
+    	assertTrue("App should be in started state", MicroclimateUtil.waitForAppState(app, AppState.STARTED, 300, 1));
     	pingApp(currentText);
-    	checkMode(ILaunchManager.DEBUG_MODE);
+    	checkMode(StartMode.DEBUG);
     	checkConsoles();
     }
     
     
     @Test
     public void test06_switchToRunMode() throws Exception {
-    	switchMode(ILaunchManager.RUN_MODE);
+    	switchMode(StartMode.RUN);
     	pingApp(currentText);
     	checkConsoles();
     }
@@ -153,28 +152,32 @@ public abstract class BaseDebugTest extends TestCase {
     	assertTrue("The response should contain the expected text: " + expectedText, result.response != null && result.response.contains(expectedText));   	
     }
     
-    private void switchMode(String mode) throws Exception {
+    private void showConsoles() throws Exception {
     	MicroclimateApplication app = connection.getAppByName(projectName);
-    	MicroclimateServerBehaviour serverBehaviour = app.getLinkedServer();
-    	serverBehaviour.restart(mode);
+    	Set<? extends IConsole> consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
+    	((MCEclipseApplication)app).setConsoles(consoles);
+    }
+    
+    private void switchMode(StartMode mode) throws Exception {
+    	MicroclimateApplication app = connection.getAppByName(projectName);
+    	connection.requestProjectRestart(app, mode.startMode);
     	// For Java builds the states can go by quickly so don't do an assert on this
-    	ServerUtil.waitForServerState(serverBehaviour.getServer(), IServer.STATE_STOPPED, 30, 1);
-    	assertTrue("Server should be in started state", ServerUtil.waitForServerState(serverBehaviour.getServer(), IServer.STATE_STARTED, 120, 1));
+    	MicroclimateUtil.waitForAppState(app, AppState.STOPPED, 30, 1);
+    	assertTrue("App should be in started state", MicroclimateUtil.waitForAppState(app, AppState.STARTED, 120, 1));
     	checkMode(mode);
     }
     
-    private void checkMode(String mode) throws Exception {
+    private void checkMode(StartMode mode) throws Exception {
     	MicroclimateApplication app = connection.getAppByName(projectName);
-    	MicroclimateServerBehaviour serverBehaviour = app.getLinkedServer();
-    	assertTrue("Server should be in mode: " + mode, serverBehaviour.getServer().getMode() == mode);
-    	ILaunch launch = serverBehaviour.getServer().getLaunch();
-    	assertNotNull("There should be a launch for the server", launch);
-    	IDebugTarget debugTarget = launch.getDebugTarget();
-    	if (ILaunchManager.DEBUG_MODE.equals(mode)) {
+    	assertTrue("App should be in mode: " + mode, app.getStartMode() == mode);
+    	ILaunch launch = ((MCEclipseApplication)app).getLaunch();
+    	if (StartMode.DEBUG_MODES.contains(mode)) {
+    		assertNotNull("There should be a launch for the app", launch);
+        	IDebugTarget debugTarget = launch.getDebugTarget();
 	    	assertNotNull("The launch should have a debug target", debugTarget);
 	    	assertTrue("The debug target should have threads", debugTarget.hasThreads());
     	} else {
-    		assertNull("The launch should not have a debug target", debugTarget);
+    		assertNull("There should be no launch when in run mode", launch);
     	}
     }
     

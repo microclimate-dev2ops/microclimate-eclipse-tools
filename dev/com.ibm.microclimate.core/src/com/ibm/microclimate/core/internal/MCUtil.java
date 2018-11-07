@@ -25,9 +25,6 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 
 /**
  * General utils that don't belong anywhere else
- *
- * @author timetchells@ibm.com
- *
  */
 public class MCUtil {
 
