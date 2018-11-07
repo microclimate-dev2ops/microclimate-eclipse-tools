@@ -13,8 +13,10 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IPath;
@@ -50,7 +52,7 @@ public class MicroclimateConnection {
 
 	public final MicroclimateSocket mcSocket;
 
-	private List<MicroclimateApplication> apps = Collections.emptyList();
+	private Map<String, MicroclimateApplication> appMap = new LinkedHashMap<String, MicroclimateApplication>();
 
 	public static URI buildUrl(String host, int port) throws URISyntaxException {
 		return new URI("http", null, host, port, null, null, null); //$NON-NLS-1$
@@ -104,7 +106,7 @@ public class MicroclimateConnection {
 			onInitFail(Messages.MicroclimateConnection_ErrConnection_WorkspaceErr);
 		}
 
-		refreshApps();
+		refreshApps(null);
 
 		MCLogger.log("Created " + this); //$NON-NLS-1$
 	}
@@ -125,6 +127,9 @@ public class MicroclimateConnection {
 				mcSocket.socket.disconnect();
 			}
 			mcSocket.socket.close();
+		}
+		for (MicroclimateApplication app : appMap.values()) {
+			app.dispose();
 		}
 	}
 
@@ -201,9 +206,10 @@ public class MicroclimateConnection {
 	}
 
 	/**
-	 * Refresh this connection's list of apps from the Microclimate project list endpoint.
+	 * Refresh this connection's apps using the Microclimate project list endpoint.
+	 * If projectID is not null then only refresh the corresponding application.
 	 */
-	public void refreshApps() {
+	public void refreshApps(String projectID) {
 
 		final URI projectsURL = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST);
 
@@ -218,58 +224,57 @@ public class MicroclimateConnection {
 		}
 
 		try {
-			apps = MicroclimateApplicationFactory.getAppsFromProjectsJson(this, projectsResponse);
+			MicroclimateApplicationFactory.getAppsFromProjectsJson(this, projectsResponse, projectID);
 			MCLogger.log("App list update success"); //$NON-NLS-1$
 		}
 		catch(Exception e) {
 			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrGettingProjectListTitle, e.getMessage());
 		}
 	}
+	
+	public void addApp(MicroclimateApplication app) {
+		synchronized(appMap) {
+			appMap.put(app.projectID, app);
+		}
+	}
 
 	public List<MicroclimateApplication> getApps() {
-		refreshApps();
-		return apps;
+		synchronized(appMap) {
+			return new ArrayList<MicroclimateApplication>(appMap.values());
+		}
 	}
 
 	public List<MicroclimateApplication> getLinkedApps() {
-		if (apps == null) {
-			return Collections.emptyList();
+		synchronized(appMap) {
+			return appMap.values().stream()
+					.filter(app -> app.isLinked())
+					.collect(Collectors.toList());
 		}
-
-		return apps.stream()
-				.filter(app -> app.isLinked())
-				.collect(Collectors.toList());
 	}
-
-	/*
-	public boolean hasLinkedApp() {
-		if (apps == null) {
-			return false;
+	
+	public MicroclimateApplication removeApp(String projectID) {
+		synchronized(appMap) {
+			return appMap.remove(projectID);
 		}
-
-		return apps.stream()
-				.anyMatch(app -> app.isLinked());
-	}*/
+	}
 
 	/**
 	 * @return The app with the given ID, if it exists in this Microclimate instance, else null.
 	 */
-	public MicroclimateApplication getAppByID(String projectID) {
-		refreshApps();
-		for (MicroclimateApplication app : apps) {
-			if (app.projectID.equals(projectID)) {
-				return app;
-			}
+	public synchronized MicroclimateApplication getAppByID(String projectID) {
+		MicroclimateApplication app = null;
+		synchronized(appMap) {
+			app = appMap.get(projectID);
 		}
-
-		MCLogger.logError("No project found with ID " + projectID); //$NON-NLS-1$
-		return null;
+		return app;
 	}
 
 	public MicroclimateApplication getAppByName(String name) {
-		for (MicroclimateApplication app : getApps()) {
-			if (app.name.equals(name)) {
-				return app;
+		synchronized(appMap) {
+			for (MicroclimateApplication app : getApps()) {
+				if (app.name.equals(name)) {
+					return app;
+				}
 			}
 		}
 		MCLogger.log("No application found for name " + name); //$NON-NLS-1$
@@ -386,7 +391,7 @@ public class MicroclimateConnection {
 	@Override
 	public String toString() {
 		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d", //$NON-NLS-1$
-				MicroclimateConnection.class.getSimpleName(), baseUrl, localWorkspacePath, apps.size());
+				MicroclimateConnection.class.getSimpleName(), baseUrl, localWorkspacePath, appMap.size());
 	}
 
 	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
@@ -395,13 +400,6 @@ public class MicroclimateConnection {
 	public String toPrefsString() {
 		// No newlines allowed!
 		return baseUrl.toString();
-	}
-
-	public static MicroclimateConnection fromPrefsString(String str)
-			throws URISyntaxException, IOException, JSONException {
-
-		URI uri = new URI(str);
-		return new MicroclimateConnection(uri);
 	}
 	
 	public void requestProjectCreate(ProjectType type, String name)

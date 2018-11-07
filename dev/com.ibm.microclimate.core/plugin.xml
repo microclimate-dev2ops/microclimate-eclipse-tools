@@ -41,6 +41,17 @@
       sourcePathComputerId="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"/>
 </extension>
 
+<extension point="org.eclipse.debug.core.launchConfigurationTypes">
+    <launchConfigurationType
+      id="com.ibm.microclimate.core.internal.launchConfigType"
+      name="%LAUNCH_CONFIG_NAME"
+      delegate="com.ibm.microclimate.core.internal.launch.MicroclimateLaunchConfigDelegate"
+      modes="run, debug"
+      public="false"
+      sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+      sourcePathComputerId="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"/>
+</extension>
+
 <extension point="org.eclipse.debug.core.sourcePathComputers">
 	<sourcePathComputer
 		id="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"

@@ -18,6 +18,7 @@ import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.AppState;
+import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.core.internal.server.MicroclimateServer;
@@ -38,7 +39,9 @@ public class MicroclimateApplication {
 	public final ProjectType projectType;
 
 	private StartMode startMode;
-	private String appStatus;
+	private AppState appState;
+	private BuildStatus buildStatus;
+	private String buildDetails;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -64,8 +67,9 @@ public class MicroclimateApplication {
 
 		setBaseUrl();
 
-		//MCLogger.log("Created mcApp:");
-		//MCLogger.log(toString());
+		this.startMode = StartMode.RUN;
+		this.appState = AppState.UNKNOWN;
+		this.buildStatus = BuildStatus.UNKOWN;
 	}
 
 	public static MicroclimateServerBehaviour getServerWithProjectID(String projectID) {
@@ -92,13 +96,24 @@ public class MicroclimateApplication {
 	}
 	
 	public synchronized void setAppStatus(String appStatus) {
-		this.appStatus = appStatus;
+		this.appState = AppState.get(appStatus);
+	}
+	
+	public synchronized void setBuildStatus(String buildStatus, String buildDetails) {
+		if (buildStatus != null) {
+			this.buildStatus = BuildStatus.get(buildStatus);
+			if (buildDetails != null && buildDetails.trim().isEmpty()) {
+				this.buildDetails = null;
+			} else {
+				this.buildDetails = buildDetails;
+			}
+		}
 	}
 	
 	public synchronized void setStartMode(StartMode startMode) {
 		this.startMode = startMode;
 	}
-
+	
 	// Getters for our project state fields
 
 	/**
@@ -108,8 +123,16 @@ public class MicroclimateApplication {
 		return baseUrl;
 	}
 	
-	public synchronized String getAppStatus() {
-		return appStatus;
+	public synchronized AppState getAppState() {
+		return appState;
+	}
+	
+	public synchronized BuildStatus getBuildStatus() {
+		return buildStatus;
+	}
+	
+	public synchronized String getBuildDetails() {
+		return buildDetails;
 	}
 
 	public synchronized int getHttpPort() {
@@ -140,7 +163,7 @@ public class MicroclimateApplication {
 	}
 	
 	public boolean isActive() {
-		return AppState.STARTING.stateMatches(getAppStatus()) || AppState.STARTED.stateMatches(getAppStatus());
+		return getAppState() == AppState.STARTING || getAppState() == AppState.STARTED;
 	}
 
 	public boolean isRunning() {
@@ -180,6 +203,18 @@ public class MicroclimateApplication {
 		MCLogger.log("Invalidate ports for " + name); //$NON-NLS-1$
 		httpPort = -1;
 		debugPort = -1;
+	}
+	
+	public void connectDebugger() {
+		// Override as needed
+	}
+	
+	public void reconnectDebugger() {
+		// override as needed
+	}
+
+	public void dispose() {
+		// Override as needed
 	}
 
 	@Override

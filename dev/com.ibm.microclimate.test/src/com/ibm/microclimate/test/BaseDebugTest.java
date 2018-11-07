@@ -21,9 +21,10 @@ import org.junit.runners.MethodSorters;
 
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.constants.ProjectType;
+import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 import com.ibm.microclimate.core.internal.server.MicroclimateServerFactory;
 import com.ibm.microclimate.test.util.ImportUtil;
@@ -54,7 +55,7 @@ public abstract class BaseDebugTest extends TestCase {
         TestUtil.print("Starting test: " + getName());
         
         // Create a microclimate connection
-        connection = new MicroclimateConnection(new URI(MICROCLIMATE_URI));
+        connection = MicroclimateObjectFactory.createMicroclimateConnection(new URI(MICROCLIMATE_URI));
         MicroclimateConnectionManager.add(connection);
         
         // Create a new microprofile project

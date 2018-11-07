@@ -20,6 +20,9 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
+import com.ibm.microclimate.core.MicroclimateCorePlugin;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+
 /**
  * General utils that don't belong anywhere else
  *
@@ -130,5 +133,27 @@ public class MCUtil {
 			return -1;
 		}
 	}
+	
+	public static void updateAll() {
+		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
+		if (handler != null) {
+			handler.updateAll();
+		}
+	}
+	
+	public static void updateConnection(MicroclimateConnection connection, boolean contentChanged) {
+		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
+		if (handler != null) {
+			handler.updateConnection(connection,  contentChanged);
+		}
+	}
+	
+	public static void updateApplication(MicroclimateApplication app, boolean contentChanged) {
+		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
+		if (handler != null) {
+			handler.updateApplication(app,  contentChanged);
+		}
+	}
+
 
 }

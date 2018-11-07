@@ -10,13 +10,19 @@
 package com.ibm.microclimate.ui;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
+import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.ui.internal.views.UpdateHandler;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -26,6 +32,9 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.ibm.microclimate.ui"; //$NON-NLS-1$
 
+	private static URL ICON_BASE_URL;
+	protected Map<String, ImageDescriptor> imageDescriptors = new HashMap<String, ImageDescriptor>();
+	
 	public static final String
 			ICON_BASE_PATH = "icons/",
 			MICROCLIMATE_ICON_PATH = "microclimate.ico",
@@ -49,6 +58,7 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		MicroclimateCorePlugin.setUpdateHandler(new UpdateHandler());
 	}
 
 	/*
@@ -57,6 +67,7 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		MicroclimateCorePlugin.setUpdateHandler(null);
 		plugin = null;
 		super.stop(context);
 	}
@@ -78,6 +89,31 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 	public static ImageDescriptor getDefaultIcon() {
 		return getIcon(MICROCLIMATE_ICON_PATH);
 	}
+	
+    public static Image getImage(String key) {
+        return plugin.getImageRegistry().get(key);
+    }
+	
+    @Override
+    protected ImageRegistry createImageRegistry() {
+        ImageRegistry registry = new ImageRegistry();
+        if (ICON_BASE_URL == null)
+            ICON_BASE_URL = plugin.getBundle().getEntry(ICON_BASE_PATH);
+
+        registerImage(registry, MICROCLIMATE_ICON_PATH, ICON_BASE_URL + MICROCLIMATE_ICON_PATH);
+
+        return registry;
+    }
+
+    private void registerImage(ImageRegistry registry, String key, String partialURL) {
+        try {
+            ImageDescriptor id = ImageDescriptor.createFromURL(new URL(ICON_BASE_URL, partialURL));
+            registry.put(key, id);
+            imageDescriptors.put(key, id);
+        } catch (Exception e) {
+            MCLogger.logError("Error registering image", e);
+        }
+    }
 
 	@Override
 	/**

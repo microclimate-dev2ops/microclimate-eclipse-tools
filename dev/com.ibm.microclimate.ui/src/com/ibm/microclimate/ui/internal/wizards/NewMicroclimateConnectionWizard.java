@@ -10,14 +10,19 @@
 package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
+import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 /**
  * This wizard, which can be launched through the MC Preferences page or as a prerequisite to Linking a project,
@@ -34,9 +39,16 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 	private IStructuredSelection selection;
 
 	private final boolean launchLinkWizardOnFinish;
+	private final boolean openViewOnFinish;
 
 	public NewMicroclimateConnectionWizard(boolean launchLinkWizardOnFinish) {
 		this.launchLinkWizardOnFinish = launchLinkWizardOnFinish;
+		this.openViewOnFinish = false;
+	}
+	
+	public NewMicroclimateConnectionWizard() {
+		this.launchLinkWizardOnFinish = false;
+		this.openViewOnFinish = true;
 	}
 
 	@Override
@@ -83,8 +95,19 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 			WizardLauncher.launchWizard(new LinkMicroclimateProjectWizard(), selection, workbench,
 					Display.getDefault().getActiveShell());
+		} else {
+			ViewHelper.openMicroclimateExplorerView();
+			ViewHelper.refreshMicroclimateExplorerView(null);
 		}
 
 		return true;
+	}
+
+	@Override
+	public IWizardPage getNextPage(IWizardPage page) {
+		if (!launchLinkWizardOnFinish) {
+			return null;
+		}
+		return super.getNextPage(page);
 	}
 }
