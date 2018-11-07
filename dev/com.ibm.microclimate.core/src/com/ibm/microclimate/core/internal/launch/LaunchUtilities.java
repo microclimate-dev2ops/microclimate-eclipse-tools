@@ -7,7 +7,7 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.core.internal.server.debug;
+package com.ibm.microclimate.core.internal.launch;
 
 import java.util.List;
 import java.util.Map;
@@ -31,10 +31,7 @@ import com.sun.jdi.connect.Connector;
  * Taken largely from com.ibm.ws.st.core.internal.launch.LaunchUtilities
  * and com.ibm.ws.st.core.internal.launch.BaseLibertyLaunchConfiguration
  *
- * Static utilities to support launching and debugging Microclimate application servers.
- *
- * @author timetchells@ibm.com
- *
+ * Static utilities to support launching and debugging Microclimate applications.
  */
 @SuppressWarnings("restriction")
 public class LaunchUtilities {

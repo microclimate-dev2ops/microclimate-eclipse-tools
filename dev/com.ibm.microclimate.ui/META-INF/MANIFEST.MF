@@ -10,10 +10,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.jem.util,
- org.eclipse.wst.command.env.ui,
  com.ibm.microclimate.core,
  org.eclipse.debug.ui,
- org.eclipse.wst.server.ui,
  org.eclipse.core.expressions,
  org.eclipse.core.filesystem,
  org.eclipse.ui.ide
@@ -21,6 +19,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: com.ibm.microclimate.ui;singleton:=true
 Bundle-ActivationPolicy: lazy
 Import-Package: org.eclipse.ui.console,
- org.eclipse.ui.navigator,
- org.eclipse.wst.server.core,
- org.eclipse.wst.server.core.model
+ org.eclipse.ui.navigator

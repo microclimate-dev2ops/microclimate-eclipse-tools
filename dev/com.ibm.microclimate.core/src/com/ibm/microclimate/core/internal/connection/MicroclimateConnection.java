@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -35,11 +34,9 @@ import com.ibm.microclimate.core.internal.MicroclimateApplicationFactory;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.messages.Messages;
-import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
- *
- * @author timetchells@ibm.com
+ * Represents a connection to a Microclimate instance
  */
 public class MicroclimateConnection {
 
@@ -244,14 +241,6 @@ public class MicroclimateConnection {
 		}
 	}
 
-	public List<MicroclimateApplication> getLinkedApps() {
-		synchronized(appMap) {
-			return appMap.values().stream()
-					.filter(app -> app.isLinked())
-					.collect(Collectors.toList());
-		}
-	}
-	
 	public MicroclimateApplication removeApp(String projectID) {
 		synchronized(appMap) {
 			return appMap.remove(projectID);
@@ -363,14 +352,6 @@ public class MicroclimateConnection {
 	 */
 	public synchronized void onConnectionError() {
 		MCLogger.log("MCConnection to " + baseUrl + " lost"); //$NON-NLS-1$ //$NON-NLS-2$
-
-		for (MicroclimateApplication app : getLinkedApps()) {
-			MicroclimateServerBehaviour server = app.getLinkedServer();
-			if (server != null) {
-				// All linked apps should have getLinkedServer return non-null.
-				server.onMicroclimateDisconnect(baseUrl.toString());
-			}
-		}
 	}
 
 	/**
@@ -378,14 +359,6 @@ public class MicroclimateConnection {
 	 */
 	public synchronized void clearConnectionError() {
 		MCLogger.log("MCConnection to " + baseUrl + " restored"); //$NON-NLS-1$ //$NON-NLS-2$
-
-		for (MicroclimateApplication app : getLinkedApps()) {
-			MicroclimateServerBehaviour server = app.getLinkedServer();
-			if (server != null) {
-				// All linked apps should have getLinkedServer return non-null.
-				server.onMicroclimateReconnect();
-			}
-		}
 	}
 
 	@Override

@@ -43,9 +43,6 @@ import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
 /**
  * This preferences page lists the current Microclimate connections, allows adding new ones, and removing existing ones.
  * It can be launched through Preferences, or from the LinkMicroclimateProjectPage.
- *
- * @author timetchells@ibm.com
- *
  */
 public class MicroclimateConnectionPrefsPage extends PreferencePage implements IWorkbenchPreferencePage {
 
@@ -91,11 +88,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		TableColumn urlsCol = new TableColumn(connectionsTable, SWT.BORDER);
 		urlsCol.setText(Messages.ConnectionPrefsPage_URLColumn);
 		urlsCol.setWidth(gridData.widthHint / 2);
-
-		TableColumn linkedProjectsCol = new TableColumn(connectionsTable, SWT.BORDER);
-		linkedProjectsCol.setText(Messages.ConnectionPrefsPage_LinkedProjectsColumn);
-		linkedProjectsCol.setWidth(urlsCol.getWidth());
-
+		
 		/*
 		TableColumn connectedCol = new TableColumn(connectionsTable, SWT.BORDER);
 		connectedCol.setText("Connected");
@@ -109,7 +102,7 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
-				Wizard wizard = new NewMicroclimateConnectionWizard(false);
+				Wizard wizard = new NewMicroclimateConnectionWizard();
 				WizardLauncher.launchWizardWithoutSelection(wizard);
 			}
 		});
@@ -173,27 +166,20 @@ public class MicroclimateConnectionPrefsPage extends PreferencePage implements I
 		}
 
 		for(MicroclimateConnection mcc : MicroclimateConnectionManager.activeConnections()) {
-			addTableRow(mcc.baseUrl.toString(),
-					MicroclimateConnectionManager.getLinkedAppNames(mcc.baseUrl.toString()),
-					false);
+			addTableRow(mcc.baseUrl.toString(),	false);
 		}
 
 		for (String brokenConnectionUrl : MicroclimateConnectionManager.brokenConnections()) {
-			addTableRow(brokenConnectionUrl,
-					MicroclimateConnectionManager.getLinkedAppNames(brokenConnectionUrl),
-					true);
+			addTableRow(brokenConnectionUrl, true);
 		}
 	}
 
-	private void addTableRow(String url, String linkedApps, boolean isBroken) {
-		if (linkedApps == null || linkedApps.isEmpty()) {
-			linkedApps = Messages.ConnectionPrefsPage_NoLinkedAppsDisplay;
-		}
+	private void addTableRow(String url, boolean isBroken) {
 
 		try {
 			TableItem ti = new TableItem(connectionsTable, SWT.NONE);
 
-			ti.setText(new String[] { url.toString(), linkedApps /*, isBroken ? CONNECTION_BAD : CONNECTION_GOOD */ });
+			ti.setText(new String[] { url.toString() /*, isBroken ? CONNECTION_BAD : CONNECTION_GOOD */ });
 		}
 		catch(SWTException e) {
 			// suppress widget disposed exception - It gets thrown if the window is out of focus,

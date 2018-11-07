@@ -11,28 +11,25 @@ package com.ibm.microclimate.core.internal.constants;
 
 import java.util.EnumSet;
 
-import org.eclipse.debug.core.ILaunchManager;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 
 public enum StartMode {
 
-	RUN("run", ILaunchManager.RUN_MODE),
-	DEBUG("debug", ILaunchManager.DEBUG_MODE),
-	DEBUG_INIT("debugInit", ILaunchManager.DEBUG_MODE);
+	RUN("run"),
+	DEBUG("debug"),
+	DEBUG_NO_INIT("debugNoInit");
 	
-	public static final EnumSet<StartMode> DEBUG_MODES = EnumSet.of(DEBUG, DEBUG_INIT);
+	public static final EnumSet<StartMode> DEBUG_MODES = EnumSet.of(DEBUG, DEBUG_NO_INIT);
 
 	public final String startMode;
-	public final String launchMode;
 
 	/**
 	 * @param buildStatus - Internal build status used by Microclimate
 	 */
-	private StartMode(String startMode, String launchMode) {
+	private StartMode(String startMode) {
 		this.startMode = startMode;
-		this.launchMode = launchMode;
 	}
 
 	public boolean equals(String s) {

@@ -20,8 +20,6 @@ import org.eclipse.ui.IWorkbench;
 
 /**
  * Static utilities to eliminate some boilerplate for launching wizards.
- *
- * @author timetchells@ibm.com
  */
 public class WizardLauncher {
 

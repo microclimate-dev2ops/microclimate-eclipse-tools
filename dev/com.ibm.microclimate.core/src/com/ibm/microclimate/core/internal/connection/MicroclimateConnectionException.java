@@ -18,8 +18,6 @@ import com.ibm.microclimate.core.internal.messages.Messages;
 
 /**
  * Custom exception to indicate that connecting to the Microclimate Socket at the given URL failed.
- *
- * @author timetchells@ibm.com
  */
 public class MicroclimateConnectionException extends ConnectException {
 	private static final long serialVersionUID = -7026779560626815421L;

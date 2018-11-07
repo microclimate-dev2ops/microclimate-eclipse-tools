@@ -1,4 +1,13 @@
-package com.ibm.microclimate.core.internal.server.console;
+/*******************************************************************************
+ * IBM Confidential
+ * OCO Source Materials
+ * (C) Copyright IBM Corp. 2018 All Rights Reserved.
+ * The source code for this program is not published or otherwise
+ * divested of its trade secrets, irrespective of what has
+ * been deposited with the U.S. Copyright Office.
+ *******************************************************************************/
+
+package com.ibm.microclimate.core.internal.console;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -53,7 +62,7 @@ public class MicroclimateConsoleFactory {
 			}
 		}
 			
-		MCLogger.log(String.format("Creating new server console: %s of type %s", 				//$NON-NLS-1$
+		MCLogger.log(String.format("Creating new application console: %s of type %s", 				//$NON-NLS-1$
 				console.getName(), console.getClass().getSimpleName()));
 
 		consoleManager.addConsoles(new IConsole[] { console });

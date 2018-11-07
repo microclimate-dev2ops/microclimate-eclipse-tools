@@ -7,7 +7,7 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.core.internal.server.console;
+package com.ibm.microclimate.core.internal.console;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -85,7 +85,7 @@ public class FileConsoleMonitorThread extends Thread {
 	            }
 			}
 			catch(IOException e) {
-				MCLogger.logError("Error updating server log for file " + inputFile.getAbsolutePath(), e); //$NON-NLS-1$
+				MCLogger.logError("Error updating application log for file " + inputFile.getAbsolutePath(), e); //$NON-NLS-1$
 			}
 		}
 

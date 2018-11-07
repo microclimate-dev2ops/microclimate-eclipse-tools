@@ -32,9 +32,6 @@ public class Messages extends NLS {
 	public static String LinkPage_ShellTitle;
 	public static String LinkPage_WizardDescription;
 
-	public static String LogActionProvider_OpenLogFileCategory;
-	public static String LogActionProvider_OpenLogMenuBtn;
-
 	public static String ConnectionPrefsPage_AddBtn;
 	public static String ConnectionPrefsPage_LinkedProjectsColumn;
 	public static String ConnectionPrefsPage_NoLinkedAppsDisplay;

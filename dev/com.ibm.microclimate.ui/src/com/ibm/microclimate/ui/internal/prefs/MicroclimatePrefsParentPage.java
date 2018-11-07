@@ -30,8 +30,7 @@ import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
- * @author timetchells@ibm.com
- *
+ * Top level Microclimate preference page
  */
 public class MicroclimatePrefsParentPage extends PreferencePage implements IWorkbenchPreferencePage {
 

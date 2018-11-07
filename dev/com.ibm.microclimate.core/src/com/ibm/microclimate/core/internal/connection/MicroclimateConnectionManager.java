@@ -12,37 +12,20 @@ package com.ibm.microclimate.core.internal.connection;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.wst.server.core.IServer;
-import org.eclipse.wst.server.core.ServerCore;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
-import com.ibm.microclimate.core.internal.constants.MCConstants;
-import com.ibm.microclimate.core.internal.messages.Messages;
-import com.ibm.microclimate.core.internal.server.MicroclimateServer;;
+import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;;
 
 /**
  * Singleton class to keep track of the list of current Microclimate Connections,
  * and manage persisting them to and from the Preferences.
- *
- * @author timetchells@ibm.com
- *
  */
 public class MicroclimateConnectionManager {
 
@@ -171,14 +154,7 @@ public class MicroclimateConnectionManager {
 		return null;
 	}
 
-	/*
-	public synchronized static boolean connectionExists(String baseUrl) {
-		return getActiveConnection(baseUrl) != null || getBrokenConnection(baseUrl) != null;
-	}
-	*/
-
 	// Preferences serialization
-
 	private void writeToPreferences() {
 		StringBuilder prefsBuilder = new StringBuilder();
 
@@ -228,124 +204,8 @@ public class MicroclimateConnectionManager {
 
 	}
 
-	/**
-	 * Proceeding with deleting this connection will delete all its linked servers too.
-	 * Make this clear to the user, then delete the servers if they still wish to delete the connection.
-	 *
-	 * @return If the connection was ultimately deleted.
-	 */
 	public static boolean removeConnection(String mcConnectionUrl) {
-		final Set<IServer> linkedServers = getServers(mcConnectionUrl);
-
-		if (linkedServers == null || linkedServers.isEmpty()) {
-			// don't have to do any special handling
-			MicroclimateConnectionManager.remove(mcConnectionUrl);
-			return true;
-		}
-
-		final String[] buttons = new String[] {
-				Messages.MicroclimateConnectionManager_CancelBtn,
-				Messages.MicroclimateConnectionManager_DeleteServersBtn
-		};
-
-		final int deleteBtnIndex = 1;
-
-		final String message = NLS.bind(Messages.MicroclimateConnectionManager_ServersLinkedDialogMsg,
-				getServerNames(linkedServers, false), mcConnectionUrl);
-
-		AtomicBoolean deleted = new AtomicBoolean(false);
-
-		Runnable confirmDeleteRunnable = new Runnable() {
-			@Override
-			public void run() {
-				MessageDialog dialog = new MessageDialog(
-						Display.getDefault().getActiveShell(),
-						Messages.MicroclimateConnectionManager_ServersLinkedDialogTitle,
-						Display.getDefault().getSystemImage(SWT.ICON_WARNING),
-						message, MessageDialog.WARNING, buttons,
-						// Below is the index of the initially selected button - This unfortunately is always
-						// the rightmost button in the dialog. So it's not possible to have the normal order
-						// (ie Cancel to the left of OK) but also have Cancel selected initially.
-						deleteBtnIndex);
-
-				final boolean deleteConfirm = dialog.open() == deleteBtnIndex;
-
-				if (deleteConfirm) {
-					for (IServer server : linkedServers) {
-						try {
-							server.delete();
-						}
-						catch (CoreException e) {
-							MCLogger.logError("Error deleting server when deleting MCConnection", e); //$NON-NLS-1$
-							MCUtil.openDialog(true,
-									Messages.MicroclimateConnectionManager_ErrDeletingServerDialogTitle + server.getName(),
-									e.getMessage());
-						}
-					}
-
-					MicroclimateConnectionManager.remove(mcConnectionUrl);
-				}
-				deleted.set(deleteConfirm);
-
-				synchronized(deleted) {
-					deleted.notify();
-				}
-			}
-		};
-
-		boolean onUIThread = Display.getDefault().getThread().equals(Thread.currentThread());
-		MCLogger.log("On UI thread = " + onUIThread); //$NON-NLS-1$
-
-		MCLogger.log("Waiting for user to confirm delete linked server"); //$NON-NLS-1$
-		if (onUIThread) {
-			confirmDeleteRunnable.run();
-		}
-		else {
-			Display.getDefault().asyncExec(confirmDeleteRunnable);
-
-			// If we're not on the UI thread, the confirm delete executes async, and we have to wait for it to finish
-			try {
-				synchronized(deleted) {
-					deleted.wait();
-				}
-			} catch (InterruptedException e) {
-				MCLogger.logError(e);
-			}
-		}
-
-		final boolean result = deleted.get();
-		MCLogger.log("User deleted linked server(s)? " + result); //$NON-NLS-1$
-		return result;
-	}
-
-	private static Set<IServer> getServers(String mcConnectionUrl) {
-		Set<IServer> servers = new HashSet<>();
-		for (IServer server : ServerCore.getServers()) {
-			if (mcConnectionUrl.equals(server.getAttribute(MicroclimateServer.ATTR_MCC_URL, ""))) { //$NON-NLS-1$
-				servers.add(server);
-			}
-		}
-		return servers;
-	}
-
-	private static String getServerNames(Set<IServer> servers, boolean appNameOnly) {
-
-		return MCUtil.toCommaSeparatedString(
-				servers.stream()
-					.map((server) -> {
-						String serverName = server.getName();
-						if (appNameOnly) {
-							// Remove the base name from the start
-							serverName = serverName.substring(MCConstants.MC_SERVER_BASE_NAME.length(),
-									server.getName().length());
-						}
-						return serverName;
-					})
-					.collect(Collectors.toSet())
-				);
-	}
-
-	public static String getLinkedAppNames(String mcConnectionUrl) {
-		return getServerNames(getServers(mcConnectionUrl), true);
+		MicroclimateConnectionManager.remove(mcConnectionUrl);
+		return true;
 	}
 }

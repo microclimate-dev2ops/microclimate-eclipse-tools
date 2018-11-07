@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * IBM Confidential
+ * OCO Source Materials
+ * (C) Copyright IBM Corp. 2018 All Rights Reserved.
+ * The source code for this program is not published or otherwise
+ * divested of its trade secrets, irrespective of what has
+ * been deposited with the U.S. Copyright Office.
+ *******************************************************************************/
+
 package com.ibm.microclimate.core.internal.launch;
 
 import java.io.IOException;
@@ -17,7 +26,6 @@ import org.eclipse.osgi.util.NLS;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.messages.Messages;
-import com.ibm.microclimate.core.internal.server.debug.LaunchUtilities;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
@@ -50,7 +58,7 @@ public class MicroclimateDebugConnector {
 				* 1000;
 		MCLogger.log("Debugger connect timeout is " + timeout + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 
-		// Now prepare the Debug Connector, and try to attach it to the server's JVM
+		// Now prepare the Debug Connector, and try to attach it to the application
 		AttachingConnector connector = LaunchUtilities.getAttachingConnector();
 		if (connector == null) {
 			MCLogger.logError("Could not create debug connector"); //$NON-NLS-1$

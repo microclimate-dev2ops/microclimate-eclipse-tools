@@ -7,7 +7,7 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.ui.internal.server.actions;
+package com.ibm.microclimate.ui.internal.actions;
 
 import java.net.URL;
 
@@ -20,15 +20,14 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
-import org.eclipse.wst.server.core.IServer;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
+import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
-public class OpenAppAction2 implements IObjectActionDelegate {
+public class OpenAppAction implements IObjectActionDelegate {
 
     protected MicroclimateApplication app;
 
@@ -44,7 +43,7 @@ public class OpenAppAction2 implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MicroclimateApplication)obj;
-            	action.setEnabled(app.isRunning());
+            	action.setEnabled(app.getAppState() == AppState.STARTED);
             	return;
             }
         }

@@ -7,23 +7,19 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.ui.internal.server.actions;
+package com.ibm.microclimate.ui.internal.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
-import com.ibm.microclimate.ui.internal.messages.Messages;
 
-public class StartBuildAction2 implements IObjectActionDelegate {
+public class StartBuildAction implements IObjectActionDelegate {
 
 	protected MicroclimateApplication app;
 

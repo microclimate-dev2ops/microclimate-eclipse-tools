@@ -11,30 +11,6 @@
 
 <plugin>
 
-   	<extension point="org.eclipse.ui.popupMenus">
-		<objectContribution
-			adaptable="true"
-			objectClass="org.eclipse.core.resources.IProject"
-			id="com.ibm.microclimate.ui.internal.wizards.LinkWizard_.id">
-			<menu
-				label="%CONTEXT_MENU_CATEGORY_NAME"
-				path="additions"
-				icon="%DEFAULT_ICON_PATH"
-				id="com.ibm.microclimate.ui.internal.menu.category">
-				<separator
-					name="popupActions">
-				</separator>
-			</menu>
-			<action
-				label="%ACTION_LINK_TO_MICROCLIMATE"
-				class="com.ibm.microclimate.ui.internal.wizards.LinkMicroclimateProjectDelegate"
-				menubarPath="com.ibm.microclimate.ui.internal.menu.category/popupActions"
-				icon="%DEFAULT_ICON_PATH"
-				id="com.ibm.microclimate.ui.internal.wizards.LinkMicroclimateProjectDelegate.action.id">
-			</action>
-		</objectContribution>
-	</extension>
-	
    	<extension
          point="org.eclipse.ui.preferencePages">
          
@@ -49,22 +25,7 @@
          	class="com.ibm.microclimate.ui.internal.prefs.MicroclimateConnectionPrefsPage">
          </page>    
    	</extension>
-   
-	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
-		<launchConfigurationTypeImage
-			id="com.ibm.microclimate.core.internal.launchConfigurationTypeImage"
-			configTypeID="com.ibm.microclimate.core.internal.launchConfigurationType"
-			icon="%DEFAULT_ICON_PATH"/>
-	</extension>
-	
-	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
-		<launchConfigurationTabGroup
-			id="com.ibm.microclimate.ui.internal.launchConfigurationTabGroup"
-			type="com.ibm.microclimate.core.internal.launchConfigurationType"
-			class="com.ibm.microclimate.ui.internal.MicroclimateLaunchConfigTabGroup"/>
-	</extension>
-	
-	   
+
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
 		<launchConfigurationTypeImage
 			id="com.ibm.microclimate.core.internal.launchConfigTypeImage"
@@ -78,62 +39,7 @@
 			type="com.ibm.microclimate.core.internal.launchConfigType"
 			class="com.ibm.microclimate.ui.internal.MicroclimateLaunchConfigTabGroup"/>
 	</extension>
-	
-  	<extension point="org.eclipse.core.expressions.propertyTesters">
-    	<propertyTester
-	      	id="com.ibm.microclimate.ui.internal.property.serverType"
-	      	namespace="com.ibm.microclimate"
-	      	properties="serverType"
-	      	type="java.lang.Object"
-	      	class="com.ibm.microclimate.ui.internal.MicroclimateServerPropertyTester"/>
-  	</extension>
-	
-	<extension point="org.eclipse.ui.popupMenus">
-		<objectContribution
-			id="com.ibm.microclimate.ui.internal.popupMenu"
-			objectClass="org.eclipse.wst.server.core.IServer">
-		<visibility>
-			<objectState name="serverType" value="%MICROCLIMATE_SERVER_ID"/>
-		</visibility>
-		<action
-			id="com.ibm.microclimate.ui.internal.popupMenu.openApp"
-			enablesFor="1"
-			icon="%DEFAULT_ICON_PATH"
-			label="%ACTION_OPEN_APP"
-			class="com.ibm.microclimate.ui.internal.server.actions.OpenAppAction"/>
-		<action
-			id="com.ibm.microclimate.ui.internal.popupMenu.startBuild"
-			enablesFor="1"
-			icon="%DEFAULT_ICON_PATH"
-			label="%ACTION_START_BUILD"
-			class="com.ibm.microclimate.ui.internal.server.actions.StartBuildAction"/>
-		</objectContribution>
-	</extension>
-	
-	<extension point="org.eclipse.ui.decorators">
-		<decorator
-			id="com.ibm.microclimate.ui.internal.ServerDecorator"
-			label="%SERVER_DECORATOR_LABEL"
-			icon="%DEFAULT_ICON_PATH"
-			lightweight="true"
-			location="BOTTOM_RIGHT"
-			state="true"
-			class="com.ibm.microclimate.ui.internal.server.MicroclimateServerDecorator">
-			<enablement>
-				<or>
-					<objectClass name="org.eclipse.wst.server.core.IServer"/>
-				</or>
-			</enablement>
-		</decorator>
-	</extension>
-  	
-	<extension point="org.eclipse.wst.server.ui.serverImages">
-		<image
-			id="com.ibm.microclimate.ui.internal.server.img"
-			icon="%DEFAULT_ICON_PATH"
-			typeIds="microclimate.server"/>
-	</extension>
-	
+
 	<!--  Extensions for Microclimate Explorer View -->
 
 	<extension point="org.eclipse.ui.views"> 
@@ -184,29 +90,29 @@
 				enablesFor="1"
 				icon="%DEFAULT_ICON_PATH"
 				label="%ACTION_OPEN_APP"
-				class="com.ibm.microclimate.ui.internal.server.actions.OpenAppAction2"/>
+				class="com.ibm.microclimate.ui.internal.actions.OpenAppAction"/>
 			<action
 				id="com.ibm.microclimate.ui.toggleConsoles"
 				enablesFor="1"
 				label="%ACTION_SHOW_CONSOLES"
 				style="toggle"
 				state="false"
-				class="com.ibm.microclimate.ui.internal.server.actions.ToggleConsolesAction"/>
+				class="com.ibm.microclimate.ui.internal.actions.ToggleConsolesAction"/>
 			<action
 				id="com.ibm.microclimate.ui.enableDebug"
 				enablesFor="1"
 				label=""
-				class="com.ibm.microclimate.ui.internal.server.actions.EnableDebugAction"/>
+				class="com.ibm.microclimate.ui.internal.actions.EnableDebugAction"/>
 			<action
 				id="com.ibm.microclimate.ui.buildApplication"
 				enablesFor="1"
 				label="%ACTION_START_BUILD"
-				class="com.ibm.microclimate.ui.internal.server.actions.StartBuildAction2"/>
+				class="com.ibm.microclimate.ui.internal.actions.StartBuildAction"/>
 			<action
 				id="com.ibm.microclimate.ui.refreshApplication"
 				enablesFor="1"
 				label="%ACTION_REFRESH"
-				class="com.ibm.microclimate.ui.internal.server.actions.RefreshAction"/>
+				class="com.ibm.microclimate.ui.internal.actions.RefreshAction"/>
 		</objectContribution>
 		<objectContribution
 			id="com.ibm.microclimate.ui.appObjectActions"
@@ -215,7 +121,7 @@
 				id="com.ibm.microclimate.ui.refreshConnection"
 				enablesFor="1"
 				label="%ACTION_REFRESH"
-				class="com.ibm.microclimate.ui.internal.server.actions.RefreshAction"/>
+				class="com.ibm.microclimate.ui.internal.actions.RefreshAction"/>
 		</objectContribution>
 	</extension>
 	

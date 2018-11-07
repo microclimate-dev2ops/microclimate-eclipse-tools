@@ -1,4 +1,4 @@
-package com.ibm.microclimate.core.internal.server.console;
+package com.ibm.microclimate.core.internal.console;
 
 import java.io.IOException;
 

@@ -7,7 +7,7 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.core.internal.server.debug;
+package com.ibm.microclimate.core.internal.launch;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -19,14 +19,10 @@ import org.eclipse.debug.core.sourcelookup.ISourcePathComputerDelegate;
 import org.eclipse.debug.core.sourcelookup.containers.ProjectSourceContainer;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 
 /**
  * This class is used by the Microclimate Launch Config to add the Java project of interest
  * to the Debug Source path.
- *
- * @author timetchells@ibm.com
- *
  */
 public class MicroclimateSourcePathComputer implements ISourcePathComputerDelegate {
 
@@ -37,8 +33,8 @@ public class MicroclimateSourcePathComputer implements ISourcePathComputerDelega
 		// Get the project name from the launch configuration, look up the IProject, and return that IProject as a
 		// source container.
 
-		// MicroclimateServerLaunchConfigDelegate sets this attribute in the launch config.
-		final String projectName = config.getAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, "");
+		// MicroclimateLaunchConfigDelegate sets this attribute in the launch config.
+		final String projectName = config.getAttribute(MicroclimateLaunchConfigDelegate.PROJECT_NAME_ATTR, "");
 		if (!projectName.isEmpty()) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 

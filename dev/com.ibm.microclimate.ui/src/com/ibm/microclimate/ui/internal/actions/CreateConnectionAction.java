@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * IBM Confidential
+ * OCO Source Materials
+ * (C) Copyright IBM Corp. 2018 All Rights Reserved.
+ * The source code for this program is not published or otherwise
+ * divested of its trade secrets, irrespective of what has
+ * been deposited with the U.S. Copyright Office.
+ *******************************************************************************/
+
 package com.ibm.microclimate.ui.internal.actions;
 
 import org.eclipse.jface.action.IAction;
@@ -15,7 +24,7 @@ public class CreateConnectionAction implements IViewActionDelegate, IActionDeleg
 	
 	@Override
 	public void run(IAction arg0) {
-		Wizard wizard = new NewMicroclimateConnectionWizard(false);
+		Wizard wizard = new NewMicroclimateConnectionWizard();
 		WizardLauncher.launchWizardWithoutSelection(wizard);
 	}
 

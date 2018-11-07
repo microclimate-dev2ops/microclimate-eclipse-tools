@@ -17,8 +17,8 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.ibm.microclimate.core.internal.IUpdateHandler;
+import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -62,7 +62,7 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 		// Set default preferences once, here
 		getPreferenceStore().setDefault(HIDE_ONFINISH_MSG_PREFSKEY, false);
 		getPreferenceStore().setDefault(DEBUG_CONNECT_TIMEOUT_PREFSKEY,
-				MicroclimateServerBehaviour.DEFAULT_DEBUG_CONNECT_TIMEOUT);
+				MCEclipseApplication.DEFAULT_DEBUG_CONNECT_TIMEOUT);
 	}
 
 	/*

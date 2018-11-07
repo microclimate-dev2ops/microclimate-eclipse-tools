@@ -7,7 +7,7 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.ui.internal.server.actions;
+package com.ibm.microclimate.ui.internal.actions;
 
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;

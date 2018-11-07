@@ -7,27 +7,22 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.ui.internal.server.actions;
-
-import java.util.Set;
+package com.ibm.microclimate.ui.internal.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.console.IConsole;
-import org.eclipse.ui.console.IConsoleManager;
 
-import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.server.console.MicroclimateConsoleFactory;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
-public class ToggleConsolesAction implements IObjectActionDelegate {
+public class RefreshAction implements IObjectActionDelegate {
 
-    protected MCEclipseApplication app;
+    protected Object microclimateObject;
 
     @Override
     public void selectionChanged(IAction action, ISelection selection) {
@@ -39,35 +34,28 @@ public class ToggleConsolesAction implements IObjectActionDelegate {
         IStructuredSelection sel = (IStructuredSelection) selection;
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
-            if (obj instanceof MicroclimateApplication) {
-            	app = (MCEclipseApplication)obj;
-            	action.setChecked(app.hasConsoles());
+            if (obj instanceof MicroclimateConnection || obj instanceof MicroclimateApplication) {
+            	microclimateObject = obj;
             	action.setEnabled(true);
             	return;
             }
         }
-        action.setChecked(false);
         action.setEnabled(false);
     }
 
     @Override
     public void run(IAction action) {
-        if (app == null) {
-        	// should not be possible
-        	MCLogger.logError("ToggleConsolesAction ran but no Microclimate application was selected");
-			return;
-		}
-
-        if (action.isChecked()) {
-        	Set<? extends IConsole> consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
-        	app.setConsoles(consoles);
+        if (microclimateObject instanceof MicroclimateConnection) {
+        	MicroclimateConnection connection = (MicroclimateConnection) microclimateObject;
+        	connection.refreshApps(null);
+        	ViewHelper.refreshMicroclimateExplorerView(connection);
+        } else if (microclimateObject instanceof MicroclimateApplication) {
+        	MicroclimateApplication app = (MicroclimateApplication) microclimateObject;
+        	app.mcConnection.refreshApps(app.projectID);
+        	ViewHelper.refreshMicroclimateExplorerView(app);
         } else {
-        	Set<? extends IConsole> consoles = app.getConsoles();
-        	if (consoles != null) {
-	        	IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
-	        	consoleManager.removeConsoles(consoles.toArray(new IConsole[consoles.size()]));
-	        	app.setConsoles(null);
-        	}
+        	// Should not happen
+        	MCLogger.logError("RefreshAction ran but no Microclimate object was selected");
         }
     }
 

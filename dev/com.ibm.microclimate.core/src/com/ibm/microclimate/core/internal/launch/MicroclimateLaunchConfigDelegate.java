@@ -24,13 +24,12 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.messages.Messages;
-import com.ibm.microclimate.core.internal.server.MicroclimateServer;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 
 @SuppressWarnings("restriction")
 public class MicroclimateLaunchConfigDelegate extends AbstractJavaLaunchConfigurationDelegate {
 	
-	public static final String LAUNCH_CONFIG_ID = "com.ibm.microclimate.core.internal.launchConfigType";
+	public static final String LAUNCH_CONFIG_ID = "com.ibm.microclimate.core.internal.launchConfigurationType";
 	
 	public static final String PROJECT_NAME_ATTR = "com.ibm.microclimate.core.internal.projectNameAttr";
 	public static final String HOST_ATTR = "com.ibm.microclimate.core.internal.hostAttr";
@@ -68,7 +67,7 @@ public class MicroclimateLaunchConfigDelegate extends AbstractJavaLaunchConfigur
 		try {
 			IDebugTarget debugTarget = MicroclimateDebugConnector.connectDebugger(launch, monitor);
 			if (debugTarget != null) {
-				MCLogger.log("Debugger connect success. Server should go into Debugging state soon."); //$NON-NLS-1$
+				MCLogger.log("Debugger connect success. Application should go into Debugging state soon."); //$NON-NLS-1$
 				launch.addDebugTarget(debugTarget);
 			}
 			else {
@@ -90,7 +89,5 @@ public class MicroclimateLaunchConfigDelegate extends AbstractJavaLaunchConfigur
 		config.setAttribute(PROJECT_NAME_ATTR, app.name);
 		config.setAttribute(HOST_ATTR, app.host);
 		config.setAttribute(DEBUG_PORT_ATTR, app.getDebugPort());
-		// TODO: Clean this up
-		config.setAttribute(MicroclimateServer.ATTR_ECLIPSE_PROJECT_NAME, app.name);
 	}
 }

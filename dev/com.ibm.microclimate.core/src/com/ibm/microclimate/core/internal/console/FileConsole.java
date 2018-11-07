@@ -7,7 +7,7 @@
  * been deposited with the U.S. Copyright Office.
  *******************************************************************************/
 
-package com.ibm.microclimate.core.internal.server.console;
+package com.ibm.microclimate.core.internal.console;
 
 import java.io.File;
 import java.io.FileNotFoundException;

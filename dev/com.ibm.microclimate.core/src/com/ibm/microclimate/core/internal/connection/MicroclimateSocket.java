@@ -22,11 +22,10 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.core.internal.messages.Messages;
-import com.ibm.microclimate.core.internal.server.MicroclimateServerBehaviour;
-import com.ibm.microclimate.core.internal.server.console.SocketConsole;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -37,9 +36,6 @@ import io.socket.emitter.Emitter;
  * then updates the corresponding MicroclimateApplication's state.
  * One of these exists for each MicroclimateConnection. That connection is stored here so we can access
  * its applications.
- *
- * @author timetchells@ibm.com
- *
  */
 public class MicroclimateSocket {
 	
@@ -282,15 +278,6 @@ public class MicroclimateSocket {
 		}
 		
 		MCUtil.updateApplication(app, false);
-		
-		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
-		if (serverBehaviour == null) {
-			// This is OK. It will happen if the project that's changed is not linked to a server.
-			return;
-		}
-
-		serverBehaviour.updateServerState(event);
-		
 	}
 
 	private void onProjectRestart(JSONObject event) throws JSONException {
@@ -303,7 +290,7 @@ public class MicroclimateSocket {
 		
 		String status = event.getString(MCConstants.KEY_STATUS);
 		if (!MCConstants.REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
-			MCLogger.logError("Project restart failed on the server: " + event.toString()); //$NON-NLS-1$
+			MCLogger.logError("Project restart failed on the application: " + event.toString()); //$NON-NLS-1$
 			MCUtil.openDialog(true,
 					Messages.MicroclimateSocket_ErrRestartingProjectDialogTitle,
 					NLS.bind(Messages.MicroclimateSocket_ErrRestartingProjectDialogMsg,
@@ -346,30 +333,6 @@ public class MicroclimateSocket {
 		}
 		MCUtil.updateConnection(mcConnection, true);
 		app.dispose();
-		
-		MicroclimateServerBehaviour serverBehaviour = getServerForEvent(event);
-		if (serverBehaviour == null) {
-			// This is normal if this project is not linked to an Eclipse server.
-			// It's an error if this project IS linked and above still returned null.
-			MCLogger.log("Failed to get serverBehaviour, aborting projectDeletion status update"); //$NON-NLS-1$
-			return;
-		}
-
-		serverBehaviour.onProjectDisableOrDelete();
-	}
-
-	private MicroclimateServerBehaviour getServerForEvent(JSONObject event) throws JSONException {
-		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
-
-		MicroclimateServerBehaviour server = MicroclimateApplication.getServerWithProjectID(projectID);
-		if (server == null) {
-			// can't recover from this
-			// This is normal if the project has been deleted or disabled
-			MCLogger.log("No server linked to project with ID " + projectID); //$NON-NLS-1$
-			return null;
-		}
-
-		return server;
 	}
 
 	public void registerSocketConsole(SocketConsole console) {
