@@ -43,7 +43,6 @@ public class Messages extends NLS {
 
 	public static String PrefsParentPage_DebugTimeoutLabel;
 	public static String PrefsParentPage_ErrInvalidDebugTimeout;
-	public static String PrefsParentPage_HidePostLinkDialogLabel;
 
 	public static String NewConnectionPage_ConnectSucceeded;
 	public static String NewConnectionPage_ErrAConnectionAlreadyExists;
@@ -68,6 +67,8 @@ public class Messages extends NLS {
 	public static String StartBuildAction_AlreadyBuildingMsg;
 	
 	public static String MicroclimateConnectionLabel;
+	public static String MicroclimateDisconnected;
+	public static String MicroclimateProjectDisabled;
 	
 	public static String RestartInDebugMode;
 	public static String RestartInRunMode;

@@ -21,15 +21,13 @@ public class UpdateHandler implements IUpdateHandler {
 	}
 
 	@Override
-	public void updateConnection(MicroclimateConnection connection, boolean contentChanged) {
-		// Simple for now
+	public void updateConnection(MicroclimateConnection connection) {
 		ViewHelper.refreshMicroclimateExplorerView(connection);
 	}
 
 	@Override
-	public void updateApplication(MicroclimateApplication application, boolean contentChanged) {
-		// Simple for now
-		ViewHelper.refreshMicroclimateExplorerView(application.mcConnection);
+	public void updateApplication(MicroclimateApplication application) {
+		ViewHelper.refreshMicroclimateExplorerView(application);
 	}
 
 }

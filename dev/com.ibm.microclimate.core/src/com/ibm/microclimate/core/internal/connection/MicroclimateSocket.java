@@ -174,7 +174,7 @@ public class MicroclimateSocket {
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
-					onProjectDeletion(event);
+					onProjectClosed(event);
 				} catch (JSONException e) {
 					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -217,7 +217,13 @@ public class MicroclimateSocket {
 	private void onProjectCreation(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		mcConnection.refreshApps(projectID);
-		MCUtil.updateConnection(mcConnection, true);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			MCLogger.logError("No application found matching the project id for the project creation event: " + projectID);
+			return;
+		}
+		app.setEnabled(true);
+		MCUtil.updateConnection(mcConnection);
 	}
 
 	private void onProjectChanged(JSONObject event) throws JSONException {
@@ -227,6 +233,8 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found matching the project id for the project changed event: " + projectID);
 			return;
 		}
+		
+		app.setEnabled(true);
 	
         // Update ports
         JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
@@ -258,9 +266,11 @@ public class MicroclimateSocket {
 		if (app == null) {
 			// Likely a new project is being created
 			mcConnection.refreshApps(projectID);
-			MCUtil.updateConnection(mcConnection, true);
+			MCUtil.updateConnection(mcConnection);
 			return;
 		}
+		
+		app.setEnabled(true);
 		
 		if (event.has(MCConstants.KEY_APP_STATUS)) {
 			String appStatus = event.getString(MCConstants.KEY_APP_STATUS);
@@ -277,7 +287,7 @@ public class MicroclimateSocket {
 			app.setBuildStatus(buildStatus, detail);
 		}
 		
-		MCUtil.updateApplication(app, false);
+		MCUtil.updateApplication(app);
 	}
 
 	private void onProjectRestart(JSONObject event) throws JSONException {
@@ -287,6 +297,8 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found matching the project id for the project restart event: " + projectID);
 			return;
 		}
+		
+		app.setEnabled(true);
 		
 		String status = event.getString(MCConstants.KEY_STATUS);
 		if (!MCConstants.REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
@@ -323,6 +335,17 @@ public class MicroclimateSocket {
 			app.connectDebugger();
 		}
 	}
+	
+	private void onProjectClosed(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			MCLogger.logError("No application found for project being closed: " + projectID);
+			return;
+		}
+		app.setEnabled(false);
+		MCUtil.updateConnection(mcConnection);
+	}
 
 	private void onProjectDeletion(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
@@ -331,7 +354,7 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found for project being deleted: " + projectID);
 			return;
 		}
-		MCUtil.updateConnection(mcConnection, true);
+		MCUtil.updateConnection(mcConnection);
 		app.dispose();
 	}
 

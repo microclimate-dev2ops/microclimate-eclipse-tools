@@ -23,7 +23,6 @@ import com.ibm.microclimate.core.internal.MCLogger;
 public class ViewHelper {
 	
 	public static final String MC_EXPLORER_VIEW_ID = "com.ibm.microclimate.ui.explorerView";
-	public static final String PROJECT_EXPLORER_VIEW_ID = "org.eclipse.ui.navigator.ProjectExplorer";
 	
 	public static void openMicroclimateExplorerView() {
 		openNavigatorView(MC_EXPLORER_VIEW_ID);
@@ -35,7 +34,6 @@ public class ViewHelper {
             @Override
             public void run() {
             	refreshNavigatorView(MC_EXPLORER_VIEW_ID, obj);
-        		refreshNavigatorView(PROJECT_EXPLORER_VIEW_ID, obj);
             }
         });
 	}
@@ -59,17 +57,13 @@ public class ViewHelper {
 
     public static void refreshNavigatorView(String viewId, Object element) {
     	IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-    	System.out.println("IWorkbenchWindow: " + window);
         if (window != null) {
             IWorkbenchPage page = window.getActivePage();
-            System.out.println("IWorkbenchPage: " + page);
             if (page != null) {
                 IWorkbenchPart part = page.findView(viewId);
-                System.out.println("IWorkbenchPart: " + part);
 		        if (part != null) {
 		            if (part instanceof CommonNavigator) {
 		                CommonNavigator v = (CommonNavigator) part;
-		                System.out.println("Refreshing navigator view: " + v);
 		                v.getCommonViewer().refresh(element);
 		            }
 		        }

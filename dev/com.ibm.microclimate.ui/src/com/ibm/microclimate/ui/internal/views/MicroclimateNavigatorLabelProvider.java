@@ -40,21 +40,29 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 	public String getText(Object element) {
 		if (element instanceof MicroclimateConnection) {
 			MicroclimateConnection connection = (MicroclimateConnection)element;
-			return Messages.MicroclimateConnectionLabel + " " + connection.baseUrl;
+			String text = Messages.MicroclimateConnectionLabel + " " + connection.baseUrl;
+			if (!connection.isConnected()) {
+				text = text + " (" + Messages.MicroclimateDisconnected + ")";
+			}
+			return text;
 		} else if (element instanceof MicroclimateApplication) {
 			MicroclimateApplication app = (MicroclimateApplication)element;
 			StringBuilder builder = new StringBuilder(app.name);
 			
-			AppState appState = app.getAppState();
-			String displayString = appState.getDisplayString(app.getStartMode());
-			builder.append(" [" + displayString + "]");
-			
-			BuildStatus buildStatus = app.getBuildStatus();
-			String buildDetails = app.getBuildDetails();
-			if (buildDetails != null && !buildDetails.isEmpty()) {
-				builder.append(" [" + buildStatus.getDisplayString() + ": " + buildDetails + "]");
+			if (app.isEnabled()) {
+				AppState appState = app.getAppState();
+				String displayString = appState.getDisplayString(app.getStartMode());
+				builder.append(" [" + displayString + "]");
+				
+				BuildStatus buildStatus = app.getBuildStatus();
+				String buildDetails = app.getBuildDetails();
+				if (buildDetails != null && !buildDetails.isEmpty()) {
+					builder.append(" [" + buildStatus.getDisplayString() + ": " + buildDetails + "]");
+				} else {
+					builder.append(" [" + buildStatus.getDisplayString() + "]");
+				}
 			} else {
-				builder.append(" [" + buildStatus.getDisplayString() + "]");
+				builder.append(" [" + Messages.MicroclimateProjectDisabled + "]");
 			}
 			return builder.toString();
 		}
@@ -68,22 +76,29 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 			MicroclimateConnection connection = (MicroclimateConnection)element;
 			styledString = new StyledString(Messages.MicroclimateConnectionLabel + " " );
 			styledString.append(connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
+			if (!connection.isConnected()) {
+				styledString.append(" (" + Messages.MicroclimateDisconnected + ")", ERROR_STYLER);
+			}
 		} else if (element instanceof MicroclimateApplication) {
 			MicroclimateApplication app = (MicroclimateApplication)element;
 			styledString = new StyledString(app.name);
 			
-			AppState appState = app.getAppState();
-			String displayString = appState.getDisplayString(app.getStartMode());
-			styledString.append(" [" + displayString + "]", StyledString.DECORATIONS_STYLER);
-			
-			BuildStatus buildStatus = app.getBuildStatus();
-			String buildDetails = app.getBuildDetails();
-			if (buildDetails != null) {
-				styledString.append(" [" + buildStatus.getDisplayString() + ": ", StyledString.DECORATIONS_STYLER);
-				styledString.append(buildDetails, StyledString.QUALIFIER_STYLER);
-				styledString.append("]", StyledString.DECORATIONS_STYLER);
+			if (app.isEnabled()) {
+				AppState appState = app.getAppState();
+				String displayString = appState.getDisplayString(app.getStartMode());
+				styledString.append(" [" + displayString + "]", StyledString.DECORATIONS_STYLER);
+				
+				BuildStatus buildStatus = app.getBuildStatus();
+				String buildDetails = app.getBuildDetails();
+				if (buildDetails != null) {
+					styledString.append(" [" + buildStatus.getDisplayString() + ": ", StyledString.DECORATIONS_STYLER);
+					styledString.append(buildDetails, StyledString.QUALIFIER_STYLER);
+					styledString.append("]", StyledString.DECORATIONS_STYLER);
+				} else {
+					styledString.append(" [" + buildStatus.getDisplayString() + "]", StyledString.DECORATIONS_STYLER);
+				}
 			} else {
-				styledString.append(" [" + buildStatus.getDisplayString() + "]", StyledString.DECORATIONS_STYLER);
+				styledString.append(" [" + Messages.MicroclimateProjectDisabled + "]", StyledString.DECORATIONS_STYLER);
 			}
 		} else {
 			styledString = new StyledString(getText(element));
