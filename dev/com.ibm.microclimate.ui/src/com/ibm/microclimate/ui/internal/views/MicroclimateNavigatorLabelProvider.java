@@ -43,6 +43,8 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 			String text = Messages.MicroclimateConnectionLabel + " " + connection.baseUrl;
 			if (!connection.isConnected()) {
 				text = text + " (" + Messages.MicroclimateDisconnected + ")";
+			} else if (connection.getApps().size() == 0) {
+				text = text + " (" + Messages.MicroclimateConnectionNoProjects + ")";
 			}
 			return text;
 		} else if (element instanceof MicroclimateApplication) {
@@ -78,6 +80,8 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 			styledString.append(connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
 			if (!connection.isConnected()) {
 				styledString.append(" (" + Messages.MicroclimateDisconnected + ")", ERROR_STYLER);
+			} else if (connection.getApps().size() == 0) {
+				styledString.append(" (" + Messages.MicroclimateConnectionNoProjects + ")", StyledString.DECORATIONS_STYLER);
 			}
 		} else if (element instanceof MicroclimateApplication) {
 			MicroclimateApplication app = (MicroclimateApplication)element;
@@ -113,7 +117,7 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 		}
 		return null;
 	}
-	
+
 	static class BoldFontStyler extends Styler {
 	    @Override
 	    public void applyStyles(final TextStyle textStyle)

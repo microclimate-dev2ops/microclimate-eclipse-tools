@@ -293,6 +293,26 @@ public class MicroclimateConnection {
 		}
 		app.invalidatePorts();
 	}
+	
+	public void requestProjectOpenClose(MicroclimateApplication app, boolean enable)
+			throws JSONException, IOException {
+		
+		String action = enable ? MCConstants.APIPATH_OPEN : MCConstants.APIPATH_CLOSE;
+
+		String restartEndpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
+				+ app.projectID + "/" 										//$NON-NLS-1$
+				+ action;
+
+		URI url = baseUrl.resolve(restartEndpoint);
+
+		// This initiates the restart
+		HttpResult result = HttpUtil.put(url);
+		if (!result.isGoodResponse) {
+			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
+					result.responseCode, result.error);
+			throw new IOException(msg);
+		}
+	}
 
 	/**
 	 * Get the project status endpoint, and filter the response for the JSON corresponding to the given project.
@@ -332,7 +352,7 @@ public class MicroclimateConnection {
 	 * Request a build on an application
 	 * @param app The app to build
 	 */
-	public void requestProjectBuild(MicroclimateApplication app)
+	public void requestProjectBuild(MicroclimateApplication app, String action)
 			throws JSONException, IOException {
 
 		String buildEndpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
@@ -342,7 +362,7 @@ public class MicroclimateConnection {
 		URI url = baseUrl.resolve(buildEndpoint);
 
 		JSONObject buildPayload = new JSONObject();
-		buildPayload.put(MCConstants.KEY_ACTION, MCConstants.VALUE_ACTION_BUILD);
+		buildPayload.put(MCConstants.KEY_ACTION, action);
 
 		// This initiates the build
 		HttpUtil.post(url, buildPayload);

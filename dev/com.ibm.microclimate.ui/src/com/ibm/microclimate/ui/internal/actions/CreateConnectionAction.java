@@ -48,8 +48,8 @@ public class CreateConnectionAction implements IViewActionDelegate, IActionDeleg
 
 	@Override
 	public void runWithEvent(IAction arg0, Event arg1) {
-		// TODO Auto-generated method stub
-
+		Wizard wizard = new NewMicroclimateConnectionWizard();
+		WizardLauncher.launchWizardWithoutSelection(wizard);
 	}
 
 	@Override

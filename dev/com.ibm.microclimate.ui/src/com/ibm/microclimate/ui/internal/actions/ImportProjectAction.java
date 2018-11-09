@@ -9,18 +9,20 @@
 
 package com.ibm.microclimate.ui.internal.actions;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.internal.wizards.datatransfer.SmartImportJob;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.constants.BuildStatus;
-import com.ibm.microclimate.core.internal.constants.MCConstants;
 
-public class StartBuildAction implements IObjectActionDelegate {
+public class ImportProjectAction implements IObjectActionDelegate {
 
 	protected MicroclimateApplication app;
 
@@ -36,9 +38,8 @@ public class StartBuildAction implements IObjectActionDelegate {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MicroclimateApplication) {
 				app = (MicroclimateApplication) obj;
-				if (app.getBuildStatus() != BuildStatus.IN_PROGRESS && app.getBuildStatus() != BuildStatus.QUEUED) {
-					action.setEnabled(true);
-				}
+				IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+				action.setEnabled(project == null || !project.exists());
 				return;
 			}
 		}
@@ -49,12 +50,14 @@ public class StartBuildAction implements IObjectActionDelegate {
 	public void run(IAction action) {
 		if (app == null) {
 			// should not be possible
-			MCLogger.logError("StartBuildAction ran but no application was selected");
+			MCLogger.logError("ImportProjectAction ran but no application was selected");
 			return;
 		}
 
 		try {
-			app.mcConnection.requestProjectBuild(app, MCConstants.VALUE_ACTION_BUILD);
+			IPath path = app.fullLocalPath;
+			SmartImportJob importJob = new SmartImportJob(path.toFile(), null, true, false);
+			importJob.schedule();
 		} catch (Exception e) {
 			MCLogger.logError("Error requesting build for application: " + app.name, e); //$NON-NLS-1$
 		}

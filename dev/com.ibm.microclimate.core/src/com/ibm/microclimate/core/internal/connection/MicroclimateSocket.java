@@ -258,6 +258,11 @@ public class MicroclimateSocket {
 		} else {
 			app.setDebugPort(-1);
 		}
+		
+		if (event.has(MCConstants.KEY_AUTO_BUILD)) {
+			boolean autoBuild = event.getBoolean(MCConstants.KEY_AUTO_BUILD);
+			app.setAutoBuild(autoBuild);
+		}
 	}
 
 	private void onProjectStatusChanged(JSONObject event) throws JSONException {

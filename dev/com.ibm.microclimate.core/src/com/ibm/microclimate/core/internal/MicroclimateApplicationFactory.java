@@ -160,6 +160,12 @@ public class MicroclimateApplicationFactory {
 			// Set the start mode
 			StartMode startMode = StartMode.get(appJso);
 			mcApp.setStartMode(startMode);
+			
+			// Set auto build
+			if (appJso.has(MCConstants.KEY_AUTO_BUILD)) {
+				boolean autoBuild = appJso.getBoolean(MCConstants.KEY_AUTO_BUILD);
+				mcApp.setAutoBuild(autoBuild);
+			}
 		} catch(JSONException e) {
 			MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
 		}

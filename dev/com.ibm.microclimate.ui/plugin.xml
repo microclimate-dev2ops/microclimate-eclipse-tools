@@ -86,6 +86,11 @@
 			id="com.ibm.microclimate.ui.appObjectActions"
 			objectClass="com.ibm.microclimate.core.internal.MicroclimateApplication">
 			<action
+				id="com.ibm.microclimate.ui.importApplication"
+				enablesFor="1"
+				label="%ACTION_IMPORT_PROJECT"
+				class="com.ibm.microclimate.ui.internal.actions.ImportProjectAction"/>
+			<action
 				id="com.ibm.microclimate.ui.openApplication"
 				enablesFor="1"
 				icon="%DEFAULT_ICON_PATH"
@@ -108,6 +113,16 @@
 				enablesFor="1"
 				label="%ACTION_START_BUILD"
 				class="com.ibm.microclimate.ui.internal.actions.StartBuildAction"/>
+			<action
+				id="com.ibm.microclimate.ui.enableDisableAutoBuild"
+				enablesFor="1"
+				label=""
+				class="com.ibm.microclimate.ui.internal.actions.EnableDisableAutoBuildAction"/>
+			<action
+				id="com.ibm.microclimate.ui.enableDisableApplication"
+				enablesFor="1"
+				label=""
+				class="com.ibm.microclimate.ui.internal.actions.EnableDisableProjectAction"/>
 			<action
 				id="com.ibm.microclimate.ui.refreshApplication"
 				enablesFor="1"
@@ -132,6 +147,8 @@
 			<action
 				id="com.ibm.microcliamte.ui.createConnectionAction"
 				label="%NEW_CONNECTION_MENU_LABEL"
+				menubarPath="additions"
+				toolbarPath="additions" 
 				icon="%DEFAULT_ICON_PATH"
 				class="com.ibm.microclimate.ui.internal.actions.CreateConnectionAction">
 			</action>
