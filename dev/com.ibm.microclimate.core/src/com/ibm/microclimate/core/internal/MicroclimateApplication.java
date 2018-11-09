@@ -35,6 +35,7 @@ public class MicroclimateApplication {
 	private AppState appState;
 	private BuildStatus buildStatus;
 	private String buildDetails;
+	private boolean enabled = true;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -98,6 +99,10 @@ public class MicroclimateApplication {
 		this.startMode = startMode;
 	}
 	
+	public synchronized void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+	
 	// Getters for our project state fields
 
 	/**
@@ -129,6 +134,10 @@ public class MicroclimateApplication {
 	
 	public synchronized StartMode getStartMode() {
 		return startMode;
+	}
+	
+	public synchronized boolean isEnabled() {
+		return enabled;
 	}
 
 	public boolean isActive() {

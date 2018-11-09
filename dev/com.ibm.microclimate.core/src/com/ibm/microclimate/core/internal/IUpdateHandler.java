@@ -15,8 +15,8 @@ public interface IUpdateHandler {
 	
 	public void updateAll();
 	
-	public void updateConnection(MicroclimateConnection connection, boolean contentChanged);
+	public void updateConnection(MicroclimateConnection connection);
 	
-	public void updateApplication(MicroclimateApplication application, boolean contentChanged);
+	public void updateApplication(MicroclimateApplication application);
 
 }

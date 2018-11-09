@@ -17,7 +17,6 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -36,7 +35,6 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 
 	private static IPreferenceStore prefs;
 
-	private Button showLinkFinishDialogBtn;
 	private Text debugTimeoutText;
 
 	@Override
@@ -69,18 +67,6 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 				validate();
 			}
 		});
-
-
-		final GridData fillRowData = new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1);
-		Label spacer = new Label(parent, SWT.NONE);
-		spacer.setLayoutData(fillRowData);
-
-		showLinkFinishDialogBtn = new Button(parent, SWT.CHECK);
-		showLinkFinishDialogBtn.setText(Messages.PrefsParentPage_HidePostLinkDialogLabel);
-		showLinkFinishDialogBtn.setSelection(prefs.getBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY));
-//		showLinkFinishDialogBtn.setFont(parent.getFont());
-		showLinkFinishDialogBtn.setLayoutData(fillRowData);
-
 
 		Label endSpacer = new Label(parent, SWT.NONE);
 		endSpacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
@@ -115,8 +101,6 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 			return false;
 		}
 
-		prefs.setValue(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY, showLinkFinishDialogBtn.getSelection());
-
 		// validate in validate() that this is a good integer
 		int debugTimeout = Integer.parseInt(debugTimeoutText.getText().trim());
 		prefs.setValue(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY, debugTimeout);
@@ -129,9 +113,6 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 
 	@Override
 	public void performDefaults() {
-		showLinkFinishDialogBtn.setSelection(
-				prefs.getDefaultBoolean(MicroclimateCorePlugin.HIDE_ONFINISH_MSG_PREFSKEY));
-
 		debugTimeoutText.setText("" + 	//$NON-NLS-1$
 				prefs.getDefaultInt(MicroclimateCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
 	}

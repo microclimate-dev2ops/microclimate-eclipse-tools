@@ -48,6 +48,8 @@ public class MicroclimateConnection {
 	public final int mcVersion;
 
 	public final MicroclimateSocket mcSocket;
+	
+	private volatile boolean isConnected = true;
 
 	private Map<String, MicroclimateApplication> appMap = new LinkedHashMap<String, MicroclimateApplication>();
 
@@ -345,13 +347,21 @@ public class MicroclimateConnection {
 		// This initiates the build
 		HttpUtil.post(url, buildPayload);
 	}
-
+	
+	public boolean isConnected() {
+		return isConnected;
+	}
 
 	/**
 	 * Called by the MicroclimateSocket when the socket.io connection goes down.
 	 */
 	public synchronized void onConnectionError() {
 		MCLogger.log("MCConnection to " + baseUrl + " lost"); //$NON-NLS-1$ //$NON-NLS-2$
+		isConnected = false;
+		synchronized(appMap) {
+			appMap.clear();
+		}
+		MCUtil.updateConnection(this);
 	}
 
 	/**
@@ -359,6 +369,9 @@ public class MicroclimateConnection {
 	 */
 	public synchronized void clearConnectionError() {
 		MCLogger.log("MCConnection to " + baseUrl + " restored"); //$NON-NLS-1$ //$NON-NLS-2$
+		isConnected = true;
+		refreshApps(null);
+		MCUtil.updateConnection(this);
 	}
 
 	@Override

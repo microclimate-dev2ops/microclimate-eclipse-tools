@@ -138,17 +138,17 @@ public class MCUtil {
 		}
 	}
 	
-	public static void updateConnection(MicroclimateConnection connection, boolean contentChanged) {
+	public static void updateConnection(MicroclimateConnection connection) {
 		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
 		if (handler != null) {
-			handler.updateConnection(connection,  contentChanged);
+			handler.updateConnection(connection);
 		}
 	}
 	
-	public static void updateApplication(MicroclimateApplication app, boolean contentChanged) {
+	public static void updateApplication(MicroclimateApplication app) {
 		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
 		if (handler != null) {
-			handler.updateApplication(app,  contentChanged);
+			handler.updateApplication(app);
 		}
 	}
 
