@@ -52,7 +52,7 @@
 			category="com.ibm.microclimate.ui.views"
 			allowMultiple="false"
 			icon="%DEFAULT_ICON_PATH"
-			class="org.eclipse.ui.navigator.CommonNavigator"/>
+			class="com.ibm.microclimate.ui.internal.views.MicroclimateExplorerView"/>
 	</extension>
 	
 	<extension point="org.eclipse.ui.navigator.viewer">

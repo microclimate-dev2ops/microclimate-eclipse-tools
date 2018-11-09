@@ -41,13 +41,15 @@ public class EnableDebugAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.getStartMode() == StartMode.RUN) {
-                	action.setText(Messages.RestartInDebugMode);
-                } else {
-                	action.setText(Messages.RestartInRunMode);
-                }
-	            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
-            	return;
+            	if (app.isSupportedProject()) {
+	            	if (app.getStartMode() == StartMode.RUN) {
+	                	action.setText(Messages.RestartInDebugMode);
+	                } else {
+	                	action.setText(Messages.RestartInRunMode);
+	                }
+		            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
+	            	return;
+            	}
             }
         }
         
