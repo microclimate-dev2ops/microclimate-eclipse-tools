@@ -19,4 +19,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: com.ibm.microclimate.ui;singleton:=true
 Bundle-ActivationPolicy: lazy
 Import-Package: org.eclipse.ui.console,
- org.eclipse.ui.navigator
+ org.eclipse.ui.navigator,
+ org.eclipse.ui.internal.wizards.datatransfer

@@ -9,9 +9,6 @@
 
 package com.ibm.microclimate.ui.internal.actions;
 
-import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -21,11 +18,10 @@ import org.eclipse.ui.IWorkbenchPart;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.constants.AppState;
-import com.ibm.microclimate.core.internal.constants.StartMode;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
-public class EnableDebugAction implements IObjectActionDelegate {
+public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
 
     protected MCEclipseApplication app;
 
@@ -41,12 +37,12 @@ public class EnableDebugAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.getStartMode() == StartMode.RUN) {
-                	action.setText(Messages.RestartInDebugMode);
+            	if (app.isAutoBuild()) {
+                	action.setText(Messages.DisableAutoBuildLabel);
                 } else {
-                	action.setText(Messages.RestartInRunMode);
+                	action.setText(Messages.EnableAutoBuildLabel);
                 }
-	            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
+	            action.setEnabled(true);
             	return;
             }
         }
@@ -58,27 +54,17 @@ public class EnableDebugAction implements IObjectActionDelegate {
     public void run(IAction action) {
         if (app == null) {
         	// should not be possible
-        	MCLogger.logError("EnableDebugAction ran but no Microclimate application was selected");
+        	MCLogger.logError("EnableDisableAutoBuildAction ran but no Microclimate application was selected");
 			return;
 		}
 
         try {
-        	ILaunch launch = app.getLaunch();
-        	if (launch != null) {
-        		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-        		launchManager.removeLaunch(launch);
-        	}
-        	app.setLaunch(null);
-        	if (app.getStartMode() == StartMode.RUN) {
-				app.mcConnection.requestProjectRestart(app, StartMode.DEBUG.startMode);
-				app.setStartMode(StartMode.DEBUG);
-			} else {
-				app.mcConnection.requestProjectRestart(app, StartMode.RUN.startMode);
-				app.setStartMode(StartMode.RUN);
-			}
+        	String actionKey = app.isAutoBuild() ? MCConstants.VALUE_ACTION_DISABLEAUTOBUILD : MCConstants.VALUE_ACTION_ENABLEAUTOBUILD;
+			app.mcConnection.requestProjectBuild(app, actionKey);
+			app.setAutoBuild(!app.isAutoBuild());
 		} catch (Exception e) {
-			MCLogger.logError("Error initiating restart for project: " + app.name, e); //$NON-NLS-1$
-			MCUtil.openDialog(true, Messages.ErrorOnRestartDialogTitle, e.getMessage());
+			MCLogger.logError("Error initiating enable/disable for project: " + app.name, e); //$NON-NLS-1$
+			MCUtil.openDialog(true, Messages.ErrorOnEnableDisableAutoBuildDialogTitle, e.getMessage());
 			return;
 		}
     }

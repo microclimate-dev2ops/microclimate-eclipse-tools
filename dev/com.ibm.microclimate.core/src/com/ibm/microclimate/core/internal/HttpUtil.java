@@ -118,6 +118,23 @@ public class HttpUtil {
 		}
 	}
 	
+	public static HttpResult put(URI uri) throws IOException {
+		HttpURLConnection connection = null;
+
+		MCLogger.log("PUT " + uri);
+		try {
+			connection = (HttpURLConnection) uri.toURL().openConnection();
+
+			connection.setRequestMethod("PUT");
+
+			return new HttpResult(connection);
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
+	
 	public static HttpResult head(URI uri) throws IOException {
 		HttpURLConnection connection = null;
 

@@ -38,7 +38,7 @@ public class MicroclimateSourcePathComputer implements ISourcePathComputerDelega
 		if (!projectName.isEmpty()) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 
-			if (project == null) {
+			if (project == null || !project.exists()) {
 				MCLogger.logError("Could not find project with name " + projectName + " to add to source path");
 				return new ISourceContainer[0];
 			}

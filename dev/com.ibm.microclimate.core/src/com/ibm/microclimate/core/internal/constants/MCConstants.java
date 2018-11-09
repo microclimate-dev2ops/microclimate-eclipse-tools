@@ -27,6 +27,8 @@ public class MCConstants {
 			APIPATH_ENV = "api/v1/environment",
 			APIPATH_RESTART = "restart",
 			APIPATH_BUILD = "build",
+			APIPATH_CLOSE = "close",
+			APIPATH_OPEN = "open",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -54,6 +56,7 @@ public class MCConstants {
 			KEY_PORTS = "ports",
 			KEY_EXPOSED_PORT = "exposedPort",
 			KEY_EXPOSED_DEBUG_PORT = "exposedDebugPort",
+			KEY_AUTO_BUILD = "autoBuild",
 
 			KEY_ENV_WORKSPACE_LOC = "workspace_location",
 			KEY_ENV_MC_VERSION = "microclimate_version",
@@ -64,6 +67,8 @@ public class MCConstants {
 			KEY_START_MODE = "startMode",
 			KEY_ACTION = "action",
 			VALUE_ACTION_BUILD = "build",
+			VALUE_ACTION_ENABLEAUTOBUILD = "enableautobuild",
+			VALUE_ACTION_DISABLEAUTOBUILD = "disableautobuild",
 
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success"

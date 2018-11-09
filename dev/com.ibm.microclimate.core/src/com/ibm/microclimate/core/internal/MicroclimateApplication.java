@@ -35,6 +35,7 @@ public class MicroclimateApplication {
 	private AppState appState;
 	private BuildStatus buildStatus;
 	private String buildDetails;
+	private boolean autoBuild = true;
 	private boolean enabled = true;
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -99,6 +100,10 @@ public class MicroclimateApplication {
 		this.startMode = startMode;
 	}
 	
+	public synchronized void setAutoBuild(boolean enabled) {
+		this.autoBuild = enabled;
+	}
+	
 	public synchronized void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
@@ -134,6 +139,10 @@ public class MicroclimateApplication {
 	
 	public synchronized StartMode getStartMode() {
 		return startMode;
+	}
+	
+	public synchronized boolean isAutoBuild() {
+		return autoBuild;
 	}
 	
 	public synchronized boolean isEnabled() {
