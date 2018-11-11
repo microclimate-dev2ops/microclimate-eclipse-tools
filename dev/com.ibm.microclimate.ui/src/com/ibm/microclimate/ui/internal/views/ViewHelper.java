@@ -22,10 +22,8 @@ import com.ibm.microclimate.core.internal.MCLogger;
 
 public class ViewHelper {
 	
-	public static final String MC_EXPLORER_VIEW_ID = "com.ibm.microclimate.ui.explorerView";
-	
 	public static void openMicroclimateExplorerView() {
-		openNavigatorView(MC_EXPLORER_VIEW_ID);
+		openNavigatorView(MicroclimateExplorerView.VIEW_ID);
 	}
 	
 	public static void refreshMicroclimateExplorerView(Object element) {
@@ -33,7 +31,7 @@ public class ViewHelper {
 		Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-            	refreshNavigatorView(MC_EXPLORER_VIEW_ID, obj);
+            	refreshNavigatorView(MicroclimateExplorerView.VIEW_ID, obj);
             }
         });
 	}
