@@ -104,10 +104,15 @@
 				state="false"
 				class="com.ibm.microclimate.ui.internal.actions.ToggleConsolesAction"/>
 			<action
-				id="com.ibm.microclimate.ui.enableDebug"
+				id="com.ibm.microclimate.ui.restartRunMode"
 				enablesFor="1"
-				label=""
-				class="com.ibm.microclimate.ui.internal.actions.EnableDebugAction"/>
+				label="%ACTION_RESTART_RUN_MODE"
+				class="com.ibm.microclimate.ui.internal.actions.RestartRunModeAction"/>
+			<action
+				id="com.ibm.microclimate.ui.restartDebugMode"
+				enablesFor="1"
+				label="%ACTION_RESTART_DEBUG_MODE"
+				class="com.ibm.microclimate.ui.internal.actions.RestartDebugModeAction"/>
 			<action
 				id="com.ibm.microclimate.ui.buildApplication"
 				enablesFor="1"
@@ -116,12 +121,12 @@
 			<action
 				id="com.ibm.microclimate.ui.enableDisableAutoBuild"
 				enablesFor="1"
-				label=""
+				label="%ACTION_ENABLE_DISABLE_AUTO_BUILD"
 				class="com.ibm.microclimate.ui.internal.actions.EnableDisableAutoBuildAction"/>
 			<action
 				id="com.ibm.microclimate.ui.enableDisableApplication"
 				enablesFor="1"
-				label=""
+				label="%ACTION_ENABLE_DISABLE_APP"
 				class="com.ibm.microclimate.ui.internal.actions.EnableDisableProjectAction"/>
 			<action
 				id="com.ibm.microclimate.ui.refreshApplication"
@@ -151,6 +156,22 @@
 				toolbarPath="additions" 
 				icon="%DEFAULT_ICON_PATH"
 				class="com.ibm.microclimate.ui.internal.actions.CreateConnectionAction">
+			</action>
+			<action
+				id="com.ibm.microcliamte.ui.restartRunModeAction"
+				label="%ACTION_RESTART_RUN_MODE"
+				menubarPath="additions"
+				toolbarPath="additions" 
+				icon="%RUN_ICON_PATH"
+				class="com.ibm.microclimate.ui.internal.actions.RestartRunModeAction">
+			</action>
+			<action
+				id="com.ibm.microcliamte.ui.restartDebugModeAction"
+				label="%ACTION_RESTART_DEBUG_MODE"
+				menubarPath="additions"
+				toolbarPath="additions" 
+				icon="%DEBUG_ICON_PATH"
+				class="com.ibm.microclimate.ui.internal.actions.RestartDebugModeAction">
 			</action>
 		</viewContribution>
 	</extension>
