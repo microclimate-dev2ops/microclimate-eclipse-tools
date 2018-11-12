@@ -18,6 +18,7 @@ public class MicroclimateUtil {
 		TestUtil.wait(new Condition() {
 			@Override
 			public boolean test() {
+				connection.refreshApps(null);
 				return connection.getAppByName(projectName) != null;
 			}
 		}, timeout, interval);
