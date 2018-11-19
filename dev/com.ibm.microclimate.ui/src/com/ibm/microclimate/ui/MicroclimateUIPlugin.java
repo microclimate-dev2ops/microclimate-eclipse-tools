@@ -37,9 +37,16 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 	
 	public static final String
 			ICON_BASE_PATH = "icons/",
-			MICROCLIMATE_ICON_PATH = "microclimate.ico",
-			MICROCLIMATE_BANNER_PATH = "microclimateBanner.png",
-			ERROR_ICON_PATH = "error.gif";
+			ENABLE_LOCAL_BASE_PATH = "icons/elcl16/",
+			MICROCLIMATE_ICON = "microclimate.ico",
+			MICROCLIMATE_BANNER = "microclimateBanner.png",
+			ERROR_ICON_PATH = "error.gif",
+			OPEN_APP_ICON = "openApp.gif",
+			BUILD_ICON = "build_exec.png",
+			IMPORT_ICON = "import_wiz.png",
+			LAUNCH_DEBUG_ICON = "launch_debug.gif",
+			LAUNCH_RUN_ICON = "launch_run.gif",
+			REFRESH_ICON = "refresh.png";
 
 	// The shared instance
 	private static MicroclimateUIPlugin plugin;
@@ -81,13 +88,13 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 		return plugin;
 	}
 
-	public static ImageDescriptor getIcon(String path) {
+	public static ImageDescriptor getImageDescriptor(String path) {
 		final URL url = MicroclimateUIPlugin.getDefault().getBundle().getEntry(ICON_BASE_PATH + path);
 		return ImageDescriptor.createFromURL(url);
 	}
 
 	public static ImageDescriptor getDefaultIcon() {
-		return getIcon(MICROCLIMATE_ICON_PATH);
+		return getImageDescriptor(MICROCLIMATE_ICON);
 	}
 	
     public static Image getImage(String key) {
@@ -100,7 +107,13 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
         if (ICON_BASE_URL == null)
             ICON_BASE_URL = plugin.getBundle().getEntry(ICON_BASE_PATH);
 
-        registerImage(registry, MICROCLIMATE_ICON_PATH, ICON_BASE_URL + MICROCLIMATE_ICON_PATH);
+        registerImage(registry, MICROCLIMATE_ICON, ICON_BASE_URL + MICROCLIMATE_ICON);
+        registerImage(registry, OPEN_APP_ICON, ENABLE_LOCAL_BASE_PATH + OPEN_APP_ICON);
+        registerImage(registry, BUILD_ICON, ENABLE_LOCAL_BASE_PATH + BUILD_ICON);
+        registerImage(registry, IMPORT_ICON, ENABLE_LOCAL_BASE_PATH + IMPORT_ICON);
+        registerImage(registry, LAUNCH_DEBUG_ICON, ENABLE_LOCAL_BASE_PATH + LAUNCH_DEBUG_ICON);
+        registerImage(registry, LAUNCH_RUN_ICON, ENABLE_LOCAL_BASE_PATH + LAUNCH_RUN_ICON);
+        registerImage(registry, REFRESH_ICON, ENABLE_LOCAL_BASE_PATH + REFRESH_ICON);
 
         return registry;
     }

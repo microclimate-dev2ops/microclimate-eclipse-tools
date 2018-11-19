@@ -60,11 +60,12 @@
 			viewerId="com.ibm.microclimate.ui.explorerView">
 			<includes>
 				<contentExtension
+					isRoot="true"
 					pattern="com.ibm.microclimate.ui.navigatorContent"/>
 			</includes>
 		</viewerContentBinding>
 	</extension>
-    
+
 	<extension point="org.eclipse.ui.navigator.navigatorContent">
 		<navigatorContent
 			name="%NAVIGATOR_CONTENT_NAME"
@@ -78,6 +79,18 @@
 					<instanceof value="org.eclipse.core.resources.IWorkspaceRoot" />
 				</or>
 			</enablement>
+			<actionProvider
+				id="com.ibm.microclimate.ui.microclimateActionProvider"
+				class="com.ibm.microclimate.ui.internal.actions.MicroclimateActionProvider">
+				<enablement>
+					<or>
+						<instanceof value="org.eclipse.core.resources.IWorkspaceRoot" />
+						<adapt type="java.util.Collection">
+							<count value="0"/>
+						</adapt>
+					</or>
+				</enablement>
+			</actionProvider>
 		</navigatorContent>
 	</extension>
 
@@ -88,17 +101,21 @@
 			<action
 				id="com.ibm.microclimate.ui.importApplication"
 				enablesFor="1"
+				menubarPath="group.top"
+				icon="%IMPORT_ICON_PATH"
 				label="%ACTION_IMPORT_PROJECT"
 				class="com.ibm.microclimate.ui.internal.actions.ImportProjectAction"/>
 			<action
 				id="com.ibm.microclimate.ui.openApplication"
 				enablesFor="1"
+				menubarPath="group.open"
 				icon="%DEFAULT_ICON_PATH"
 				label="%ACTION_OPEN_APP"
 				class="com.ibm.microclimate.ui.internal.actions.OpenAppAction"/>
 			<action
 				id="com.ibm.microclimate.ui.toggleConsoles"
 				enablesFor="1"
+				menubarPath="group.show"
 				label="%ACTION_SHOW_CONSOLES"
 				style="toggle"
 				state="false"
@@ -106,31 +123,35 @@
 			<action
 				id="com.ibm.microclimate.ui.restartRunMode"
 				enablesFor="1"
+				menubarPath="group.top"
+				icon="%RUN_ICON_PATH"
 				label="%ACTION_RESTART_RUN_MODE"
 				class="com.ibm.microclimate.ui.internal.actions.RestartRunModeAction"/>
 			<action
 				id="com.ibm.microclimate.ui.restartDebugMode"
 				enablesFor="1"
+				menubarPath="group.top"
+				icon="%DEBUG_ICON_PATH"
 				label="%ACTION_RESTART_DEBUG_MODE"
 				class="com.ibm.microclimate.ui.internal.actions.RestartDebugModeAction"/>
 			<action
 				id="com.ibm.microclimate.ui.buildApplication"
 				enablesFor="1"
+				menubarPath="group.build"
+				icon="%BUILD_ICON_PATH"
 				label="%ACTION_START_BUILD"
 				class="com.ibm.microclimate.ui.internal.actions.StartBuildAction"/>
 			<action
 				id="com.ibm.microclimate.ui.enableDisableAutoBuild"
 				enablesFor="1"
+				menubarPath="group.build"
 				label="%ACTION_ENABLE_DISABLE_AUTO_BUILD"
 				class="com.ibm.microclimate.ui.internal.actions.EnableDisableAutoBuildAction"/>
 			<action
-				id="com.ibm.microclimate.ui.enableDisableApplication"
-				enablesFor="1"
-				label="%ACTION_ENABLE_DISABLE_APP"
-				class="com.ibm.microclimate.ui.internal.actions.EnableDisableProjectAction"/>
-			<action
 				id="com.ibm.microclimate.ui.refreshApplication"
 				enablesFor="1"
+				menubarPath="group.additions"
+				icon="%REFRESH_ICON_PATH"
 				label="%ACTION_REFRESH"
 				class="com.ibm.microclimate.ui.internal.actions.RefreshAction"/>
 		</objectContribution>
@@ -138,13 +159,21 @@
 			id="com.ibm.microclimate.ui.appObjectActions"
 			objectClass="com.ibm.microclimate.core.internal.connection.MicroclimateConnection">
 			<action
+				id="com.ibm.microclimate.ui.removeConnection"
+				enablesFor="1"
+				menubarPath="group.new"
+				label="%ACTION_REMOVE_CONNECTION"
+				class="com.ibm.microclimate.ui.internal.actions.RemoveConnectionAction"/>
+			<action
 				id="com.ibm.microclimate.ui.refreshConnection"
 				enablesFor="1"
+				menubarPath="group.additions"
+				icon="%REFRESH_ICON_PATH"
 				label="%ACTION_REFRESH"
 				class="com.ibm.microclimate.ui.internal.actions.RefreshAction"/>
 		</objectContribution>
 	</extension>
-	
+
 	<extension point="org.eclipse.ui.viewActions">
 		<viewContribution
 			id="com.ibm.microclimate.ui.explorerViewActions"
@@ -152,30 +181,30 @@
 			<action
 				id="com.ibm.microcliamte.ui.createConnectionAction"
 				label="%NEW_CONNECTION_MENU_LABEL"
-				menubarPath="additions"
-				toolbarPath="additions" 
+				menubarPath="group.new"
+				toolbarPath="group.new" 
 				icon="%DEFAULT_ICON_PATH"
 				class="com.ibm.microclimate.ui.internal.actions.CreateConnectionAction">
 			</action>
 			<action
 				id="com.ibm.microcliamte.ui.restartRunModeAction"
 				label="%ACTION_RESTART_RUN_MODE"
-				menubarPath="additions"
-				toolbarPath="additions" 
+				menubarPath="group.top"
+				toolbarPath="group.top" 
 				icon="%RUN_ICON_PATH"
 				class="com.ibm.microclimate.ui.internal.actions.RestartRunModeAction">
 			</action>
 			<action
 				id="com.ibm.microcliamte.ui.restartDebugModeAction"
 				label="%ACTION_RESTART_DEBUG_MODE"
-				menubarPath="additions"
-				toolbarPath="additions" 
+				menubarPath="group.top"
+				toolbarPath="group.top" 
 				icon="%DEBUG_ICON_PATH"
 				class="com.ibm.microclimate.ui.internal.actions.RestartDebugModeAction">
 			</action>
 		</viewContribution>
 	</extension>
-	
+
 	<extension point="org.eclipse.ui.newWizards">
 		<category
 			id = "com.ibm.microclimate.ui.new"

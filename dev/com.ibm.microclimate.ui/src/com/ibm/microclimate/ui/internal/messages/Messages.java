@@ -56,6 +56,8 @@ public class Messages extends NLS {
 	public static String DisableAutoBuildLabel;
 	public static String ErrorOnEnableDisableAutoBuildDialogTitle;
 	
+	public static String ActionNewConnection;
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
