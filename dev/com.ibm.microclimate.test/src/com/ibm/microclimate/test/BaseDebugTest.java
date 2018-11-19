@@ -154,8 +154,10 @@ public abstract class BaseDebugTest extends TestCase {
     
     private void showConsoles() throws Exception {
     	MicroclimateApplication app = connection.getAppByName(projectName);
-    	Set<? extends IConsole> consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
-    	((MCEclipseApplication)app).setConsoles(consoles);
+    	IConsole appConsole = MicroclimateConsoleFactory.createApplicationConsole(app);
+    	((MCEclipseApplication)app).setAppConsole(appConsole);
+    	IConsole buildConsole = MicroclimateConsoleFactory.createBuildConsole(app);
+    	((MCEclipseApplication)app).setAppConsole(buildConsole);
     }
     
     private void switchMode(StartMode mode) throws Exception {

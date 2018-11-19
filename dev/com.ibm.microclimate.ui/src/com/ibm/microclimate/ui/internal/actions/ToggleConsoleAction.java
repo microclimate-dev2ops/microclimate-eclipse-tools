@@ -25,7 +25,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
 
-public class ToggleConsolesAction implements IObjectActionDelegate {
+public abstract class ToggleConsoleAction implements IObjectActionDelegate {
 
     protected MCEclipseApplication app;
 
@@ -41,7 +41,7 @@ public class ToggleConsolesAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MCEclipseApplication)obj;
-            	action.setChecked(app.hasConsoles());
+            	action.setChecked(hasConsole());
             	action.setEnabled(true);
             	return;
             }
@@ -59,14 +59,15 @@ public class ToggleConsolesAction implements IObjectActionDelegate {
 		}
 
         if (action.isChecked()) {
-        	Set<? extends IConsole> consoles = MicroclimateConsoleFactory.createApplicationConsoles(app);
-        	app.setConsoles(consoles);
+        	IConsole console = createConsole();
+        	ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+        	setConsole(console);
         } else {
-        	Set<? extends IConsole> consoles = app.getConsoles();
-        	if (consoles != null) {
+        	IConsole console = getConsole();
+        	if (console != null) {
 	        	IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
-	        	consoleManager.removeConsoles(consoles.toArray(new IConsole[consoles.size()]));
-	        	app.setConsoles(null);
+	        	consoleManager.removeConsoles(new IConsole[] { console });
+	        	setConsole(null);
         	}
         }
     }
@@ -75,4 +76,9 @@ public class ToggleConsolesAction implements IObjectActionDelegate {
 	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
 		// nothing
 	}
+	
+	protected abstract IConsole createConsole();
+	protected abstract void setConsole(IConsole console);
+	protected abstract boolean hasConsole();
+	protected abstract IConsole getConsole();
 }
