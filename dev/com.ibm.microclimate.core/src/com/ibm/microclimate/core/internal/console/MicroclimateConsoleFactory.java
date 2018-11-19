@@ -9,9 +9,6 @@
 
 package com.ibm.microclimate.core.internal.console;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
@@ -26,27 +23,24 @@ public class MicroclimateConsoleFactory {
 
 	static final String MC_CONSOLE_TYPE = "microclimate-console"; //$NON-NLS-1$
 	
-	public static Set<IOConsole> createApplicationConsoles(MicroclimateApplication app) {
-
-		Set<IOConsole> consoles = new HashSet<>();
-
+	public static IOConsole createApplicationConsole(MicroclimateApplication app) {
+		String appLogName = NLS.bind(Messages.AppConsoleName, app.name);
+		IOConsole appConsole = new SocketConsole(appLogName, app);
+		onNewConsole(appConsole);
+		return appConsole;
+	}
+	
+	public static IOConsole createBuildConsole(MicroclimateApplication app) {
 		if (app.hasBuildLog()) {
 			String buildLogName = NLS.bind(Messages.BuildConsoleName, app.name);
 			IOConsole buildConsole = new BuildLogConsole(buildLogName, app);
-			consoles.add(buildConsole);
 			onNewConsole(buildConsole);
+			return buildConsole;
 		}
 		else {
 			MCLogger.logError("No buildLogPath is set for app " + app.name); 		// $NON-NLS-1$
 		}
-
-		String appLogName = NLS.bind(Messages.AppConsoleName, app.name);
-		IOConsole appConsole = new SocketConsole(appLogName, app);
-		consoles.add(appConsole);
-		onNewConsole(appConsole);
-		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(appConsole);
-
-		return consoles;
+		return null;
 	}
 
 	private static void onNewConsole(IOConsole console) {

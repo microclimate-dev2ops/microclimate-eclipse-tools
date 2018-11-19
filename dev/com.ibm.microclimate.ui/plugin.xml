@@ -113,13 +113,21 @@
 				label="%ACTION_OPEN_APP"
 				class="com.ibm.microclimate.ui.internal.actions.OpenAppAction"/>
 			<action
-				id="com.ibm.microclimate.ui.toggleConsoles"
+				id="com.ibm.microclimate.ui.toggleAppConsole"
 				enablesFor="1"
 				menubarPath="group.show"
-				label="%ACTION_SHOW_CONSOLES"
+				label="%ACTION_SHOW_APP_CONSOLE"
 				style="toggle"
 				state="false"
-				class="com.ibm.microclimate.ui.internal.actions.ToggleConsolesAction"/>
+				class="com.ibm.microclimate.ui.internal.actions.ToggleAppConsoleAction"/>
+			<action
+				id="com.ibm.microclimate.ui.toggleBuildConsole"
+				enablesFor="1"
+				menubarPath="group.show"
+				label="%ACTION_SHOW_BUILD_CONSOLE"
+				style="toggle"
+				state="false"
+				class="com.ibm.microclimate.ui.internal.actions.ToggleBuildConsoleAction"/>
 			<action
 				id="com.ibm.microclimate.ui.restartRunMode"
 				enablesFor="1"
@@ -208,7 +216,7 @@
 	<extension point="org.eclipse.ui.newWizards">
 		<category
 			id = "com.ibm.microclimate.ui.new"
-			 name="%MICROCLIMATE_CATEGORY_NAME">
+			name="%MICROCLIMATE_CATEGORY_NAME">
 		</category>
 		<wizard
 			id="com.ibm.microcliamte.ui.wizards.newConnection"

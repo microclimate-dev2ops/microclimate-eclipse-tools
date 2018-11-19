@@ -66,6 +66,7 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 		ViewHelper.openMicroclimateExplorerView();
 		ViewHelper.refreshMicroclimateExplorerView(null);
+		ViewHelper.expandConnection(newConnectionPage.getMCConnection());
 
 		return true;
 	}

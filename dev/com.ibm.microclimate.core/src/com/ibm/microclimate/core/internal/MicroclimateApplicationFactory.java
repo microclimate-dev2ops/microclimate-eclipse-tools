@@ -43,13 +43,15 @@ public class MicroclimateApplicationFactory {
 					String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
 					// If a project id was passed in then only process the JSON object for that project
 					if (projectID == null || projectID.equals(id)) {
-						MicroclimateApplication app = mcConnection.getAppByID(id);
-						if (app != null) {
-							updateApp(app, appJso);
-						} else {
-							app = createApp(mcConnection, appJso);
+						synchronized(MicroclimateApplicationFactory.class) {
+							MicroclimateApplication app = mcConnection.getAppByID(id);
 							if (app != null) {
-								mcConnection.addApp(app);
+								updateApp(app, appJso);
+							} else {
+								app = createApp(mcConnection, appJso);
+								if (app != null) {
+									mcConnection.addApp(app);
+								}
 							}
 						}
 					}

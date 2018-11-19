@@ -11,6 +11,7 @@ package com.ibm.microclimate.ui.internal.views;
 
 import java.util.List;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
@@ -38,7 +39,7 @@ public class MicroclimateNavigatorContentProvider implements ITreeContentProvide
 	@Override
 	public Object getParent(Object obj) {
 		if (obj instanceof MicroclimateConnection) {
-			
+			return ResourcesPlugin.getWorkspace().getRoot();
 		} else if (obj instanceof MicroclimateApplication) {
 			MicroclimateApplication app = (MicroclimateApplication)obj;
 			return app.mcConnection;

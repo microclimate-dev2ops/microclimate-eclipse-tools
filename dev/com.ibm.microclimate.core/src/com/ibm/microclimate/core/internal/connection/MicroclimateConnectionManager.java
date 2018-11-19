@@ -44,16 +44,16 @@ public class MicroclimateConnectionManager {
 		loadFromPreferences();
 
 		// Add a preference listener to reload the cached list of connections each time it's modified.
-		MicroclimateCorePlugin.getDefault().getPreferenceStore()
-			.addPropertyChangeListener(new IPropertyChangeListener() {
-				@Override
-				public void propertyChange(PropertyChangeEvent event) {
-				    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
-				    	// MCLogger.log("Loading prefs in MCCM");
-				        loadFromPreferences();
-				    }
-				}
-			});
+//		MicroclimateCorePlugin.getDefault().getPreferenceStore()
+//			.addPropertyChangeListener(new IPropertyChangeListener() {
+//				@Override
+//				public void propertyChange(PropertyChangeEvent event) {
+//				    if (event.getProperty() == MicroclimateConnectionManager.CONNECTION_LIST_PREFSKEY) {
+//				    	// MCLogger.log("Loading prefs in MCCM");
+//				        loadFromPreferences();
+//				    }
+//				}
+//			});
 	}
 
 	private static MicroclimateConnectionManager instance() {

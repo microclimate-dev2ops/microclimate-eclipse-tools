@@ -10,7 +10,8 @@
 package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -41,7 +42,8 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 3;
 	
 	// Consoles, null if not showing
-	private Set<? extends IConsole> consoles = null;
+	private IConsole appConsole = null;
+	private IConsole buildConsole = null;
 	
 	// Debug launch, null if not debugging
 	private ILaunch launch = null;
@@ -52,16 +54,28 @@ public class MCEclipseApplication extends MicroclimateApplication {
 		super(mcConnection, id, name, projectType, pathInWorkspace, contextRoot);
 	}
 	
-	public synchronized boolean hasConsoles() {
-		return consoles != null;
+	public synchronized boolean hasAppConsole() {
+		return appConsole != null;
 	}
 	
-	public synchronized void setConsoles(Set<? extends IConsole> consoles) {
-		this.consoles = consoles;
+	public synchronized boolean hasBuildConsole() {
+		return buildConsole != null;
 	}
 	
-	public synchronized Set<? extends IConsole> getConsoles() {
-		return consoles;
+	public synchronized void setAppConsole(IConsole console) {
+		this.appConsole = console;
+	}
+	
+	public synchronized void setBuildConsole(IConsole console) {
+		this.buildConsole = console;
+	}
+	
+	public synchronized IConsole getAppConsole() {
+		return appConsole;
+	}
+	
+	public synchronized IConsole getBuildConsole() {
+		return buildConsole;
 	}
 	
 	public synchronized void setLaunch(ILaunch launch) {
@@ -120,14 +134,21 @@ public class MCEclipseApplication extends MicroclimateApplication {
 
 	@Override
 	public void dispose() {
-    	if (launch != null) {
-    		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-    		launchManager.removeLaunch(launch);
-    	}
-    	if (consoles != null) {
-	    	IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
-	    	consoleManager.removeConsoles(consoles.toArray(new IConsole[consoles.size()]));
-    	}
+		if (launch != null) {
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+			launchManager.removeLaunch(launch);
+		}
+		List<IConsole> consoles = new ArrayList<IConsole>();
+		if (appConsole != null) {
+			consoles.add(appConsole);
+		}
+		if (buildConsole != null) {
+			consoles.add(buildConsole);
+		}
+		if (!consoles.isEmpty()) {
+			IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
+			consoleManager.removeConsoles(consoles.toArray(new IConsole[consoles.size()]));
+		}
 		super.dispose();
 	}
 	
