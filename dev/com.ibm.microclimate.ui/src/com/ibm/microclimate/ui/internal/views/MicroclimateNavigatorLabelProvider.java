@@ -113,7 +113,7 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 	@Override
 	public Image getImage(Object element) {
 		if (element instanceof MicroclimateConnection) {
-			return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.MICROCLIMATE_ICON_PATH);
+			return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.MICROCLIMATE_ICON);
 		}
 		return null;
 	}

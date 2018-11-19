@@ -29,7 +29,7 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 
-		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getIcon(MicroclimateUIPlugin.MICROCLIMATE_BANNER_PATH));
+		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_BANNER));
 
 		// TODO help
 		setHelpAvailable(false);
