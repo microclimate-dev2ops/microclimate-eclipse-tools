@@ -45,7 +45,7 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
             Object obj = sel.getFirstElement();
             if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.isSupportedProject()) {
+            	if (app.isEnabled() && app.isSupportedProject()) {
 		            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
 	            	return;
             	}
@@ -59,7 +59,7 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
     public void run(IAction action) {
         if (app == null) {
         	// should not be possible
-        	MCLogger.logError("EnableDebugAction ran but no Microclimate application was selected");
+        	MCLogger.logError("RestartRunModeAction ran but no Microclimate application was selected");
 			return;
 		}
 

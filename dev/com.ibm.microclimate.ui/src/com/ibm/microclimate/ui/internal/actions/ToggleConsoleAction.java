@@ -9,8 +9,6 @@
 
 package com.ibm.microclimate.ui.internal.actions;
 
-import java.util.Set;
-
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -23,7 +21,6 @@ import org.eclipse.ui.console.IConsoleManager;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
 
 public abstract class ToggleConsoleAction implements IObjectActionDelegate {
 
@@ -41,9 +38,11 @@ public abstract class ToggleConsoleAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MCEclipseApplication)obj;
-            	action.setChecked(hasConsole());
-            	action.setEnabled(true);
-            	return;
+            	if (app.isEnabled()) {
+	            	action.setChecked(hasConsole());
+	            	action.setEnabled(true);
+	            	return;
+            	}
             }
         }
         action.setChecked(false);
