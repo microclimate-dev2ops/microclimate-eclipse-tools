@@ -14,6 +14,11 @@ import org.eclipse.ui.console.IConsole;
 import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
 
 public class ToggleBuildConsoleAction extends ToggleConsoleAction {
+	
+	@Override 
+	protected boolean supportsConsole() {
+		return app.hasBuildLog();
+	}
 
 	@Override
 	protected IConsole createConsole() {

@@ -91,6 +91,15 @@
 					</or>
 				</enablement>
 			</actionProvider>
+			<actionProvider
+				id="com.ibm.microclimate.ui.microclimateApplicationActionProvider"
+				class="com.ibm.microclimate.ui.internal.actions.MicroclimateApplicationActionProvider">
+				<enablement>
+					<or>
+						<instanceof value="com.ibm.microclimate.core.internal.MicroclimateApplication" />
+					</or>
+				</enablement>
+			</actionProvider>
 		</navigatorContent>
 	</extension>
 
@@ -227,6 +236,12 @@
 			<description>%NEW_CONNECTION_DESCRIPTION</description>
 			<selection class="org.eclipse.core.resources.IResource"/>
 		</wizard>
+	</extension>
+	
+	<extension point="org.eclipse.ui.ide.markerResolution">
+		<markerResolutionGenerator
+			markerType="com.ibm.microclimate.core.validationMarker"
+			class="com.ibm.microclimate.ui.internal.marker.MicroclimateMarkerResolutionGenerator"/>
 	</extension>
 
 </plugin>

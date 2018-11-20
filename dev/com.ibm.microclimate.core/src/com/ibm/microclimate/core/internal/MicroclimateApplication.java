@@ -203,6 +203,18 @@ public class MicroclimateApplication {
 	public void dispose() {
 		// Override as needed
 	}
+	
+	public void resetValidation() {
+		// Override as needed
+	}
+	
+	public void validationError(String filePath, String message, String quickFixId, String quickFixDescription) {
+		// Override as needed
+	}
+	
+	public void validationWarning(String filePath, String message, String quickFixId, String quickFixDescription) {
+		// Override as needed
+	}
 
 	@Override
 	public String toString() {

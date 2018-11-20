@@ -25,6 +25,8 @@ public class MCConstants {
 			// Portal API endpoints
 			APIPATH_PROJECT_LIST = "api/v1/projects",
 			APIPATH_ENV = "api/v1/environment",
+			APIPATH_VALIDATE = "api/v1/validate",
+			APIPATH_VALIDATE_GENERATE = "api/v1/validate/generate",
 			APIPATH_RESTART = "restart",
 			APIPATH_BUILD = "build",
 			APIPATH_CLOSE = "close",
@@ -33,7 +35,7 @@ public class MCConstants {
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
 			KEY_NAME = "name",
-			// KEY_PROJECT_TYPE = "projectType",
+			KEY_PROJECT_TYPE = "projectType",
 			KEY_BUILD_TYPE = "buildType",
 			KEY_LOC_DISK = "locOnDisk",
 			KEY_CONTEXTROOT = "contextroot",
@@ -69,6 +71,26 @@ public class MCConstants {
 			VALUE_ACTION_BUILD = "build",
 			VALUE_ACTION_ENABLEAUTOBUILD = "enableautobuild",
 			VALUE_ACTION_DISABLEAUTOBUILD = "disableautobuild",
+			
+			KEY_VALIDATION_STATUS = "validationStatus",
+			KEY_VALIDATION_RESULTS = "validationResults",
+			KEY_SEVERITY = "severity",
+			KEY_FILENAME = "filename",
+			KEY_FILEPATH = "filepath",
+			KEY_TYPE = "type",
+			KEY_LABEL = "label",
+			KEY_DETAILS = "details",
+			KEY_QUICKFIX = "quickfix",
+			KEY_FIXID = "fixID",
+			KEY_DESCRIPTION = "description",
+			VALUE_STATUS_SUCCESS = "success",
+			VALUE_STATUS_FAILED = "failed",
+			VALUE_SEVERITY_ERROR = "error",
+			VALUE_SEVERITY_WARNING = "warning",
+			VALUE_TYPE_MISSING = "missing",
+			VALUE_TYPE_INVALID = "invalid",
+			
+			KEY_AUTO_GENERATE = "autoGenerate",
 
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success"

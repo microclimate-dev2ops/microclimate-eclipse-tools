@@ -70,6 +70,7 @@ public class Messages extends NLS {
 	public static String BuildStateUnknown;
 	
 	public static String DebugLaunchError;
+	public static String ReconnectDebugJob;
 
 	static {
 		// initialize resource bundle
