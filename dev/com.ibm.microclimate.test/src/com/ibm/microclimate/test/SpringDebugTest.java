@@ -6,7 +6,7 @@ public class SpringDebugTest extends BaseDebugTest {
 
 	static {
 		projectName = "springdebugtest";
-		projectType = ProjectType.SPRING;
+		projectType = new ProjectType(ProjectType.TYPE_SPRING, ProjectType.LANGUAGE_JAVA);
 		relativeURL = "/v1";
 		srcPath = "src/main/java/application/rest/v1/Example.java";
 		currentText = "Congratulations";

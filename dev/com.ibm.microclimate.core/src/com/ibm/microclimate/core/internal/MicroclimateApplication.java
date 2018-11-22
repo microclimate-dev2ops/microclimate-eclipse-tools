@@ -30,14 +30,15 @@ public class MicroclimateApplication {
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 	public final ProjectType projectType;
-	public final String containerId;
 
+	
 	private StartMode startMode;
 	private AppState appState;
 	private BuildStatus buildStatus;
 	private String buildDetails;
 	private boolean autoBuild = true;
 	private boolean enabled = true;
+	private String containerId;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -47,14 +48,13 @@ public class MicroclimateApplication {
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace, String containerId, String contextRoot)
+			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot)
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
 		this.projectID = id;
 		this.name = name;
 		this.projectType = projectType;
-		this.containerId = containerId;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
 
@@ -110,6 +110,10 @@ public class MicroclimateApplication {
 		this.enabled = enabled;
 	}
 	
+	public synchronized void setContainerId(String id) {
+		this.containerId = id;
+	}
+	
 	// Getters for our project state fields
 
 	/**
@@ -150,6 +154,10 @@ public class MicroclimateApplication {
 	public synchronized boolean isEnabled() {
 		return enabled;
 	}
+	
+	public synchronized String getContainerId() {
+		return containerId;
+	}
 
 	public boolean isActive() {
 		return getAppState() == AppState.STARTING || getAppState() == AppState.STARTED;
@@ -164,7 +172,7 @@ public class MicroclimateApplication {
 	}
 	
 	public boolean hasBuildLog() {
-		return (projectType != ProjectType.NODE);
+		return (!projectType.isType(ProjectType.TYPE_NODE));
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

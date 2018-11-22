@@ -9,33 +9,34 @@
 
 package com.ibm.microclimate.core.internal.constants;
 
-import com.ibm.microclimate.core.internal.MCLogger;
-
-public enum ProjectType {
-
-	LIBERTY("liberty", "Microprofile", true),
-	SPRING("spring", "Spring", true),
-	NODE("nodejs", "Node.js", false),
-	SWIFT("swift", "Swift", false),
-	DOCKER("docker", "Docker", false),
-	UNKNOWN("unknown", "Unknown", false);
-
-	public final String internalType, userFriendlyType;
-	public final boolean isDebuggable;
-
-	private ProjectType(String internalType, String userFriendlyType, boolean isDebuggable) {
-		this.internalType = internalType;
-		this.userFriendlyType = userFriendlyType;
-		this.isDebuggable = isDebuggable;
+public class ProjectType {
+	
+	public static final String UNKNOWN = "unknown";
+	
+	public static final String TYPE_LIBERTY = "liberty";
+	public static final String TYPE_SPRING = "spring";
+	public static final String TYPE_NODE = "nodejs";
+	public static final String TYPE_DOCKER = "docker";
+	
+	public static final String LANGUAGE_JAVA = "java";
+	public static final String LANGUAGE_PYTHON = "python";
+	
+	public static final ProjectType UNKNOWN_TYPE = new ProjectType(UNKNOWN, UNKNOWN);
+	
+	public final String type;
+	public final String language;
+	
+	public ProjectType(String type, String language) {
+		this.type = type;
+		this.language = language;
+	}
+	
+	public boolean isType(String type) {
+		return type != null && type.equals(this.type);
+	}
+	
+	public boolean isLanguage(String language) {
+		return language != null && language.equals(this.language);
 	}
 
-	public static ProjectType fromInternalType(String internalType) {
-		for (ProjectType type : ProjectType.values()) {
-			if (type.internalType.equals(internalType)) {
-				return type;
-			}
-		}
-		MCLogger.logError("Unknown internal project type " + internalType);
-		return ProjectType.UNKNOWN;
-	}
 }

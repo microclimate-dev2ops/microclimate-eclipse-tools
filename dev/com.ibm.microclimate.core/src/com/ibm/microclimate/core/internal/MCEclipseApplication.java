@@ -64,9 +64,9 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	private ILaunch launch = null;
 
 	MCEclipseApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace, String containerId, String contextRoot)
+			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot)
 					throws MalformedURLException {
-		super(mcConnection, id, name, projectType, pathInWorkspace, containerId, contextRoot);
+		super(mcConnection, id, name, projectType, pathInWorkspace, contextRoot);
 	}
 	
 	public synchronized boolean hasAppConsole() {
@@ -170,10 +170,12 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	@Override
 	public void resetValidation() {
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
-		try {
-			project.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-		} catch (CoreException e) {
-			MCLogger.logError("Failed to delete existing markers for the " + name + " project.", e);
+		if (project != null && project.isAccessible()) {
+			try {
+				project.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
+			} catch (CoreException e) {
+				MCLogger.logError("Failed to delete existing markers for the " + name + " project.", e);
+			}
 		}
 	}
 	
@@ -190,27 +192,29 @@ public class MCEclipseApplication extends MicroclimateApplication {
     private void validationEvent(int severity, String filePath, String message, String quickFixId, String quickFixDescription) {
         try {
         	IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
-        	IResource resource = project;
-        	if (filePath != null && !filePath.isEmpty()) {
-	        	IPath path = new Path(filePath);
-	        	if (filePath.startsWith(project.getName())) {
-	        		path = path.removeFirstSegments(1);
+        	if (project != null && project.isAccessible()) {
+	        	IResource resource = project;
+	        	if (filePath != null && !filePath.isEmpty()) {
+		        	IPath path = new Path(filePath);
+		        	if (filePath.startsWith(project.getName())) {
+		        		path = path.removeFirstSegments(1);
+		        	}
+		        	IFile file = project.getFile(path);
+		        	if (file != null && file.exists()) {
+		        		resource = file;
+		        	}
 	        	}
-	        	IFile file = project.getFile(path);
-	        	if (file != null && file.exists()) {
-	        		resource = file;
-	        	}
+	            final IMarker marker = resource.createMarker(MARKER_TYPE);
+	            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+	            marker.setAttribute(IMarker.LINE_NUMBER, 1);
+	            marker.setAttribute(IMarker.MESSAGE, message);
+	            if (quickFixId != null && !quickFixId.isEmpty()) {
+	            	marker.setAttribute(CONNECTION_URL, mcConnection.baseUrl.toString());
+	            	marker.setAttribute(PROJECT_ID, projectID);
+	            	marker.setAttribute(QUICK_FIX_ID, quickFixId);
+	            	marker.setAttribute(QUICK_FIX_DESCRIPTION, quickFixDescription);
+	            }
         	}
-            final IMarker marker = resource.createMarker(MARKER_TYPE);
-            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-            marker.setAttribute(IMarker.LINE_NUMBER, 1);
-            marker.setAttribute(IMarker.MESSAGE, message);
-            if (quickFixId != null && !quickFixId.isEmpty()) {
-            	marker.setAttribute(CONNECTION_URL, mcConnection.baseUrl.toString());
-            	marker.setAttribute(PROJECT_ID, projectID);
-            	marker.setAttribute(QUICK_FIX_ID, quickFixId);
-            	marker.setAttribute(QUICK_FIX_DESCRIPTION, quickFixDescription);
-            }
         } catch (CoreException e) {
             MCLogger.logError("Failed to create a marker for the " + name + " application: " + message, e);
         }
