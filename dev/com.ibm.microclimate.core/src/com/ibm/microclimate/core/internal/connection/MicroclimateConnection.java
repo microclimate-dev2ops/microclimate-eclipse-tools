@@ -368,6 +368,40 @@ public class MicroclimateConnection {
 		HttpUtil.post(url, buildPayload);
 	}
 	
+	public void requestValidate(MicroclimateApplication app) throws JSONException, IOException {
+		URI url = baseUrl.resolve(MCConstants.APIPATH_VALIDATE);
+		
+		JSONObject buildPayload = new JSONObject();
+		buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.internalType);
+		
+		HttpResult result = HttpUtil.post(url, buildPayload);
+		if (!result.isGoodResponse) {
+			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
+					result.responseCode, result.error);
+			throw new IOException(msg);
+		}
+	}
+	
+	public void requestValidateGenerate(MicroclimateApplication app) throws JSONException, IOException {
+		URI url = baseUrl.resolve(MCConstants.APIPATH_VALIDATE_GENERATE);
+		
+		JSONObject buildPayload = new JSONObject();
+		buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.internalType);
+		buildPayload.put(MCConstants.KEY_AUTO_GENERATE, true);
+		
+		HttpResult result = HttpUtil.post(url, buildPayload);
+		if (!result.isGoodResponse) {
+			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
+					result.responseCode, result.error);
+			throw new IOException(msg);
+		}
+		
+		// Perform validation again to clear the errors/warnings that have been fixed
+		requestValidate(app);
+	}
+	
 	public boolean isConnected() {
 		return isConnected;
 	}

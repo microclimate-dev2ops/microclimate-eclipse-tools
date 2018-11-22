@@ -58,6 +58,10 @@ public class Messages extends NLS {
 	
 	public static String ActionNewConnection;
 	
+	public static String ValidateLabel;
+	public static String refreshResourceJobLabel;
+	public static String RefreshResourceError;
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

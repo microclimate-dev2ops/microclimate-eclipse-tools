@@ -16,6 +16,11 @@ import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
 public class ToggleAppConsoleAction extends ToggleConsoleAction {
 
 	@Override
+	protected boolean supportsConsole() {
+		return true;
+	}
+	
+	@Override
 	protected IConsole createConsole() {
 		return MicroclimateConsoleFactory.createApplicationConsole(app);
 	}

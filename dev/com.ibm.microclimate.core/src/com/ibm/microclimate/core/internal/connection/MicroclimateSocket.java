@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.osgi.util.NLS;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,7 +63,8 @@ public class MicroclimateSocket {
 			EVENT_PROJECT_RESTART = "projectRestartResult", 		//$NON-NLS-1$
 			EVENT_PROJECT_CLOSED = "projectClosed", 				//$NON-NLS-1$
 			EVENT_PROJECT_DELETION = "projectDeletion", 			//$NON-NLS-1$
-			EVENT_CONTAINER_LOGS = "container-logs";				//$NON-NLS-1$
+			EVENT_CONTAINER_LOGS = "container-logs",				//$NON-NLS-1$
+			EVENT_PROJECT_VALIDATED = "projectValidated";			//$NON-NLS-1$
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 		this.mcConnection = mcConnection;
@@ -203,6 +205,19 @@ public class MicroclimateSocket {
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onLogUpdate(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
+			}
+		})
+		.on(EVENT_PROJECT_VALIDATED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				MCLogger.log(EVENT_PROJECT_VALIDATED + ": " + arg0[0].toString()); //$NON-NLS-1$
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onValidationEvent(event);
 				} catch (JSONException e) {
 					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -386,6 +401,51 @@ public class MicroclimateSocket {
 					MCLogger.logError("Error updating console " + console.getName(), e);	// $NON-NLS-1$
 				}
 			}
+		}
+	}
+	
+	private void onValidationEvent(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			MCLogger.logError("No application found for project: " + projectID);
+			return;
+		}
+		app.resetValidation();
+		
+		String status = event.getString(MCConstants.KEY_VALIDATION_STATUS);
+		if (MCConstants.VALUE_STATUS_SUCCESS.equals(status)) {
+			// Nothing to do
+			return;
+		}
+		
+		if (event.has(MCConstants.KEY_VALIDATION_RESULTS)) {
+			JSONArray results = event.getJSONArray(MCConstants.KEY_VALIDATION_RESULTS);
+			for (int i = 0; i < results.length(); i++) {
+				JSONObject result = results.getJSONObject(i);
+				String severity = result.getString(MCConstants.KEY_SEVERITY);
+				String filename = result.getString(MCConstants.KEY_FILENAME);
+				String filepath = result.getString(MCConstants.KEY_FILEPATH);
+				String type = null;
+				if (result.has(MCConstants.KEY_TYPE)) {
+					type = result.getString(MCConstants.KEY_TYPE);
+				}
+				String details = result.getString(MCConstants.KEY_DETAILS);
+				String quickFixId = null;
+				String quickFixDescription = null;
+				if (result.has(MCConstants.KEY_QUICKFIX)) {
+					JSONObject quickFix = result.getJSONObject(MCConstants.KEY_QUICKFIX);
+					quickFixId = quickFix.getString(MCConstants.KEY_FIXID);
+					quickFixDescription = quickFix.getString(MCConstants.KEY_DESCRIPTION);
+				}
+				if (MCConstants.VALUE_SEVERITY_WARNING.equals(severity)) {
+					app.validationWarning(filepath, details, quickFixId, quickFixDescription);
+				} else {
+					app.validationError(filepath, details, quickFixId, quickFixDescription);
+				}
+			}
+		} else {
+			MCLogger.log("Validation event indicates failure but no validation results,"); //$NON-NLS-1$
 		}
 	}
 
