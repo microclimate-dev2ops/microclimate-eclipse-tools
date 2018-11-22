@@ -64,9 +64,9 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	private ILaunch launch = null;
 
 	MCEclipseApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot)
+			String id, String name, ProjectType projectType, String pathInWorkspace, String containerId, String contextRoot)
 					throws MalformedURLException {
-		super(mcConnection, id, name, projectType, pathInWorkspace, contextRoot);
+		super(mcConnection, id, name, projectType, pathInWorkspace, containerId, contextRoot);
 	}
 	
 	public synchronized boolean hasAppConsole() {

@@ -89,13 +89,15 @@ public class MicroclimateApplicationFactory {
 			}
 
 			String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
+			
+			String containerId = appJso.getString(MCConstants.KEY_CONTAINER_ID);
 
 			String contextRoot = null;
 			if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
 				contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
 			}
 
-			MicroclimateApplication mcApp = MicroclimateObjectFactory.createMicroclimateApplication(mcConnection, id, name, type, loc, contextRoot);
+			MicroclimateApplication mcApp = MicroclimateObjectFactory.createMicroclimateApplication(mcConnection, id, name, type, loc, containerId, contextRoot);
 			
 			updateApp(mcApp, appJso);
 			return mcApp;

@@ -21,8 +21,8 @@ public class MicroclimateObjectFactory {
 	}
 	
 	public static MicroclimateApplication createMicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot) throws Exception {
-		return new MCEclipseApplication(mcConnection, id, name, projectType, pathInWorkspace, contextRoot);
+			String id, String name, ProjectType projectType, String pathInWorkspace, String containerId, String contextRoot) throws Exception {
+		return new MCEclipseApplication(mcConnection, id, name, projectType, pathInWorkspace, containerId, contextRoot);
 	}
 
 }

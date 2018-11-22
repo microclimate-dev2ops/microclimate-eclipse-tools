@@ -30,6 +30,7 @@ public class MicroclimateApplication {
 	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 	public final ProjectType projectType;
+	public final String containerId;
 
 	private StartMode startMode;
 	private AppState appState;
@@ -46,13 +47,14 @@ public class MicroclimateApplication {
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot)
+			String id, String name, ProjectType projectType, String pathInWorkspace, String containerId, String contextRoot)
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
 		this.projectID = id;
 		this.name = name;
 		this.projectType = projectType;
+		this.containerId = containerId;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
 
