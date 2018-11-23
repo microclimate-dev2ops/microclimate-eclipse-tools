@@ -31,6 +31,7 @@ public class MCConstants {
 			APIPATH_BUILD = "build",
 			APIPATH_CLOSE = "close",
 			APIPATH_OPEN = "open",
+			APIPATH_CAPABILITIES = "capabilities",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -91,6 +92,10 @@ public class MCConstants {
 			VALUE_TYPE_MISSING = "missing",
 			VALUE_TYPE_INVALID = "invalid",
 			
+			KEY_CAPABILIITES = "capabilities",
+			KEY_START_MODES = "startModes",
+			KEY_CONTROL_COMMANDS = "controlCommands",
+			
 			KEY_AUTO_GENERATE = "autoGenerate",
 
 			// JSON attribute values
@@ -102,12 +107,8 @@ public class MCConstants {
 
 			;
 
-	// Microclimate 18.09 is required
-	// otherwise we will be missing the Workspace ENV data and the project restart endpoint.
+	// Microclimate 18.11 is required as earlier versions are missing needed APIs.
 	public static final int
-			// This version supports only Liberty projects.
-			REQUIRED_MC_VERSION = 1809,
-			// This version supports both Spring and Liberty projects.
-			SPRING_MC_VERSION = 1810;
+			REQUIRED_MC_VERSION = 1811;
 
 }

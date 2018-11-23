@@ -402,6 +402,24 @@ public class MicroclimateConnection {
 		requestValidate(app);
 	}
 	
+	public JSONObject requestProjectCapabilities(MicroclimateApplication app) throws IOException, JSONException {
+		final URI statusUrl = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST + "/" + app.projectID + "/" + MCConstants.APIPATH_CAPABILITIES);
+
+		HttpResult result = HttpUtil.get(statusUrl);
+
+		if (!result.isGoodResponse) {
+			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
+					result.responseCode, result.error);
+			throw new IOException(msg);
+		} else if (result.response == null) {
+			// I don't think this will ever happen.
+			throw new IOException("Server returned good response code, but empty content when getting project capabilities"); //$NON-NLS-1$
+		}
+
+		JSONObject capabilities = new JSONObject(result.response);
+		return capabilities;
+	}
+	
 	public boolean isConnected() {
 		return isConnected;
 	}
@@ -496,10 +514,5 @@ public class MicroclimateConnection {
 
 	public IPath getWorkspacePath() {
 		return localWorkspacePath;
-	}
-
-	public boolean supportsProjectType(ProjectType type) {
-		return type.isType(ProjectType.TYPE_LIBERTY) ||
-				(type.isType(ProjectType.TYPE_SPRING) && mcVersion >= MCConstants.SPRING_MC_VERSION);
 	}
 }
