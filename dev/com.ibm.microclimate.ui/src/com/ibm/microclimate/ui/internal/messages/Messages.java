@@ -64,6 +64,8 @@ public class Messages extends NLS {
 	
 	public static String ImportProjectError;
 	public static String StartBuildError;
+	public static String OpenMicroclimateUIError;
+	public static String OpenMicroclimateUINotConnectedError;
 	
 	static {
 		// initialize resource bundle
