@@ -94,7 +94,11 @@ public class MCConstants {
 			KEY_AUTO_GENERATE = "autoGenerate",
 
 			// JSON attribute values
-			REQUEST_STATUS_SUCCESS = "success"
+			REQUEST_STATUS_SUCCESS = "success",
+			
+			// Microclimate files
+			DOCKERFILE = "Dockerfile",
+			DOCKERFILE_BUILD = "Dockerfile-build"
 
 			;
 

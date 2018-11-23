@@ -52,7 +52,7 @@ public enum StartMode {
 				mode = obj.getString(MCConstants.KEY_START_MODE);
 			}
 			if (mode == null) {
-				MCLogger.logError("No start mode was specified on JSON object");
+				MCLogger.log("No start mode was specified on JSON object");
 				return StartMode.RUN;
 			} else {
 				StartMode startMode = StartMode.get(mode);
