@@ -28,8 +28,8 @@
 
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
 		<launchConfigurationTypeImage
-			id="com.ibm.microclimate.core.internal.launchConfigTypeImage"
-			configTypeID="com.ibm.microclimate.core.internal.launchConfigType"
+			id="com.ibm.microclimate.core.internal.launchConfigurationTypeImage"
+			configTypeID="com.ibm.microclimate.core.internal.launchConfigurationType"
 			icon="%DEFAULT_ICON_PATH"/>
 	</extension>
 	
