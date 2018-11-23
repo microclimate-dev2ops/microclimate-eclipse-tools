@@ -9,13 +9,24 @@
 
 package com.ibm.microclimate.ui.internal.actions;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionDelegate2;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IViewActionDelegate;
@@ -27,6 +38,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.StartMode;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 public class RestartDebugModeAction implements IObjectActionDelegate, IViewActionDelegate, IActionDelegate2 {
@@ -62,6 +74,40 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
         	MCLogger.logError("RestartDebugModeAction ran but no Microclimate application was selected");
 			return;
 		}
+        
+        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+        if (project == null || !project.exists()) {
+        	int result = openDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
+        	if (result == 0) {
+        		// Import the project
+        		ImportProjectAction.importProject(app);
+        	} else if (result == 2) {
+        		// Cancel selected
+        		return;
+        	}
+        } else if (!project.isOpen()) {
+        	int result = openDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
+        	if (result == 0) {
+        		// Open the project
+        		Job job = new Job(NLS.bind(Messages.ProjectOpenJob, app.name)) {
+        			@Override
+        			protected IStatus run(IProgressMonitor monitor) {
+        				try {
+        					project.open(monitor);
+        					return Status.OK_STATUS;
+        				} catch (CoreException e) {
+        					return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID,
+        							NLS.bind(Messages.ProjectOpenError, app.name), e);
+        				}
+        			}
+        		};
+        		job.setPriority(Job.LONG);
+        		job.schedule();
+        	} else if (result == 2) {
+        		// Cancel selected
+        		return;
+        	}
+        }
 
         try {
         	ILaunch launch = app.getLaunch();
@@ -78,7 +124,31 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
 			return;
 		}
     }
-
+    
+    /*
+     * Dialog which asks the user a question and they can select Yes, No
+     * or Cancel.
+     * Returns:
+     *  0 - user selected Yes
+     *  1 - user selected No
+     *  2 - user selected Cancel
+     */
+    private static int openDialog(String title, String msg) {
+    	final int[] result = new int[1];
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				Shell shell = Display.getDefault().getActiveShell();
+				String[] buttonLabels = new String[] {Messages.DialogYesButton, Messages.DialogNoButton, Messages.DialogCancelButton};
+				MessageDialog dialog = new MessageDialog(shell, title, MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.MICROCLIMATE_ICON),
+						msg, MessageDialog.QUESTION, buttonLabels, 0);
+				result[0] = dialog.open();
+			}
+		});
+		
+		return result[0];
+	}
+    
 	@Override
 	public void runWithEvent(IAction action, Event event) {
 		run(action);

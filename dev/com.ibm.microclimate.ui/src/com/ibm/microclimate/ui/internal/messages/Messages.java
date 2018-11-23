@@ -67,6 +67,18 @@ public class Messages extends NLS {
 	public static String OpenMicroclimateUIError;
 	public static String OpenMicroclimateUINotConnectedError;
 	
+	public static String DialogYesButton;
+	public static String DialogNoButton;
+	public static String DialogCancelButton;
+	
+	public static String ProjectNotImportedDialogTitle;
+	public static String ProjectNotImportedDialogMsg;
+
+	public static String ProjectClosedDialogTitle;
+	public static String ProjectClosedDialogMsg;
+	public static String ProjectOpenJob;
+	public static String ProjectOpenError;
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
