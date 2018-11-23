@@ -25,6 +25,7 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
@@ -440,7 +441,7 @@ public class MicroclimateSocket {
 				String details = result.getString(MCConstants.KEY_DETAILS);
 				String quickFixId = null;
 				String quickFixDescription = null;
-				if (result.has(MCConstants.KEY_QUICKFIX)) {
+				if (result.has(MCConstants.KEY_QUICKFIX) && supportsQuickFix(app, type, filename)) {
 					JSONObject quickFix = result.getJSONObject(MCConstants.KEY_QUICKFIX);
 					quickFixId = quickFix.getString(MCConstants.KEY_FIXID);
 					quickFixDescription = quickFix.getString(MCConstants.KEY_DESCRIPTION);
@@ -454,6 +455,19 @@ public class MicroclimateSocket {
 		} else {
 			MCLogger.log("Validation event indicates failure but no validation results,"); //$NON-NLS-1$
 		}
+	}
+	
+	private boolean supportsQuickFix(MicroclimateApplication app, String type, String filename) {
+		if (!MCConstants.VALUE_TYPE_MISSING.equals(type) || app.projectType.isType(ProjectType.TYPE_DOCKER)) {
+			return false;
+		}
+		if (MCConstants.DOCKERFILE.equals(filename)) {
+			return true;
+		}
+		if (app.projectType.isType(ProjectType.TYPE_LIBERTY) && MCConstants.DOCKERFILE_BUILD.equals(filename)) {
+			return true;
+		}
+		return false;
 	}
 
 	boolean blockUntilFirstConnection() {
