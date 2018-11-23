@@ -12,6 +12,7 @@ package com.ibm.microclimate.ui.internal.actions;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -59,6 +60,15 @@ public class ImportProjectAction implements IObjectActionDelegate {
 			return;
 		}
 
+		importProject(app);
+	}
+
+	@Override
+	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
+		// nothing
+	}
+	
+	public static void importProject(MicroclimateApplication app) {
 		try {
 			IPath path = app.fullLocalPath;
 			SmartImportJob importJob = new SmartImportJob(path.toFile(), null, true, false);
@@ -68,10 +78,5 @@ public class ImportProjectAction implements IObjectActionDelegate {
 			MCUtil.openDialog(true, NLS.bind(Messages.ImportProjectError, app.name), e.getMessage());
 			return;
 		}
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
 	}
 }
