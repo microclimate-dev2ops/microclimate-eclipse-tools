@@ -9,14 +9,18 @@
 
 package com.ibm.microclimate.core.internal;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.IPath;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
+import com.ibm.microclimate.core.internal.constants.ProjectCapabilities;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 
@@ -39,6 +43,7 @@ public class MicroclimateApplication {
 	private boolean autoBuild = true;
 	private boolean enabled = true;
 	private String containerId;
+	private ProjectCapabilities projectCapabilities;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -167,10 +172,6 @@ public class MicroclimateApplication {
 		return baseUrl != null;
 	}
 
-	public boolean isSupportedProject() {
-		return mcConnection.supportsProjectType(projectType);
-	}
-	
 	public boolean hasBuildLog() {
 		return (!projectType.isType(ProjectType.TYPE_NODE));
 	}
@@ -201,6 +202,21 @@ public class MicroclimateApplication {
 		httpPort = -1;
 		debugPort = -1;
 	}
+
+	public ProjectCapabilities getProjectCapabilities() {
+		if (projectCapabilities == null) {
+			try {
+				JSONObject obj = mcConnection.requestProjectCapabilities(this);
+				projectCapabilities = new ProjectCapabilities(obj);
+			} catch (Exception e) {
+				MCLogger.logError("Failed to get the project capabilities for application: " + name, e); //$NON-NLS-1$
+			}
+		}
+		if (projectCapabilities == null) {
+			return ProjectCapabilities.emptyCapabilities;
+		}
+		return projectCapabilities;
+	}
 	
 	public void connectDebugger() {
 		// Override as needed
@@ -224,6 +240,10 @@ public class MicroclimateApplication {
 	
 	public void validationWarning(String filePath, String message, String quickFixId, String quickFixDescription) {
 		// Override as needed
+	}
+	
+	public boolean supportsDebug() {
+		return false;
 	}
 
 	@Override

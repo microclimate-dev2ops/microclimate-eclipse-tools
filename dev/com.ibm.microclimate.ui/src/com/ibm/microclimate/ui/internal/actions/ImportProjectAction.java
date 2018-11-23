@@ -15,12 +15,15 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.internal.wizards.datatransfer.SmartImportJob;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 public class ImportProjectAction implements IObjectActionDelegate {
 
@@ -61,7 +64,9 @@ public class ImportProjectAction implements IObjectActionDelegate {
 			SmartImportJob importJob = new SmartImportJob(path.toFile(), null, true, false);
 			importJob.schedule();
 		} catch (Exception e) {
-			MCLogger.logError("Error requesting build for application: " + app.name, e); //$NON-NLS-1$
+			MCLogger.logError("Error importing project: " + app.name, e); //$NON-NLS-1$
+			MCUtil.openDialog(true, NLS.bind(Messages.ImportProjectError, app.name), e.getMessage());
+			return;
 		}
 	}
 

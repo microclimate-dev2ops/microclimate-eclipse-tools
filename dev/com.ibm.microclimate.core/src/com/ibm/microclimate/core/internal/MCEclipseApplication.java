@@ -40,6 +40,7 @@ import org.eclipse.ui.console.IConsoleManager;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.constants.ProjectCapabilities;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.launch.MicroclimateLaunchConfigDelegate;
 import com.ibm.microclimate.core.internal.messages.Messages;
@@ -219,5 +220,16 @@ public class MCEclipseApplication extends MicroclimateApplication {
             MCLogger.logError("Failed to create a marker for the " + name + " application: " + message, e);
         }
     }
+
+	@Override
+	public boolean supportsDebug() {
+		// Only supported for certain project types
+		if (projectType.isType(ProjectType.TYPE_LIBERTY) || projectType.isType(ProjectType.TYPE_SPRING)) {
+			// And only if the project supports it
+			ProjectCapabilities capabilities = getProjectCapabilities();
+			return capabilities.supportsDebugMode() && capabilities.canRestart();
+		}
+		return false;
+	}
     
 }

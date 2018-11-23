@@ -45,7 +45,7 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
             Object obj = sel.getFirstElement();
             if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.isEnabled() && app.isSupportedProject()) {
+            	if (app.isEnabled() && app.getProjectCapabilities().canRestart()) {
 		            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
 	            	return;
             	}
