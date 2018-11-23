@@ -194,6 +194,12 @@
 				icon="%REFRESH_ICON_PATH"
 				label="%ACTION_REFRESH"
 				class="com.ibm.microclimate.ui.internal.actions.RefreshAction"/>
+			<action
+				id="com.ibm.microclimate.ui.openMicroclimateUI"
+				enablesFor="1"
+				menubarPath="group.new"
+				label="%ACTION_OPEN_MICROCLIMATE_UI"
+				class="com.ibm.microclimate.ui.internal.actions.OpenMicroclimateUIAction"/>
 		</objectContribution>
 	</extension>
 
