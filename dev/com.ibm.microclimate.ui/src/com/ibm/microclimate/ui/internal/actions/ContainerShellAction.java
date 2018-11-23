@@ -23,6 +23,7 @@ import org.eclipse.ui.IWorkbenchPart;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 
 public class ContainerShellAction implements IObjectActionDelegate {
 	
@@ -50,7 +51,7 @@ public class ContainerShellAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MicroclimateApplication)obj;
-            	action.setEnabled(app.isEnabled());
+            	action.setEnabled(app.isEnabled() && app.getContainerId() != null);
             	return;
             }
         }
@@ -65,7 +66,7 @@ public class ContainerShellAction implements IObjectActionDelegate {
 			return;
 		}
         
-        if (app.containerId == null || app.containerId.isEmpty()) {
+        if (app.getContainerId() == null) {
         	MCLogger.logError("ContainerShellAction ran but the container id for the application is not set: " + app.name); //$NON-NLS-1$
 			return;
         }
@@ -75,12 +76,17 @@ public class ContainerShellAction implements IObjectActionDelegate {
         	MCLogger.logError("ContainerShellAction ran but the local terminal laucher delegate is null"); //$NON-NLS-1$
 			return;
 		}
+        
+        String command = "bash";
+        if (app.projectType.isType(ProjectType.TYPE_DOCKER) && app.projectType.isLanguage(ProjectType.LANGUAGE_PYTHON)) {
+        	command = "sh";
+        }
 
         Map<String, Object> properties = new HashMap<>();
         properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, delegate.getId());
         properties.put(ITerminalsConnectorConstants.PROP_TITLE, app.name);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, "docker");
-        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ARGS, "exec -it " + app.containerId + " bash");
+        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ARGS, "exec -it " + app.getContainerId() + " " + command);
         delegate.execute(properties, null);
     }
 

@@ -73,7 +73,7 @@ public class MicroclimateApplicationFactory {
 			String name = appJso.getString(MCConstants.KEY_NAME);
 			String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
 
-			ProjectType type = ProjectType.UNKNOWN;
+			ProjectType type = ProjectType.UNKNOWN_TYPE;
 			try {
 				// from portal: projectType and buildType are equivalent - however
 				// buildType is always present, projectType is missing for disabled/stopped projects
@@ -82,7 +82,8 @@ public class MicroclimateApplicationFactory {
 				// String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
 
 				String typeStr = appJso.getString(MCConstants.KEY_BUILD_TYPE);
-				type = ProjectType.fromInternalType(typeStr);
+				String languageStr = appJso.getString(MCConstants.KEY_LANGUAGE);
+				type = new ProjectType(typeStr, languageStr);
 			}
 			catch(JSONException e) {
 				MCLogger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
@@ -90,14 +91,12 @@ public class MicroclimateApplicationFactory {
 
 			String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
 			
-			String containerId = appJso.getString(MCConstants.KEY_CONTAINER_ID);
-
 			String contextRoot = null;
 			if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
 				contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
 			}
 
-			MicroclimateApplication mcApp = MicroclimateObjectFactory.createMicroclimateApplication(mcConnection, id, name, type, loc, containerId, contextRoot);
+			MicroclimateApplication mcApp = MicroclimateObjectFactory.createMicroclimateApplication(mcConnection, id, name, type, loc, contextRoot);
 			
 			updateApp(mcApp, appJso);
 			return mcApp;
@@ -131,6 +130,13 @@ public class MicroclimateApplicationFactory {
 				}
 				mcApp.setBuildStatus(buildStatus, detail);
 			}
+			
+			// Get the container id
+			String containerId = null;
+			if (appJso.has(MCConstants.KEY_CONTAINER_ID)) {
+			    containerId = appJso.getString(MCConstants.KEY_CONTAINER_ID);
+			}
+			mcApp.setContainerId(containerId);
 			
 			// Get the ports if they are available
 			try {

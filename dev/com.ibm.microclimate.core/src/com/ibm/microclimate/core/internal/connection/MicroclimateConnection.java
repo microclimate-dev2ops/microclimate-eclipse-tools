@@ -373,7 +373,7 @@ public class MicroclimateConnection {
 		
 		JSONObject buildPayload = new JSONObject();
 		buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
-		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.internalType);
+		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.type);
 		
 		HttpResult result = HttpUtil.post(url, buildPayload);
 		if (!result.isGoodResponse) {
@@ -388,7 +388,7 @@ public class MicroclimateConnection {
 		
 		JSONObject buildPayload = new JSONObject();
 		buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
-		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.internalType);
+		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.type);
 		buildPayload.put(MCConstants.KEY_AUTO_GENERATE, true);
 		
 		HttpResult result = HttpUtil.post(url, buildPayload);
@@ -444,14 +444,11 @@ public class MicroclimateConnection {
 	
 	public void requestProjectCreate(ProjectType type, String name)
 			throws JSONException, IOException {
-		switch(type) {
-		case LIBERTY:
+		if (type.isType(ProjectType.TYPE_LIBERTY)) {
 			requestMicroprofileProjectCreate(name);
-			break;
-		case SPRING:
+		} else if (type.isType(ProjectType.TYPE_SPRING)) {
 			requestSpringProjectCreate(name);
-			break;
-		default:
+		} else {
 			MCLogger.log("Creation of projects with type " + type + " is not supported.");
 		}	
 	}
@@ -502,7 +499,7 @@ public class MicroclimateConnection {
 	}
 
 	public boolean supportsProjectType(ProjectType type) {
-		return type == ProjectType.LIBERTY ||
-				(type == ProjectType.SPRING && mcVersion >= MCConstants.SPRING_MC_VERSION);
+		return type.isType(ProjectType.TYPE_LIBERTY) ||
+				(type.isType(ProjectType.TYPE_SPRING) && mcVersion >= MCConstants.SPRING_MC_VERSION);
 	}
 }

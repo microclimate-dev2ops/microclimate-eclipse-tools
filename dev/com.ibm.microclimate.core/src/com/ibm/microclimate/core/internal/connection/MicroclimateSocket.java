@@ -250,6 +250,13 @@ public class MicroclimateSocket {
 		}
 		
 		app.setEnabled(true);
+		
+		// Update container id
+		String containerId = null;
+		if (event.has(MCConstants.KEY_CONTAINER_ID)) {
+		    containerId = event.getString(MCConstants.KEY_CONTAINER_ID);
+		}
+		app.setContainerId(containerId);
 	
         // Update ports
         JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
