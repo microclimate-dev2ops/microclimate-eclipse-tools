@@ -13,6 +13,10 @@ import org.eclipse.ui.console.IConsole;
 
 import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
 
+/**
+ * Action for toggling the display of a console showing the application logs
+ * for a Microclimate application.
+ */
 public class ToggleAppConsoleAction extends ToggleConsoleAction {
 
 	@Override

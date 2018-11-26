@@ -9,6 +9,9 @@
 
 package com.ibm.microclimate.core.internal.constants;
 
+/**
+ * Type and language of a project.
+ */
 public class ProjectType {
 	
 	public static final String UNKNOWN = "unknown";

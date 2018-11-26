@@ -13,6 +13,10 @@ import com.ibm.microclimate.core.internal.IUpdateHandler;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 
+/**
+ * Update handler registered on the Microclimate core plug-in in order to keep
+ * the Microclimate view up to date.
+ */
 public class UpdateHandler implements IUpdateHandler {
 	
 	@Override

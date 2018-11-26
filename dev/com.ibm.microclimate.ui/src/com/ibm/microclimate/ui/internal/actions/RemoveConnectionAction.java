@@ -19,6 +19,9 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 
+/**
+ * Action to remove a Microclimate connection.
+ */
 public class RemoveConnectionAction implements IObjectActionDelegate {
 
 	protected MicroclimateConnection connection;

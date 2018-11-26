@@ -42,7 +42,8 @@ public class MicroclimateMarkerResolution implements IMarkerResolution {
 
 	@Override
 	public void run(IMarker marker) {
-		// Some day there should be a API that takes the quick fix id and executes it
+		// Some day there should be an API that takes the quick fix id and executes
+		// it.  For now, just make a regenerate request.
 		try {
 			app.mcConnection.requestValidateGenerate(app);
 			IResource resource = marker.getResource();

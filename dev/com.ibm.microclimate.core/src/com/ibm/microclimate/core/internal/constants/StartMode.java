@@ -15,6 +15,9 @@ import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 
+/**
+ * Project start modes.
+ */
 public enum StartMode {
 
 	RUN("run"),

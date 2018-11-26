@@ -41,6 +41,9 @@ import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action to restart a Microclimate application in debug mode.
+ */
 public class RestartDebugModeAction implements IObjectActionDelegate, IViewActionDelegate, IActionDelegate2 {
 
     protected MCEclipseApplication app;
@@ -76,6 +79,7 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
 		}
         
         IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+        // Check if the project has been imported into Eclipse. If not, offer to import it.
         if (project == null || !project.exists()) {
         	int result = openDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
         	if (result == 0) {
@@ -85,6 +89,7 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
         		// Cancel selected
         		return;
         	}
+        // Check if the project is open in Eclipse. If not, offer to open it.
         } else if (!project.isOpen()) {
         	int result = openDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
         	if (result == 0) {
@@ -110,12 +115,16 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
         }
 
         try {
+        	// Clear out any old launch
         	ILaunch launch = app.getLaunch();
         	if (launch != null) {
         		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
         		launchManager.removeLaunch(launch);
         	}
         	app.setLaunch(null);
+        	
+        	// Restart the project in debug mode. The debugger will be attached when the restart result
+        	// event is received from Microclimate.
 			app.mcConnection.requestProjectRestart(app, StartMode.DEBUG.startMode);
 			app.setStartMode(StartMode.DEBUG);
 		} catch (Exception e) {

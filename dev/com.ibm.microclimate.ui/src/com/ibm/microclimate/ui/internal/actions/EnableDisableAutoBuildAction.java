@@ -21,6 +21,9 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action for enabling/disabling auto build on a Microclimate project.
+ */
 public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
 
     protected MCEclipseApplication app;

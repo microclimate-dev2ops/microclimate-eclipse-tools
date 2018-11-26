@@ -31,8 +31,6 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	public static final String DEFAULT_ICON_PATH = "icons/microclimate.ico"; //$NON-NLS-1$
 
 	public static final String
-			// Boolean option for hiding the on-finish dialog for the Link Project wizard
-			HIDE_ONFINISH_MSG_PREFSKEY = "showLinkWizardOnFinishDialog", //$NON-NLS-1$
 			// Int option for debug timeout in seconds
 			DEBUG_CONNECT_TIMEOUT_PREFSKEY = "serverDebugTimeout"; //$NON-NLS-1$
 
@@ -60,7 +58,6 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 		context.registerService(DebugOptionsListener.class, MCLogger.instance(), null);
 
 		// Set default preferences once, here
-		getPreferenceStore().setDefault(HIDE_ONFINISH_MSG_PREFSKEY, false);
 		getPreferenceStore().setDefault(DEBUG_CONNECT_TIMEOUT_PREFSKEY,
 				MCEclipseApplication.DEFAULT_DEBUG_CONNECT_TIMEOUT);
 	}

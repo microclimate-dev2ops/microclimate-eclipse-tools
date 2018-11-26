@@ -203,6 +203,11 @@ public class MicroclimateApplication {
 		debugPort = -1;
 	}
 
+	/**
+	 * Get the capabilities of a project.  Cache them because they should not change
+	 * and since they are used to decide which menu items are shown/enabled this method
+	 * needs to be fast.
+	 */
 	public ProjectCapabilities getProjectCapabilities() {
 		if (projectCapabilities == null) {
 			try {
@@ -243,6 +248,7 @@ public class MicroclimateApplication {
 	}
 	
 	public boolean supportsDebug() {
+		// Override as needed
 		return false;
 	}
 

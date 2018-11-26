@@ -28,9 +28,6 @@ import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
 
 /**
- * Taken largely from com.ibm.ws.st.core.internal.launch.LaunchUtilities
- * and com.ibm.ws.st.core.internal.launch.BaseLibertyLaunchConfiguration
- *
  * Static utilities to support launching and debugging Microclimate applications.
  */
 @SuppressWarnings("restriction")

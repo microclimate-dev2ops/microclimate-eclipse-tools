@@ -24,6 +24,14 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
 import com.ibm.microclimate.ui.internal.wizards.NewMicroclimateConnectionWizard;
 import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
 
+/**
+ * Action to create a new Microclimate connection. This action is used in several places
+ * including:
+ *    The File > New menu
+ *    Popup menu in the Microclimate view
+ *    Toolbar action in the Microclimate view
+ *
+ */
 public class CreateConnectionAction extends Action implements IViewActionDelegate, IActionDelegate2 {
 	
 	private Shell shell;

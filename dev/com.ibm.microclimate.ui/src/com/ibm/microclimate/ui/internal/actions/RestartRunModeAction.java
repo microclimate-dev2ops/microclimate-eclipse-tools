@@ -29,6 +29,9 @@ import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action to restart a Microclimate application in run mode.
+ */
 public class RestartRunModeAction implements IObjectActionDelegate, IViewActionDelegate, IActionDelegate2 {
 
     protected MCEclipseApplication app;
@@ -64,12 +67,15 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
 		}
 
         try {
+        	// Clear out any old launch
         	ILaunch launch = app.getLaunch();
         	if (launch != null) {
         		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
         		launchManager.removeLaunch(launch);
         	}
         	app.setLaunch(null);
+        	
+        	// Restart the project in run mode
 			app.mcConnection.requestProjectRestart(app, StartMode.RUN.startMode);
 			app.setStartMode(StartMode.RUN);
 		} catch (Exception e) {

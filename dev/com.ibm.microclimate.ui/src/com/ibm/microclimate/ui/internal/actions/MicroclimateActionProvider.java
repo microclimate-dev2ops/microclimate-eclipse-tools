@@ -15,6 +15,9 @@ import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 import org.eclipse.ui.navigator.ICommonMenuConstants;
 
+/**
+ * Action provider for the Microclimate view.
+ */
 public class MicroclimateActionProvider extends CommonActionProvider {
 	
 	private CreateConnectionAction createConnectionAction;

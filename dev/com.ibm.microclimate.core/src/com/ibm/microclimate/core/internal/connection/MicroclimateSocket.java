@@ -419,14 +419,18 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found for project: " + projectID);
 			return;
 		}
+		
+		// Clear out any old validation objects
 		app.resetValidation();
 		
+		// If the validation is successful then just return
 		String status = event.getString(MCConstants.KEY_VALIDATION_STATUS);
 		if (MCConstants.VALUE_STATUS_SUCCESS.equals(status)) {
 			// Nothing to do
 			return;
 		}
 		
+		// If the validation is not successful, create validation objects for each problem
 		if (event.has(MCConstants.KEY_VALIDATION_RESULTS)) {
 			JSONArray results = event.getJSONArray(MCConstants.KEY_VALIDATION_RESULTS);
 			for (int i = 0; i < results.length(); i++) {
@@ -458,6 +462,7 @@ public class MicroclimateSocket {
 	}
 	
 	private boolean supportsQuickFix(MicroclimateApplication app, String type, String filename) {
+		// The regenerate job only works in certain cases so only show the quickfix in the working cases
 		if (!MCConstants.VALUE_TYPE_MISSING.equals(type) || app.projectType.isType(ProjectType.TYPE_DOCKER)) {
 			return false;
 		}

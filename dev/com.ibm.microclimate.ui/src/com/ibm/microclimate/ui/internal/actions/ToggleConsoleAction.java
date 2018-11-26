@@ -22,6 +22,9 @@ import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 
+/**
+ * Abstract base action for toggling the display of Microclimate logs.
+ */
 public abstract class ToggleConsoleAction implements IObjectActionDelegate {
 
     protected MCEclipseApplication app;

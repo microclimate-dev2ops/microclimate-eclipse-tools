@@ -131,6 +131,9 @@ public class MCUtil {
 		}
 	}
 	
+	/**
+	 * Update everything in the Microclimate explorer view
+	 */
 	public static void updateAll() {
 		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
 		if (handler != null) {
@@ -138,6 +141,9 @@ public class MCUtil {
 		}
 	}
 	
+	/**
+	 * Update the connection and its children in the Microclimate explorer view
+	 */
 	public static void updateConnection(MicroclimateConnection connection) {
 		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
 		if (handler != null) {
@@ -145,6 +151,9 @@ public class MCUtil {
 		}
 	}
 	
+	/**
+	 * Update the application in the Microclimate explorer view
+	 */
 	public static void updateApplication(MicroclimateApplication app) {
 		IUpdateHandler handler = MicroclimateCorePlugin.getUpdateHandler();
 		if (handler != null) {
