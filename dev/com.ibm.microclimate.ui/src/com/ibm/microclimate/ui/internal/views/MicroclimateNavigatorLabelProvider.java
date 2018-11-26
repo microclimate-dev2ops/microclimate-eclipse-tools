@@ -29,6 +29,9 @@ import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Label provider for the Microclimate view.
+ */
 public class MicroclimateNavigatorLabelProvider extends LabelProvider implements IStyledLabelProvider {
 
 	static final Styler BOLD_FONT_STYLER = new BoldFontStyler();

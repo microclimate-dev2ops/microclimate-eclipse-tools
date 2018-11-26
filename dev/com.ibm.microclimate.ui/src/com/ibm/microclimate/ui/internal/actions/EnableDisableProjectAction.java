@@ -20,6 +20,9 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action for enabling/disabling a Microclimate project.  Not currently used.
+ */
 public class EnableDisableProjectAction implements IObjectActionDelegate {
 
     protected MCEclipseApplication app;

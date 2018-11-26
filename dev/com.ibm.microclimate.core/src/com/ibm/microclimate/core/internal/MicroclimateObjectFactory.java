@@ -14,6 +14,13 @@ import java.net.URI;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 
+/**
+ * Factory for creating the correct Microclimate objects.  This is used to keep the Eclipse
+ * code and the Microclimate code separate.
+ * 
+ * Currently only MicroclimateApplication has an Eclipse version.  Rather than let Eclipse
+ * code leak into MicroclimateConnection an Eclipse version of it should be created if necessary.
+ */
 public class MicroclimateObjectFactory {
 	
 	public static MicroclimateConnection createMicroclimateConnection(URI uri) throws Exception {

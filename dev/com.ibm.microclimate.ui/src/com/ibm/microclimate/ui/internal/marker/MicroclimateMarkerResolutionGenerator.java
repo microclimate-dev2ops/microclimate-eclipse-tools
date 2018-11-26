@@ -18,6 +18,9 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 
+/**
+ * Generates the quick fixes for the marker if there are any.
+ */
 public class MicroclimateMarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 
 	@Override

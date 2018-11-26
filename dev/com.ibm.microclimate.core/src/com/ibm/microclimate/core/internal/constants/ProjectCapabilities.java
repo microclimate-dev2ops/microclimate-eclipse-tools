@@ -18,6 +18,9 @@ import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 
+/**
+ * Represents the capabilities of a project.
+ */
 public class ProjectCapabilities {
 	
 	public static final ProjectCapabilities emptyCapabilities = new ProjectCapabilities();

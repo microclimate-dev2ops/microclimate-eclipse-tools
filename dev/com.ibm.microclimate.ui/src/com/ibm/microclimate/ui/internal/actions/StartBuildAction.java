@@ -23,6 +23,9 @@ import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action to start an application build.
+ */
 public class StartBuildAction implements IObjectActionDelegate {
 
 	protected MicroclimateApplication app;

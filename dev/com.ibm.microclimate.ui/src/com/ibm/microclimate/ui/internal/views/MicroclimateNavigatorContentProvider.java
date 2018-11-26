@@ -18,6 +18,9 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 
+/**
+ * Content provider for the Microclimate view.
+ */
 public class MicroclimateNavigatorContentProvider implements ITreeContentProvider {
 
 	@Override

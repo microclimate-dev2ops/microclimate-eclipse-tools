@@ -45,6 +45,11 @@ import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.launch.MicroclimateLaunchConfigDelegate;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
+/**
+ * Eclipse specific code for a Microclimate application.  Anything related to Eclipse 
+ * (launches, consoles, connecting the debugger, etc.) should go here and not in the
+ * MicroclimateApplication class.
+ */
 public class MCEclipseApplication extends MicroclimateApplication {
 	
 	// Validation marker
@@ -150,10 +155,13 @@ public class MCEclipseApplication extends MicroclimateApplication {
 
 	@Override
 	public void dispose() {
+		// Clean up the launch
 		if (launch != null) {
 			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
 			launchManager.removeLaunch(launch);
 		}
+		
+		// Clean up the consoles
 		List<IConsole> consoles = new ArrayList<IConsole>();
 		if (appConsole != null) {
 			consoles.add(appConsole);
@@ -170,6 +178,7 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	
 	@Override
 	public void resetValidation() {
+		// Delete all Microclimate markers for a project
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
 		if (project != null && project.isAccessible()) {
 			try {
@@ -191,7 +200,8 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	}
 	
     private void validationEvent(int severity, String filePath, String message, String quickFixId, String quickFixDescription) {
-        try {
+        // Create a marker and quick fix (if available) on the specific file if there is one or the project if not.
+    	try {
         	IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
         	if (project != null && project.isAccessible()) {
 	        	IResource resource = project;

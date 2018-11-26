@@ -26,6 +26,10 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action for importing a Microclimate project into Eclipse.  This makes
+ * the source available for editing and debugging.
+ */
 public class ImportProjectAction implements IObjectActionDelegate {
 
 	protected MicroclimateApplication app;
@@ -68,6 +72,9 @@ public class ImportProjectAction implements IObjectActionDelegate {
 		// nothing
 	}
 	
+	/**
+	 * Import a Microclimate project into Eclipse using Smart Import.
+	 */
 	public static void importProject(MicroclimateApplication app) {
 		try {
 			IPath path = app.fullLocalPath;

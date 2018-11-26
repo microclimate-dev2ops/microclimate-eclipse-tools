@@ -20,6 +20,10 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
+/**
+ * Refresh action for a Microclimate connection or application.  This retrieves the
+ * latest information for the object from Microcliamte and updates the view.
+ */
 public class RefreshAction implements IObjectActionDelegate {
 
     protected Object microclimateObject;

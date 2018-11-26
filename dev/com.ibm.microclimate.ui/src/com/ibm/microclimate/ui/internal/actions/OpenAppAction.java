@@ -27,6 +27,9 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action to open the application in a browser.
+ */
 public class OpenAppAction implements IObjectActionDelegate {
 
     protected MicroclimateApplication app;

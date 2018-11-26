@@ -15,6 +15,9 @@ import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 import org.eclipse.ui.navigator.ICommonMenuConstants;
 
+/**
+ * Action provider for Microclimate applications in the Microclimate view.
+ */
 public class MicroclimateApplicationActionProvider extends CommonActionProvider {
 	
 	private ValidateAction validateAction;

@@ -13,6 +13,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.navigator.CommonNavigator;
 import org.eclipse.ui.navigator.CommonViewer;
 
+/**
+ * Microclimate explorer view.  Shows connections to Microclimate instances and
+ * the applications for each instance.
+ */
 public class MicroclimateExplorerView extends CommonNavigator {
     public static final String VIEW_ID = "com.ibm.microclimate.ui.explorerView";
 

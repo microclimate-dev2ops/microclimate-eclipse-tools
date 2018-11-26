@@ -26,6 +26,10 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+/**
+ * Action to open the Microclimate UI in a browser.  This allows users to easily
+ * access features that are not implemented in the Microclimate plug-ins.
+ */
 public class OpenMicroclimateUIAction implements IObjectActionDelegate {
 
     protected MicroclimateConnection connection;

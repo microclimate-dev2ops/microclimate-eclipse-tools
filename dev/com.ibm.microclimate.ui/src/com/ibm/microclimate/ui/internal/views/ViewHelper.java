@@ -26,6 +26,9 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 
+/**
+ * Utilities for refreshing the Microclimate view.
+ */
 public class ViewHelper {
 	
 	public static void openMicroclimateExplorerView() {

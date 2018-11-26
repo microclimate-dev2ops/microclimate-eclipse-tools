@@ -25,6 +25,9 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 
+/**
+ * Action for opening a shell in the application container.
+ */
 public class ContainerShellAction implements IObjectActionDelegate {
 	
 	private static final String LAUNCHER_DELEGATE_ID = "org.eclipse.tm.terminal.connector.local.launcher.local"; //$NON-NLS-1$
@@ -77,11 +80,13 @@ public class ContainerShellAction implements IObjectActionDelegate {
 			return;
 		}
         
+        // The command varies depending on the application type
         String command = "bash";
         if (app.projectType.isType(ProjectType.TYPE_DOCKER) && app.projectType.isLanguage(ProjectType.LANGUAGE_PYTHON)) {
         	command = "sh";
         }
 
+        // Open a shell in the application container
         Map<String, Object> properties = new HashMap<>();
         properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, delegate.getId());
         properties.put(ITerminalsConnectorConstants.PROP_TITLE, app.name);
