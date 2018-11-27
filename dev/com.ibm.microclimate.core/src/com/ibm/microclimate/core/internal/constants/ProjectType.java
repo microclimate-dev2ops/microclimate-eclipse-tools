@@ -18,11 +18,14 @@ public class ProjectType {
 	
 	public static final String TYPE_LIBERTY = "liberty";
 	public static final String TYPE_SPRING = "spring";
-	public static final String TYPE_NODE = "nodejs";
+	public static final String TYPE_NODEJS = "nodejs";
 	public static final String TYPE_DOCKER = "docker";
 	
 	public static final String LANGUAGE_JAVA = "java";
+	public static final String LANGUAGE_NODEJS = "nodejs";
+	public static final String LANGUAGE_SWIFT = "swift";
 	public static final String LANGUAGE_PYTHON = "python";
+	public static final String LANGUAGE_GO = "go";
 	
 	public static final ProjectType UNKNOWN_TYPE = new ProjectType(UNKNOWN, UNKNOWN);
 	

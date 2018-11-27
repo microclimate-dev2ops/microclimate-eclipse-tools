@@ -126,7 +126,6 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
         	// Restart the project in debug mode. The debugger will be attached when the restart result
         	// event is received from Microclimate.
 			app.mcConnection.requestProjectRestart(app, StartMode.DEBUG.startMode);
-			app.setStartMode(StartMode.DEBUG);
 		} catch (Exception e) {
 			MCLogger.logError("Error initiating restart for project: " + app.name, e); //$NON-NLS-1$
 			MCUtil.openDialog(true, Messages.ErrorOnRestartDialogTitle, e.getMessage());

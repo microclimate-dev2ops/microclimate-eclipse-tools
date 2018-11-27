@@ -103,7 +103,12 @@ public class MCConstants {
 			
 			// Microclimate files
 			DOCKERFILE = "Dockerfile",
-			DOCKERFILE_BUILD = "Dockerfile-build"
+			DOCKERFILE_BUILD = "Dockerfile-build",
+			
+			QUERY_PROJECT = "project",
+			QUERY_VIEW = "view",
+			VIEW_MONITOR = "monitor",
+			VIEW_OVERVIEW = "overview"
 
 			;
 
