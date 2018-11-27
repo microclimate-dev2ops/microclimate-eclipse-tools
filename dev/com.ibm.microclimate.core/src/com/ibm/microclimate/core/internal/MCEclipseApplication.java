@@ -152,7 +152,33 @@ public class MCEclipseApplication extends MicroclimateApplication {
 			}
 		}
 	}
-
+	
+	public void attachDebugger() {
+		// Remove any existing launch such as for a disconnected debug target
+		if (launch != null) {
+			IDebugTarget debugTarget = launch.getDebugTarget();
+			if (debugTarget != null && !debugTarget.isDisconnected()) {
+				// Already attached
+				return;
+			}
+			DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);
+			launch = null;
+		}
+		connectDebugger();
+	}
+	
+	public IDebugTarget getDebugTarget() {
+		if (launch != null) {
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+			for (ILaunch launchItem : launchManager.getLaunches()) {
+				if (launch.equals(launchItem)) {
+					return launch.getDebugTarget();
+				}
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public void dispose() {
 		// Clean up the launch
@@ -217,7 +243,6 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	        	}
 	            final IMarker marker = resource.createMarker(MARKER_TYPE);
 	            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-	            marker.setAttribute(IMarker.LINE_NUMBER, 1);
 	            marker.setAttribute(IMarker.MESSAGE, message);
 	            if (quickFixId != null && !quickFixId.isEmpty()) {
 	            	marker.setAttribute(CONNECTION_URL, mcConnection.baseUrl.toString());

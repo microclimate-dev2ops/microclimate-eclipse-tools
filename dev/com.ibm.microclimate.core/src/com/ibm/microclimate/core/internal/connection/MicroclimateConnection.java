@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -514,5 +515,22 @@ public class MicroclimateConnection {
 
 	public IPath getWorkspacePath() {
 		return localWorkspacePath;
+	}
+	
+	public URL getAppMonitorURL(MicroclimateApplication app) {
+		return getAppViewURL(app, MCConstants.VIEW_MONITOR);
+	}
+	
+	public URL getAppViewURL(MicroclimateApplication app, String view) {
+		try {
+			URI uri = baseUrl;
+			String query = MCConstants.QUERY_PROJECT + "=" + app.projectID;
+			query = query + "&" + MCConstants.QUERY_VIEW + "=" + view;
+			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
+			return uri.toURL();
+		} catch (Exception e) {
+			MCLogger.logError("Failed to get the URL for the " + view + " view and the " + app.name + "application.", e);  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$ 
+		}
+		return null;
 	}
 }

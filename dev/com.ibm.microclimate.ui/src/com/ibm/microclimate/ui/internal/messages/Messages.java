@@ -59,6 +59,7 @@ public class Messages extends NLS {
 	public static String ActionNewConnection;
 	
 	public static String ValidateLabel;
+	public static String AttachDebuggerLabel;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
 	
@@ -78,6 +79,9 @@ public class Messages extends NLS {
 	public static String ProjectClosedDialogMsg;
 	public static String ProjectOpenJob;
 	public static String ProjectOpenError;
+	
+	public static String BrowserTooltipApp;
+	public static String BrowserTooltipAppMonitor;
 	
 	static {
 		// initialize resource bundle

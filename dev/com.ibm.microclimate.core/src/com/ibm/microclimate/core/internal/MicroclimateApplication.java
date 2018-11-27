@@ -173,7 +173,7 @@ public class MicroclimateApplication {
 	}
 
 	public boolean hasBuildLog() {
-		return (!projectType.isType(ProjectType.TYPE_NODE));
+		return (!projectType.isType(ProjectType.TYPE_NODEJS));
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

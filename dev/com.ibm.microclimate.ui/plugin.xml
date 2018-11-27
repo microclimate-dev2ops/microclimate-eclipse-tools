@@ -110,7 +110,7 @@
 			<action
 				id="com.ibm.microclimate.ui.importApplication"
 				enablesFor="1"
-				menubarPath="group.top"
+				menubarPath="group.generate"
 				icon="%IMPORT_ICON_PATH"
 				label="%ACTION_IMPORT_PROJECT"
 				class="com.ibm.microclimate.ui.internal.actions.ImportProjectAction"/>
@@ -120,6 +120,12 @@
 				menubarPath="group.open"
 				label="%ACTION_CONTAINER_SHELL"
 				class="com.ibm.microclimate.ui.internal.actions.ContainerShellAction"/>
+			<action
+				id="com.ibm.microclimate.ui.openAppMonitor"
+				enablesFor="1"
+				menubarPath="group.open"
+				label="%ACTION_OPEN_APP_MONITOR"
+				class="com.ibm.microclimate.ui.internal.actions.OpenAppMonitorAction"/>
 			<action
 				id="com.ibm.microclimate.ui.openApplication"
 				enablesFor="1"
@@ -146,14 +152,14 @@
 			<action
 				id="com.ibm.microclimate.ui.restartRunMode"
 				enablesFor="1"
-				menubarPath="group.top"
+				menubarPath="group.generate"
 				icon="%RUN_ICON_PATH"
 				label="%ACTION_RESTART_RUN_MODE"
 				class="com.ibm.microclimate.ui.internal.actions.RestartRunModeAction"/>
 			<action
 				id="com.ibm.microclimate.ui.restartDebugMode"
 				enablesFor="1"
-				menubarPath="group.top"
+				menubarPath="group.generate"
 				icon="%DEBUG_ICON_PATH"
 				label="%ACTION_RESTART_DEBUG_MODE"
 				class="com.ibm.microclimate.ui.internal.actions.RestartDebugModeAction"/>

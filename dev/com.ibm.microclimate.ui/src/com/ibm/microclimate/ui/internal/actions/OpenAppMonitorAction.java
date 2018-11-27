@@ -26,12 +26,13 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.constants.AppState;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
  * Action to open the application in a browser.
  */
-public class OpenAppAction implements IObjectActionDelegate {
+public class OpenAppMonitorAction implements IObjectActionDelegate {
 
     protected MicroclimateApplication app;
 
@@ -58,7 +59,7 @@ public class OpenAppAction implements IObjectActionDelegate {
     public void run(IAction action) {
         if (app == null) {
         	// should not be possible
-        	MCLogger.logError("OpenAppAction ran but no Microclimate application was selected");
+        	MCLogger.logError("OpenAppMonitorAction ran but no Microclimate application was selected");
 			return;
 		}
 
@@ -68,7 +69,12 @@ public class OpenAppAction implements IObjectActionDelegate {
         	return;
         }
 
-        URL appRootUrl = app.getBaseUrl();
+        URL url = app.mcConnection.getAppMonitorURL(app);
+        if (url == null) {
+        	// this should not happen
+        	MCLogger.logError("OpenAppMonitorAction ran but the url was null");
+			return;
+        }
 
         // Use the app's ID as the browser ID so that if this is called again on the same app,
         // the browser will be re-used
@@ -77,11 +83,11 @@ public class OpenAppAction implements IObjectActionDelegate {
 			IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 			IWebBrowser browser = browserSupport
 					.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
-							app.projectID, app.name, NLS.bind(Messages.BrowserTooltipApp, app.name));
+							app.projectID + "_" + MCConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipAppMonitor, app.name));
 
-	        browser.openURL(appRootUrl);
+	        browser.openURL(url);
 		} catch (PartInitException e) {
-			MCLogger.logError("Error opening app in browser", e); //$NON-NLS-1$
+			MCLogger.logError("Error opening the app monitor in browser", e); //$NON-NLS-1$
 		}
     }
 

@@ -37,16 +37,20 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 	
 	public static final String
 			ICON_BASE_PATH = "icons/",
-			ENABLE_LOCAL_BASE_PATH = "icons/elcl16/",
 			MICROCLIMATE_ICON = "microclimate.ico",
 			MICROCLIMATE_BANNER = "microclimateBanner.png",
 			ERROR_ICON_PATH = "error.gif",
-			OPEN_APP_ICON = "openApp.gif",
-			BUILD_ICON = "build_exec.png",
-			IMPORT_ICON = "import_wiz.png",
-			LAUNCH_DEBUG_ICON = "launch_debug.gif",
-			LAUNCH_RUN_ICON = "launch_run.gif",
-			REFRESH_ICON = "refresh.png";
+			OPEN_APP_ICON = "elcl16/openApp.gif",
+			BUILD_ICON = "elcl16/build_exec.png",
+			IMPORT_ICON = "elcl16/import_wiz.png",
+			LAUNCH_DEBUG_ICON = "elcl16/launch_debug.gif",
+			LAUNCH_RUN_ICON = "elcl16/launch_run.gif",
+			REFRESH_ICON = "elcl16/refresh.png",
+			JAVA_ICON = "obj16/java.png",
+			NODE_ICON = "obj16/node.png",
+			SWIFT_ICON = "obj16/swift.png",
+			GO_ICON = "obj16/go.png",
+			PYTHON_ICON = "obj16/python.png";
 
 	// The shared instance
 	private static MicroclimateUIPlugin plugin;
@@ -108,12 +112,17 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
             ICON_BASE_URL = plugin.getBundle().getEntry(ICON_BASE_PATH);
 
         registerImage(registry, MICROCLIMATE_ICON, ICON_BASE_URL + MICROCLIMATE_ICON);
-        registerImage(registry, OPEN_APP_ICON, ENABLE_LOCAL_BASE_PATH + OPEN_APP_ICON);
-        registerImage(registry, BUILD_ICON, ENABLE_LOCAL_BASE_PATH + BUILD_ICON);
-        registerImage(registry, IMPORT_ICON, ENABLE_LOCAL_BASE_PATH + IMPORT_ICON);
-        registerImage(registry, LAUNCH_DEBUG_ICON, ENABLE_LOCAL_BASE_PATH + LAUNCH_DEBUG_ICON);
-        registerImage(registry, LAUNCH_RUN_ICON, ENABLE_LOCAL_BASE_PATH + LAUNCH_RUN_ICON);
-        registerImage(registry, REFRESH_ICON, ENABLE_LOCAL_BASE_PATH + REFRESH_ICON);
+        registerImage(registry, OPEN_APP_ICON, ICON_BASE_URL + OPEN_APP_ICON);
+        registerImage(registry, BUILD_ICON, ICON_BASE_URL + BUILD_ICON);
+        registerImage(registry, IMPORT_ICON, ICON_BASE_URL + IMPORT_ICON);
+        registerImage(registry, LAUNCH_DEBUG_ICON, ICON_BASE_URL + LAUNCH_DEBUG_ICON);
+        registerImage(registry, LAUNCH_RUN_ICON, ICON_BASE_URL + LAUNCH_RUN_ICON);
+        registerImage(registry, REFRESH_ICON, ICON_BASE_URL + REFRESH_ICON);
+        registerImage(registry, JAVA_ICON, ICON_BASE_URL + JAVA_ICON);
+        registerImage(registry, NODE_ICON, ICON_BASE_URL + NODE_ICON);
+        registerImage(registry, SWIFT_ICON, ICON_BASE_URL + SWIFT_ICON);
+        registerImage(registry, GO_ICON, ICON_BASE_URL + GO_ICON);
+        registerImage(registry, PYTHON_ICON, ICON_BASE_URL + PYTHON_ICON);
 
         return registry;
     }

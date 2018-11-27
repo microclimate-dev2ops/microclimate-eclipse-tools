@@ -21,18 +21,23 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
 public class MicroclimateApplicationActionProvider extends CommonActionProvider {
 	
 	private ValidateAction validateAction;
+	private AttachDebuggerAction attachDebuggerAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
         ISelectionProvider selProvider = aSite.getStructuredViewer();
         validateAction = new ValidateAction(selProvider);
+        attachDebuggerAction = new AttachDebuggerAction(selProvider);
     }
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
     	if (validateAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, validateAction);
+    	}
+    	if (attachDebuggerAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, attachDebuggerAction);
     	}
     }
 

@@ -26,6 +26,7 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
@@ -117,6 +118,23 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 	public Image getImage(Object element) {
 		if (element instanceof MicroclimateConnection) {
 			return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.MICROCLIMATE_ICON);
+		} else if (element instanceof MicroclimateApplication) {
+			ProjectType type = ((MicroclimateApplication)element).projectType;
+			if (type.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+				return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.JAVA_ICON);
+			}
+			if (type.isLanguage(ProjectType.LANGUAGE_NODEJS)) {
+				return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.NODE_ICON);
+			}
+			if (type.isLanguage(ProjectType.LANGUAGE_SWIFT)) {
+				return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.SWIFT_ICON);
+			}
+			if (type.isLanguage(ProjectType.LANGUAGE_GO)) {
+				return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.GO_ICON);
+			}
+			if (type.isLanguage(ProjectType.LANGUAGE_PYTHON)) {
+				return MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.PYTHON_ICON);
+			}
 		}
 		return null;
 	}

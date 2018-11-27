@@ -77,7 +77,6 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
         	
         	// Restart the project in run mode
 			app.mcConnection.requestProjectRestart(app, StartMode.RUN.startMode);
-			app.setStartMode(StartMode.RUN);
 		} catch (Exception e) {
 			MCLogger.logError("Error initiating restart for project: " + app.name, e); //$NON-NLS-1$
 			MCUtil.openDialog(true, Messages.ErrorOnRestartDialogTitle, e.getMessage());
