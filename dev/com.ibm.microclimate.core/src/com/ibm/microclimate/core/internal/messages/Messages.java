@@ -15,32 +15,11 @@ public class Messages extends NLS {
 
 	public static String MicroclimateConnectionException_ConnectingToMCFailed;
 
-	public static String MicroclimateConnectionManager_CancelBtn;
-	public static String MicroclimateConnectionManager_DeleteServersBtn;
-	public static String MicroclimateConnectionManager_ErrDeletingServerDialogTitle;
-	public static String MicroclimateConnectionManager_ServersLinkedDialogMsg;
-	public static String MicroclimateConnectionManager_ServersLinkedDialogTitle;
-
 	public static String MicroclimateReconnectJob_ReconnectErrorDialogMsg;
 	public static String MicroclimateReconnectJob_ReconnectErrorDialogTitle;
 	public static String MicroclimateReconnectJob_ReconnectJobName;
 
-	public static String MicroclimateServer_CantModifyModules;
-
-	public static String MicroclimateServerBehaviour_CantRestartDialogMsg;
-	public static String MicroclimateServerBehaviour_CantRestartDialogTitle;
-	public static String MicroclimateServerBehaviour_ConnectionLostServerSuffix;
 	public static String MicroclimateServerBehaviour_DebugLaunchConfigName;
-	public static String MicroclimateServerBehaviour_DeletingServerModeSwitchMsg;
-	public static String MicroclimateServerBehaviour_DeletingServerModeSwitchTitle;
-	public static String MicroclimateServerBehaviour_ErrCreatingServerDialogMsg;
-	public static String MicroclimateServerBehaviour_ErrCreatingServerDialogTitle;
-	public static String MicroclimateServerBehaviour_ErrInitiatingRestartDialogTitle;
-	public static String MicroclimateServerBehaviour_ErrMissingAttribute;
-	public static String MicroclimateServerBehaviour_ErrSettingInitialStateDialogTitle;
-	public static String MicroclimateServerBehaviour_MissingProjectID;
-	public static String MicroclimateServerBehaviour_ProjectMissingServerSuffix;
-	public static String MicroclimateServerBehaviour_ServerDoesntSupportPublish;
 	public static String MicroclimateServerBehaviour_DebuggerConnectFailureDialogTitle;
 	public static String MicroclimateServerBehaviour_DebuggerConnectFailureDialogMsg;
 
@@ -49,9 +28,6 @@ public class Messages extends NLS {
 
 	public static String FileNotFoundTitle;
 	public static String FileNotFoundMsg;
-
-	public static String MicroclimateServerLaunchConfigDelegate_ErrInitServer;
-	public static String MicroclimateServerLaunchConfigDelegate_OnlyLaunchFromServers;
 
 	public static String MicroclimateSocket_ErrRestartingProjectDialogMsg;
 	public static String MicroclimateSocket_ErrRestartingProjectDialogTitle;
