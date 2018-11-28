@@ -111,8 +111,6 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	@Override
 	public void clearDebugger() {
 		if (launch != null) {
-			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-			launchManager.removeLaunch(launch);
 			IDebugTarget debugTarget = launch.getDebugTarget();
 			if (debugTarget != null && !debugTarget.isDisconnected()) {
 				try {
@@ -121,6 +119,8 @@ public class MCEclipseApplication extends MicroclimateApplication {
 					MCLogger.logError("An error occurred while disconnecting the debugger for project: " + name, e); //$NON-NLS-1$
 				}
 			}
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+			launchManager.removeLaunch(launch);
 		}
 		setLaunch(null);
 	}
