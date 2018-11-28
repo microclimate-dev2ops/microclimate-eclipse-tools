@@ -121,6 +121,12 @@
 				label="%ACTION_CONTAINER_SHELL"
 				class="com.ibm.microclimate.ui.internal.actions.ContainerShellAction"/>
 			<action
+				id="com.ibm.microclimate.ui.openAppOverview"
+				enablesFor="1"
+				menubarPath="group.open"
+				label="%ACTION_OPEN_APP_OVERVIEW"
+				class="com.ibm.microclimate.ui.internal.actions.OpenAppOverviewAction"/>
+			<action
 				id="com.ibm.microclimate.ui.openAppMonitor"
 				enablesFor="1"
 				menubarPath="group.open"
