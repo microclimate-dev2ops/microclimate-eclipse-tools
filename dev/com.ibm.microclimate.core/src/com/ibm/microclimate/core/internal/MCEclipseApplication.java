@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -106,6 +107,23 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	public synchronized ILaunch getLaunch() {
 		return launch;
 	}
+	
+	@Override
+	public void clearDebugger() {
+		if (launch != null) {
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+			launchManager.removeLaunch(launch);
+			IDebugTarget debugTarget = launch.getDebugTarget();
+			if (debugTarget != null && !debugTarget.isDisconnected()) {
+				try {
+					debugTarget.disconnect();
+				} catch (DebugException e) {
+					MCLogger.logError("An error occurred while disconnecting the debugger for project: " + name, e); //$NON-NLS-1$
+				}
+			}
+		}
+		setLaunch(null);
+	}
 
 	@Override
 	public void connectDebugger() {
@@ -123,7 +141,7 @@ public class MCEclipseApplication extends MicroclimateApplication {
 		            app.setLaunch(launch);
 		            return Status.OK_STATUS;
 				} catch (Exception e) {
-					MCLogger.logError("An error occurred while trying to launch the debugger for project: " + app.name);
+					MCLogger.logError("An error occurred while trying to launch the debugger for project: " + app.name); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID,
 							NLS.bind(Messages.DebugLaunchError, app.name), e);
 				}
@@ -210,7 +228,7 @@ public class MCEclipseApplication extends MicroclimateApplication {
 			try {
 				project.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 			} catch (CoreException e) {
-				MCLogger.logError("Failed to delete existing markers for the " + name + " project.", e);
+				MCLogger.logError("Failed to delete existing markers for the " + name + " project.", e); //$NON-NLS-1$
 			}
 		}
 	}
@@ -252,7 +270,7 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	            }
         	}
         } catch (CoreException e) {
-            MCLogger.logError("Failed to create a marker for the " + name + " application: " + message, e);
+            MCLogger.logError("Failed to create a marker for the " + name + " application: " + message, e); //$NON-NLS-1$
         }
     }
 

@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -115,13 +116,8 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
         }
 
         try {
-        	// Clear out any old launch
-        	ILaunch launch = app.getLaunch();
-        	if (launch != null) {
-        		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-        		launchManager.removeLaunch(launch);
-        	}
-        	app.setLaunch(null);
+        	// Clear out any old launch and debug target
+        	app.clearDebugger();
         	
         	// Restart the project in debug mode. The debugger will be attached when the restart result
         	// event is received from Microclimate.
