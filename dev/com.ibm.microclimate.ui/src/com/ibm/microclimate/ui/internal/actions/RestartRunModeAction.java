@@ -67,13 +67,8 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
 		}
 
         try {
-        	// Clear out any old launch
-        	ILaunch launch = app.getLaunch();
-        	if (launch != null) {
-        		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-        		launchManager.removeLaunch(launch);
-        	}
-        	app.setLaunch(null);
+        	// Clear out any old launch and debug target
+        	app.clearDebugger();
         	
         	// Restart the project in run mode
 			app.mcConnection.requestProjectRestart(app, StartMode.RUN.startMode);

@@ -223,6 +223,10 @@ public class MicroclimateApplication {
 		return projectCapabilities;
 	}
 	
+	public void clearDebugger() {
+		// Override as needed
+	}
+	
 	public void connectDebugger() {
 		// Override as needed
 	}
