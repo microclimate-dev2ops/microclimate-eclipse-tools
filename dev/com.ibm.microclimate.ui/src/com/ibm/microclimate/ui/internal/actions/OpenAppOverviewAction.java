@@ -23,16 +23,14 @@ import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
- * Action to open the application monitor in a browser.
+ * Action to open the application overview in a browser.
  */
-public class OpenAppMonitorAction implements IObjectActionDelegate {
+public class OpenAppOverviewAction implements IObjectActionDelegate {
 
     protected MicroclimateApplication app;
 
@@ -47,8 +45,8 @@ public class OpenAppMonitorAction implements IObjectActionDelegate {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
-            	app = (MicroclimateApplication)obj;
-            	action.setEnabled(app.isEnabled() && app.getAppState() == AppState.STARTED);
+            	app = (MicroclimateApplication) obj;
+            	action.setEnabled(true);
             	return;
             }
         }
@@ -59,20 +57,14 @@ public class OpenAppMonitorAction implements IObjectActionDelegate {
     public void run(IAction action) {
         if (app == null) {
         	// should not be possible
-        	MCLogger.logError("OpenAppMonitorAction ran but no Microclimate application was selected");
+        	MCLogger.logError("OpenAppOverviewAction ran but no Microclimate application was selected");
 			return;
 		}
 
-        if (!app.isRunning()) {
-        	MCUtil.openDialog(true, Messages.OpenAppAction_CantOpenNotRunningAppTitle,
-        			Messages.OpenAppAction_CantOpenNotRunningAppMsg);
-        	return;
-        }
-
-        URL url = app.mcConnection.getAppMonitorURL(app);
+        URL url = app.mcConnection.getAppOverviewURL(app);
         if (url == null) {
         	// this should not happen
-        	MCLogger.logError("OpenAppMonitorAction ran but the url was null");
+        	MCLogger.logError("OpenAppOverviewAction ran but the url was null");
 			return;
         }
 
@@ -83,11 +75,11 @@ public class OpenAppMonitorAction implements IObjectActionDelegate {
 			IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 			IWebBrowser browser = browserSupport
 					.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
-							app.projectID + "_" + MCConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipAppMonitor, app.name));
+							app.projectID + "_" + MCConstants.VIEW_OVERVIEW, app.name, NLS.bind(Messages.BrowserTooltipAppOverview, app.name));
 
 	        browser.openURL(url);
 		} catch (PartInitException e) {
-			MCLogger.logError("Error opening the app monitor in browser", e); //$NON-NLS-1$
+			MCLogger.logError("Error opening the app overview in browser", e); //$NON-NLS-1$
 		}
     }
 

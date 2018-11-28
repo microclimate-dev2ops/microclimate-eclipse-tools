@@ -82,6 +82,7 @@ public class Messages extends NLS {
 	
 	public static String BrowserTooltipApp;
 	public static String BrowserTooltipAppMonitor;
+	public static String BrowserTooltipAppOverview;
 	
 	static {
 		// initialize resource bundle

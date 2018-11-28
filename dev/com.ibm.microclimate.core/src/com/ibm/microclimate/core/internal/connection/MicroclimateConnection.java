@@ -521,6 +521,10 @@ public class MicroclimateConnection {
 		return getAppViewURL(app, MCConstants.VIEW_MONITOR);
 	}
 	
+	public URL getAppOverviewURL(MicroclimateApplication app) {
+		return getAppViewURL(app, MCConstants.VIEW_OVERVIEW);
+	}
+	
 	public URL getAppViewURL(MicroclimateApplication app, String view) {
 		try {
 			URI uri = baseUrl;
