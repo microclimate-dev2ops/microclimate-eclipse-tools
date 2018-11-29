@@ -38,7 +38,7 @@ public class ValidateAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MicroclimateApplication) {
 				app = (MicroclimateApplication) obj;
-				if (app.isEnabled()) {
+				if (app.isAvailable()) {
 					setEnabled(true);
 					return;
 				}

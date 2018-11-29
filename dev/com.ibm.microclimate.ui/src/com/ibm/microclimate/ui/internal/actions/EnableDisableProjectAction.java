@@ -39,7 +39,7 @@ public class EnableDisableProjectAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.isEnabled()) {
+            	if (app.isAvailable()) {
                 	action.setText(Messages.DisableProjectLabel);
                 } else {
                 	action.setText(Messages.EnableProjectLabel);

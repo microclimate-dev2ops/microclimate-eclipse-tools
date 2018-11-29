@@ -54,7 +54,7 @@ public class ContainerShellAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MicroclimateApplication)obj;
-            	action.setEnabled(app.isEnabled() && app.getContainerId() != null);
+            	action.setEnabled(app.isAvailable() && app.getContainerId() != null);
             	return;
             }
         }

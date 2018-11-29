@@ -40,7 +40,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication) obj;
-            	if (app.isEnabled() && StartMode.DEBUG_MODES.contains(app.getStartMode()) &&
+            	if (app.isAvailable() && StartMode.DEBUG_MODES.contains(app.getStartMode()) && app.getDebugPort() != -1 &&
             			(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING)) {
             		IDebugTarget debugTarget = app.getDebugTarget();
             		setEnabled(debugTarget == null || debugTarget.isDisconnected());

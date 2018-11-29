@@ -42,7 +42,7 @@ public class StartBuildAction implements IObjectActionDelegate {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MicroclimateApplication) {
 				app = (MicroclimateApplication) obj;
-				if (app.isEnabled() && app.getBuildStatus() != BuildStatus.IN_PROGRESS && app.getBuildStatus() != BuildStatus.QUEUED) {
+				if (app.isAvailable() && app.getBuildStatus() != BuildStatus.IN_PROGRESS && app.getBuildStatus() != BuildStatus.QUEUED) {
 					action.setEnabled(true);
 					return;
 				}

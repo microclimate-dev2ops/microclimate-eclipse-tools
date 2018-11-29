@@ -46,7 +46,7 @@ public class ImportProjectAction implements IObjectActionDelegate {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MicroclimateApplication) {
 				app = (MicroclimateApplication) obj;
-				if (app.isEnabled()) {
+				if (app.isAvailable()) {
 					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
 					action.setEnabled(project == null || !project.exists());
 					return;

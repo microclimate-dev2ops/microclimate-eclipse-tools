@@ -262,17 +262,14 @@ public class MicroclimateSocket {
         // Update ports
         JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
-		// If the app is started, get the http port. If it's not started, this will be missing, and we can't proceed.
-        if (!portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
-        	MCLogger.log(String.format("No %s key - %s is not running.", 		//$NON-NLS-1$
-        			MCConstants.KEY_EXPOSED_PORT, app.name));
-        	return;
+        if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
+        	int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
+    		app.setHttpPort(port);
+        } else {
+        	MCLogger.logError("No http port on project changed event for: " + app.name); //$NON-NLS-1$
         }
 
-		int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
-		app.setHttpPort(port);
-
-		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
+		if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
 			int debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
 			app.setDebugPort(debugPort);
 			if (StartMode.DEBUG_MODES.contains(app.getStartMode()) && debugPort != -1) {
@@ -338,23 +335,23 @@ public class MicroclimateSocket {
 			return;
 		}
 
-		// this event should always have a 'ports' sub-object
+		// This event should always have a 'ports' sub-object
 		JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
-		// ports object should always have an http port
-		int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
-		if (port != -1) {
+		// The ports object should always have an http port
+		if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
+			int port = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_PORT));
 			app.setHttpPort(port);
+		} else {
+			MCLogger.logError("No http port on project restart event for: " + app.name); //$NON-NLS-1$
 		}
 
-		// Debug port will obviously be missing if the restart was into Run mode.
+		// Debug port will be missing if the restart was into Run mode.
 		int debugPort = -1;
-		if (portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
+		if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
 			debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
-			if (debugPort != -1) {
-				app.setDebugPort(debugPort);
-			}
 		}
+		app.setDebugPort(debugPort);
 		
 		StartMode startMode = StartMode.get(event);
 		app.setStartMode(startMode);
