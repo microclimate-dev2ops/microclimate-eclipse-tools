@@ -47,9 +47,13 @@ public class MicroclimateApplicationFactory {
 							MicroclimateApplication app = mcConnection.getAppByID(id);
 							if (app != null) {
 								updateApp(app, appJso);
+								if (app.isDeleting()) {
+									// Remove the app from the list
+									mcConnection.removeApp(id);
+								}
 							} else {
 								app = createApp(mcConnection, appJso);
-								if (app != null) {
+								if (app != null && !app.isDeleting()) {
 									mcConnection.addApp(app);
 								}
 							}
@@ -113,6 +117,18 @@ public class MicroclimateApplicationFactory {
 	 */
 	public static void updateApp(MicroclimateApplication mcApp, JSONObject appJso) {
 		try {
+			// Set the action
+			if (appJso.has(MCConstants.KEY_ACTION)) {
+				String action = appJso.getString(MCConstants.KEY_ACTION);
+				mcApp.setAction(action);
+				if (MCConstants.VALUE_ACTION_DELETING.equals(action)) {
+					// No point in updating any further since this app should be removed from the list
+					return;
+				}
+			} else {
+				mcApp.setAction(null);
+			}
+			
 			// Set the app status
 			if (appJso.has(MCConstants.KEY_APP_STATUS)) {
 				String appStatus = appJso.getString(MCConstants.KEY_APP_STATUS);
@@ -143,28 +159,31 @@ public class MicroclimateApplicationFactory {
 				if (appJso.has(MCConstants.KEY_PORTS) && (appJso.get(MCConstants.KEY_PORTS) instanceof JSONObject)) {
 					JSONObject portsObj = appJso.getJSONObject(MCConstants.KEY_PORTS);
 	
+					int httpPortNum = -1;
 					if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_PORT)) {
 						String httpPort = portsObj.getString(MCConstants.KEY_EXPOSED_PORT);
 						if (httpPort != null && !httpPort.isEmpty()) {
-							int portNum = MCUtil.parsePort(httpPort);
-							if (portNum != -1) {
-								mcApp.setHttpPort(portNum);
-							}
+							httpPortNum = MCUtil.parsePort(httpPort);
 						}
 					}
+					if (httpPortNum != -1) {
+						mcApp.setHttpPort(httpPortNum);
+					}
 	
+					int debugPortNum = -1;
 					if (portsObj != null && portsObj.has(MCConstants.KEY_EXPOSED_DEBUG_PORT)) {
 						String debugPort = portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT);
 						if (debugPort != null && !debugPort.isEmpty()) {
-							int portNum = MCUtil.parsePort(debugPort);
-							if (portNum != -1) {
-								mcApp.setDebugPort(portNum);
-							}
+							debugPortNum = MCUtil.parsePort(debugPort);
 						}
 					}
+					mcApp.setDebugPort(debugPortNum);
+
+				} else {
+					MCLogger.logError("No ports object on project info for application: " + mcApp.name); //$NON-NLS-1$
 				}
 			} catch (Exception e) {
-				MCLogger.logError("Failed to get the ports for application: " + mcApp.name, e);
+				MCLogger.logError("Failed to get the ports for application: " + mcApp.name, e); //$NON-NLS-1$
 			}
 			
 			// Set the start mode

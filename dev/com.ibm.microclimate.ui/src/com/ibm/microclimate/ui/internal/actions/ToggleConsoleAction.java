@@ -41,7 +41,7 @@ public abstract class ToggleConsoleAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.isEnabled() && supportsConsole()) {
+            	if (app.isAvailable() && supportsConsole()) {
 	            	action.setChecked(hasConsole());
 	            	action.setEnabled(true);
 	            	return;

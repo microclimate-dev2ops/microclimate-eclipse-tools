@@ -48,7 +48,7 @@ public class OpenAppMonitorAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MicroclimateApplication)obj;
-            	action.setEnabled(app.isEnabled() && app.getAppState() == AppState.STARTED);
+            	action.setEnabled(app.isAvailable() && app.getAppState() == AppState.STARTED);
             	return;
             }
         }

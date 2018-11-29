@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
+import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectCapabilities;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
@@ -44,6 +45,7 @@ public class MicroclimateApplication {
 	private boolean enabled = true;
 	private String containerId;
 	private ProjectCapabilities projectCapabilities;
+	private String action;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -119,6 +121,10 @@ public class MicroclimateApplication {
 		this.containerId = id;
 	}
 	
+	public synchronized void setAction(String action) {
+		this.action = action;
+	}
+	
 	// Getters for our project state fields
 
 	/**
@@ -163,13 +169,26 @@ public class MicroclimateApplication {
 	public synchronized String getContainerId() {
 		return containerId;
 	}
-
+	
 	public boolean isActive() {
 		return getAppState() == AppState.STARTING || getAppState() == AppState.STARTED;
 	}
 
 	public boolean isRunning() {
 		return baseUrl != null;
+	}
+	
+	public boolean isDeleting() {
+		return MCConstants.VALUE_ACTION_DELETING.equals(action);
+	}
+	
+	public boolean isImporting() {
+		// The action value is called "validating" but really this means the project is importing
+		return MCConstants.VALUE_ACTION_VALIDATING.equals(action);
+	}
+	
+	public boolean isAvailable() {
+		return isEnabled() && !isImporting();
 	}
 
 	public boolean hasBuildLog() {

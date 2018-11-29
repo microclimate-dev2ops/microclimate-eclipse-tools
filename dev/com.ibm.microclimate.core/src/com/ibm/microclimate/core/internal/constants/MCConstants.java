@@ -73,6 +73,8 @@ public class MCConstants {
 			VALUE_ACTION_BUILD = "build",
 			VALUE_ACTION_ENABLEAUTOBUILD = "enableautobuild",
 			VALUE_ACTION_DISABLEAUTOBUILD = "disableautobuild",
+			VALUE_ACTION_DELETING = "deleting",
+			VALUE_ACTION_VALIDATING = "validating",
 			
 			KEY_VALIDATION_STATUS = "validationStatus",
 			KEY_VALIDATION_RESULTS = "validationResults",

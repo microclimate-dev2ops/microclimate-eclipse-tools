@@ -40,7 +40,7 @@ public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
             Object obj = sel.getFirstElement();
             if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.isEnabled()) {
+            	if (app.isAvailable()) {
 	            	if (app.isAutoBuild()) {
 	                	action.setText(Messages.DisableAutoBuildLabel);
 	                } else {

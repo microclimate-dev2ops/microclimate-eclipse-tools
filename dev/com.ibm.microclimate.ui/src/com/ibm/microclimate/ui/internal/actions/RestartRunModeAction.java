@@ -9,9 +9,6 @@
 
 package com.ibm.microclimate.ui.internal.actions;
 
-import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -48,7 +45,7 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
             Object obj = sel.getFirstElement();
             if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication)obj;
-            	if (app.isEnabled() && app.getProjectCapabilities().canRestart()) {
+            	if (app.isAvailable() && app.getProjectCapabilities().canRestart()) {
 		            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
 	            	return;
             	}
