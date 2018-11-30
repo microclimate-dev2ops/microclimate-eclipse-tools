@@ -34,8 +34,6 @@ import com.ibm.microclimate.ui.internal.wizards.WizardLauncher;
  */
 public class CreateConnectionAction extends Action implements IViewActionDelegate, IActionDelegate2 {
 	
-	private Shell shell;
-	
 	public CreateConnectionAction(Shell shell) {
         super(Messages.ActionNewConnection);
         setImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_ICON));

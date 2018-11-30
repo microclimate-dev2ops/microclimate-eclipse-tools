@@ -9,12 +9,10 @@
 
 package com.ibm.microclimate.core.internal;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.IPath;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
@@ -125,8 +123,6 @@ public class MicroclimateApplication {
 		this.action = action;
 	}
 	
-	// Getters for our project state fields
-
 	/**
 	 * Can return null if this project hasn't started yet (ie httpPort == -1)
 	 */

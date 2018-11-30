@@ -83,7 +83,6 @@ public class HttpUtil {
 
 		try {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
-			// MCLogger.log("GET " + url);
 
 			connection.setRequestMethod("GET");
 			connection.setReadTimeout(5000);
