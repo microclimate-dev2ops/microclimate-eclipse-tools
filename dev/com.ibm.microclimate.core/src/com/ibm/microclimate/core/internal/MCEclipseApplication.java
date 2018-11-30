@@ -121,6 +121,14 @@ public class MCEclipseApplication extends MicroclimateApplication {
 			}
 			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
 			launchManager.removeLaunch(launch);
+			ILaunchConfiguration launchConfig = launch.getLaunchConfiguration();
+			if (launchConfig != null) {
+				try {
+					launchConfig.delete();
+				} catch (CoreException e) {
+					MCLogger.logError("An error occurred while deleting the launch configuration for project: " + name, e); //$NON-NLS-1$
+				}
+			}
 		}
 		setLaunch(null);
 	}
@@ -161,9 +169,9 @@ public class MCEclipseApplication extends MicroclimateApplication {
 					// Check if the debugger is still attached (for Liberty, a small change to the app does not require a server restart)
 					IDebugTarget debugTarget = launch.getDebugTarget();
 					if (debugTarget == null || debugTarget.isDisconnected()) {
+						// Clean up
+						clearDebugger();
 						// Reconnect the debugger
-						launchManager.removeLaunch(launch);
-						launch = null;
 						connectDebugger();
 					}
 				}
@@ -179,8 +187,7 @@ public class MCEclipseApplication extends MicroclimateApplication {
 				// Already attached
 				return;
 			}
-			DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);
-			launch = null;
+			clearDebugger();
 		}
 		connectDebugger();
 	}
@@ -200,10 +207,7 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	@Override
 	public void dispose() {
 		// Clean up the launch
-		if (launch != null) {
-			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-			launchManager.removeLaunch(launch);
-		}
+		clearDebugger();
 		
 		// Clean up the consoles
 		List<IConsole> consoles = new ArrayList<IConsole>();
