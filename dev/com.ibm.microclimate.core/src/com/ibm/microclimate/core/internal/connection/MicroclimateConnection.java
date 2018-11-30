@@ -254,11 +254,9 @@ public class MicroclimateConnection {
 	 * @return The app with the given ID, if it exists in this Microclimate instance, else null.
 	 */
 	public synchronized MicroclimateApplication getAppByID(String projectID) {
-		MicroclimateApplication app = null;
 		synchronized(appMap) {
-			app = appMap.get(projectID);
+			return appMap.get(projectID);
 		}
-		return app;
 	}
 
 	public MicroclimateApplication getAppByName(String name) {
