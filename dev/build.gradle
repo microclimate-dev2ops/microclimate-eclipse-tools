@@ -20,6 +20,7 @@ repositories {
 configurations {
     antcp
     antScp
+    corelibs
 }
 dependencies {
     antcp 'org.apache.ivy:ivy:2.4.0'
@@ -29,9 +30,15 @@ dependencies {
     antcp 'org.apache.aries:org.apache.aries.util:1.1.3'
 
     antScp 'org.apache.ant:ant-jsch:1.7.1', 'jsch:jsch:0.1.29'
+    
+    corelibs "io.socket:engine.io-client:1.0.0"
+    corelibs "org.json:json:20090211"
+    corelibs "com.squareup.okhttp3:okhttp:3.8.1"
+    corelibs "com.squareup.okio:okio:1.13.0"
+    corelibs "io.socket:socket.io-client:1.0.0"
 }
 
-defaultTasks 'clean', 'compile', 'generateOpenLTUpdateSite'
+defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenLTUpdateSite'
 
 task importAnt {
     ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader
@@ -66,6 +73,19 @@ def eclipseTempFolder  = file(projDir + project.properties['eclipse.temp.folder'
 def toolsImageFolder  = file(projDir + project.properties['tools.image.folder'])
 def toolsImagePluginsFolder  = file(projDir + project.properties['tools.image.plugins.folder'])
 def artifactsFolder = file(projDir + '/' + project.properties['ant.artifacts.folder'])
+
+def corelibFolder = file(projDir + project.properties['microclimate.core.prereqlib.folder'])
+
+// Download dependent plugins from maven repository for 'com.ibm.microclimate.core'
+task getCoreDependencies(type: Copy) {
+	
+    if (!corelibFolder.exists()) {
+    	corelibFolder.mkdir()
+    }
+            
+    from configurations.corelibs
+    into corelibFolder
+}
 
 // Download an Eclipse TargetPlatform
 task downloadEclipseTargetPlatform {
@@ -403,7 +423,7 @@ task cleanPrereqs(type: Delete) {
         fileTree(dir: projDir, include: 'com.ibm.*/lib/').visit {  FileVisitDetails details ->
             if(details.file.isDirectory() && 'lib'.equals(details.file.name)) {
                 println 'Delete ' + details.file.getPath()
-                details.file.delete()
+                details.file.deleteDir()
             }
         }
     }
