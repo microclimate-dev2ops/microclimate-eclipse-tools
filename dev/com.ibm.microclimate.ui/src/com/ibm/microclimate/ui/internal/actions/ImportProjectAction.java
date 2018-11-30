@@ -12,7 +12,6 @@ package com.ibm.microclimate.ui.internal.actions;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -30,6 +29,7 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
  * Action for importing a Microclimate project into Eclipse.  This makes
  * the source available for editing and debugging.
  */
+@SuppressWarnings("restriction")
 public class ImportProjectAction implements IObjectActionDelegate {
 
 	protected MicroclimateApplication app;

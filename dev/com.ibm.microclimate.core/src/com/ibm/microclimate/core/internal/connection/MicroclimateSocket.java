@@ -34,7 +34,7 @@ import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
 /**
- * Wrapper for a SocketIO client socket, which connects to FileWatcher and listens for project state changes,
+ * Wrapper for a SocketIO client socket, which connects to Microclimate and listens for project state changes,
  * then updates the corresponding MicroclimateApplication's state.
  * One of these exists for each MicroclimateConnection. That connection is stored here so we can access
  * its applications.

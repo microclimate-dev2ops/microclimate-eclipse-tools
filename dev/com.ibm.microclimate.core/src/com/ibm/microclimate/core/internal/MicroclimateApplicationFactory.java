@@ -81,8 +81,7 @@ public class MicroclimateApplicationFactory {
 			try {
 				// from portal: projectType and buildType are equivalent - however
 				// buildType is always present, projectType is missing for disabled/stopped projects
-				// We should use projectType if it gets fixed
-				// see see https://github.ibm.com/dev-ex/portal/issues/520
+				// We should use projectType if it gets fixed.
 				// String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
 
 				String typeStr = appJso.getString(MCConstants.KEY_BUILD_TYPE);

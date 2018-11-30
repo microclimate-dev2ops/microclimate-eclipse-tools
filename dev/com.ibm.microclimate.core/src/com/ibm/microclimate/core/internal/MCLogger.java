@@ -22,8 +22,6 @@ import com.ibm.microclimate.core.MicroclimateCorePlugin;
  */
 public class MCLogger implements DebugOptionsListener {
 
-	// private static final SimpleDateFormat TIME_SDF = new SimpleDateFormat("k:mm:ss");
-
 	private static final ILog logger = MicroclimateCorePlugin.getDefault().getLog();
 
 	private static MCLogger instance;
