@@ -27,6 +27,9 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
  * General utils that don't belong anywhere else
  */
 public class MCUtil {
+	
+	// Provide a way for users to override the path used for running commands
+	private static final String ENV_PATH_PROPERTY = "com.ibm.microclimate.envPath";
 
 	/**
 	 * Open a dialog on top of the current active window. Can be called off the UI thread.
@@ -161,5 +164,33 @@ public class MCUtil {
 		}
 	}
 
-
+    public static String getOSName() {
+        return (String)System.getProperty("os.name");
+    }
+    
+    public static boolean isMACOS() {
+    	String osName = getOSName();
+    	if (osName != null && osName.toLowerCase().contains("mac")) {
+    		return true;
+    	}
+    	return false;
+    }
+    
+    public static String getEnvPath() {
+    	String path = (String)System.getProperty(ENV_PATH_PROPERTY);
+    	if (path == null || path.trim().isEmpty()) {
+    		if (isMACOS()) {
+    			// On MAC a full path is required for running commands
+    			return "/usr/local/bin/";
+    		}
+    		return null;
+    	}
+    	path = path.trim();
+    	path = path.replaceAll("\\", "/");
+    	if (!path.endsWith("/")) {
+    		path = path + "/";
+    	}
+    	return path;
+    }
+    
 }

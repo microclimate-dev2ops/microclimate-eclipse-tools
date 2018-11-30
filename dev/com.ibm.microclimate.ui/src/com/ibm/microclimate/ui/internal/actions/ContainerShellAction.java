@@ -22,6 +22,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 
@@ -31,7 +32,7 @@ import com.ibm.microclimate.core.internal.constants.ProjectType;
 public class ContainerShellAction implements IObjectActionDelegate {
 	
 	private static final String LAUNCHER_DELEGATE_ID = "org.eclipse.tm.terminal.connector.local.launcher.local"; //$NON-NLS-1$
-
+	
     protected MicroclimateApplication app;
     protected ILauncherDelegate delegate;
     
@@ -87,10 +88,12 @@ public class ContainerShellAction implements IObjectActionDelegate {
         }
 
         // Open a shell in the application container
+        String envPath = MCUtil.getEnvPath();
+        String dockerPath = envPath != null ? envPath + "docker" : "docker";
         Map<String, Object> properties = new HashMap<>();
         properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, delegate.getId());
         properties.put(ITerminalsConnectorConstants.PROP_TITLE, app.name);
-        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, "docker");
+        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, dockerPath);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ARGS, "exec -it " + app.getContainerId() + " " + command);
         delegate.execute(properties, null);
     }
