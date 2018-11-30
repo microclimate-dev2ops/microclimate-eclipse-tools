@@ -30,6 +30,7 @@ import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.test.util.ImportUtil;
 import com.ibm.microclimate.test.util.MicroclimateUtil;
 import com.ibm.microclimate.test.util.TestUtil;
+import com.ibm.microclimate.ui.internal.actions.ImportProjectAction;
 
 import junit.framework.TestCase;
 
@@ -67,8 +68,9 @@ public abstract class BaseDebugTest extends TestCase {
         assertTrue("The application " + projectName + " should be running", MicroclimateUtil.waitForProjectStart(connection, projectName, 600, 5));
         
         // Import the application into eclipse
-        IPath workspace = connection.getWorkspacePath();
-        project = ImportUtil.importExistingMavenProjects(workspace, projectName);
+        MicroclimateApplication app = connection.getAppByName(projectName);
+        ImportProjectAction.importProject(app);
+        project = ImportUtil.waitForProject(projectName);
         assertNotNull("The " + projectName + " project should be imported in eclipse", project);
     }
     
