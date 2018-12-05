@@ -40,7 +40,7 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 			MICROCLIMATE_ICON = "microclimate.ico",
 			MICROCLIMATE_BANNER = "microclimateBanner.png",
 			ERROR_ICON_PATH = "error.gif",
-			OPEN_APP_ICON = "elcl16/openApp.gif",
+			OPEN_BROWSER_ICON = "elcl16/internal_browser.gif",
 			BUILD_ICON = "elcl16/build_exec.png",
 			IMPORT_ICON = "elcl16/import_wiz.png",
 			LAUNCH_DEBUG_ICON = "elcl16/launch_debug.gif",
@@ -112,7 +112,7 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
             ICON_BASE_URL = plugin.getBundle().getEntry(ICON_BASE_PATH);
 
         registerImage(registry, MICROCLIMATE_ICON, ICON_BASE_URL + MICROCLIMATE_ICON);
-        registerImage(registry, OPEN_APP_ICON, ICON_BASE_URL + OPEN_APP_ICON);
+        registerImage(registry, OPEN_BROWSER_ICON, ICON_BASE_URL + OPEN_BROWSER_ICON);
         registerImage(registry, BUILD_ICON, ICON_BASE_URL + BUILD_ICON);
         registerImage(registry, IMPORT_ICON, ICON_BASE_URL + IMPORT_ICON);
         registerImage(registry, LAUNCH_DEBUG_ICON, ICON_BASE_URL + LAUNCH_DEBUG_ICON);
