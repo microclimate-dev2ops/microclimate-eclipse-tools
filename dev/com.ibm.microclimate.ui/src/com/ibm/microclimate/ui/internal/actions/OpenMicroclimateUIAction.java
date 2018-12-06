@@ -31,6 +31,8 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
  * access features that are not implemented in the Microclimate plug-ins.
  */
 public class OpenMicroclimateUIAction implements IObjectActionDelegate {
+	
+	private final String CREATE_NEW_PROJECT_ID = "com.ibm.microclimate.ui.createNewProject";
 
     protected MicroclimateConnection connection;
 
@@ -67,9 +69,15 @@ public class OpenMicroclimateUIAction implements IObjectActionDelegate {
         	return;
         }
 
-        URI uri = connection.baseUrl;
-
 		try {
+			URI uri = null;
+			if (CREATE_NEW_PROJECT_ID.equals(action.getId())) {
+				uri = connection.getNewProjectURI();
+			}
+			if (uri == null) {
+				uri = connection.baseUrl;
+			}
+	        
 			IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 			IWebBrowser browser = browserSupport
 					.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,

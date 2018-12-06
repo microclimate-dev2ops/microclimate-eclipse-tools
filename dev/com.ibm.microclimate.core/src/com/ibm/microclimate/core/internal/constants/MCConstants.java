@@ -107,6 +107,9 @@ public class MCConstants {
 			DOCKERFILE = "Dockerfile",
 			DOCKERFILE_BUILD = "Dockerfile-build",
 			
+			QUERY_NEW_PROJECT = "new-project",
+			VALUE_TRUE = "true",
+			
 			QUERY_PROJECT = "project",
 			QUERY_VIEW = "view",
 			VIEW_MONITOR = "monitor",
