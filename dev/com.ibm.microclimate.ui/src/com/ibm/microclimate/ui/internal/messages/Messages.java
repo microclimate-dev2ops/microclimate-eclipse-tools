@@ -6,8 +6,6 @@ public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.ibm.microclimate.ui.internal.messages.messages"; //$NON-NLS-1$
 
 	public static String ConnectionPrefsPage_AddBtn;
-	public static String ConnectionPrefsPage_LinkedProjectsColumn;
-	public static String ConnectionPrefsPage_NoLinkedAppsDisplay;
 	public static String ConnectionPrefsPage_PageTitle;
 	public static String ConnectionPrefsPage_RemoveBtn;
 	public static String ConnectionPrefsPage_ShellTitle;

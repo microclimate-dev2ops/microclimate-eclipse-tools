@@ -110,12 +110,12 @@
 			id="com.ibm.microclimate.ui.appObjectActions"
 			objectClass="com.ibm.microclimate.core.internal.MicroclimateApplication">
 			<action
-				id="com.ibm.microclimate.ui.importApplication"
+				id="com.ibm.microclimate.ui.openAppMonitor"
 				enablesFor="1"
-				menubarPath="group.generate"
-				icon="%IMPORT_ICON_PATH"
-				label="%ACTION_IMPORT_PROJECT"
-				class="com.ibm.microclimate.ui.internal.actions.ImportProjectAction"/>
+				menubarPath="group.open"
+				icon="%OPEN_BROWSER_ICON_PATH"
+				label="%ACTION_OPEN_APP_MONITOR"
+				class="com.ibm.microclimate.ui.internal.actions.OpenAppMonitorAction"/>
 			<action
 				id="com.ibm.microclimate.ui.containerShell"
 				enablesFor="1"
@@ -130,27 +130,12 @@
 				label="%ACTION_OPEN_APP_OVERVIEW"
 				class="com.ibm.microclimate.ui.internal.actions.OpenAppOverviewAction"/>
 			<action
-				id="com.ibm.microclimate.ui.openAppMonitor"
-				enablesFor="1"
-				menubarPath="group.open"
-				icon="%OPEN_BROWSER_ICON_PATH"
-				label="%ACTION_OPEN_APP_MONITOR"
-				class="com.ibm.microclimate.ui.internal.actions.OpenAppMonitorAction"/>
-			<action
 				id="com.ibm.microclimate.ui.openApplication"
 				enablesFor="1"
 				menubarPath="group.open"
 				icon="%OPEN_BROWSER_ICON_PATH"
 				label="%ACTION_OPEN_APP"
 				class="com.ibm.microclimate.ui.internal.actions.OpenAppAction"/>
-			<action
-				id="com.ibm.microclimate.ui.toggleAppConsole"
-				enablesFor="1"
-				menubarPath="group.show"
-				label="%ACTION_SHOW_APP_CONSOLE"
-				style="toggle"
-				state="false"
-				class="com.ibm.microclimate.ui.internal.actions.ToggleAppConsoleAction"/>
 			<action
 				id="com.ibm.microclimate.ui.toggleBuildConsole"
 				enablesFor="1"
@@ -160,12 +145,20 @@
 				state="false"
 				class="com.ibm.microclimate.ui.internal.actions.ToggleBuildConsoleAction"/>
 			<action
-				id="com.ibm.microclimate.ui.restartRunMode"
+				id="com.ibm.microclimate.ui.toggleAppConsole"
 				enablesFor="1"
-				menubarPath="group.generate"
-				icon="%RUN_ICON_PATH"
-				label="%ACTION_RESTART_RUN_MODE"
-				class="com.ibm.microclimate.ui.internal.actions.RestartRunModeAction"/>
+				menubarPath="group.show"
+				label="%ACTION_SHOW_APP_CONSOLE"
+				style="toggle"
+				state="false"
+				class="com.ibm.microclimate.ui.internal.actions.ToggleAppConsoleAction"/>
+			<action
+				id="com.ibm.microclimate.ui.importApplication"
+				enablesFor="1"
+				menubarPath="group.show"
+				icon="%IMPORT_ICON_PATH"
+				label="%ACTION_IMPORT_PROJECT"
+				class="com.ibm.microclimate.ui.internal.actions.ImportProjectAction"/>
 			<action
 				id="com.ibm.microclimate.ui.restartDebugMode"
 				enablesFor="1"
@@ -174,18 +167,25 @@
 				label="%ACTION_RESTART_DEBUG_MODE"
 				class="com.ibm.microclimate.ui.internal.actions.RestartDebugModeAction"/>
 			<action
-				id="com.ibm.microclimate.ui.buildApplication"
+				id="com.ibm.microclimate.ui.restartRunMode"
 				enablesFor="1"
-				menubarPath="group.build"
-				icon="%BUILD_ICON_PATH"
-				label="%ACTION_START_BUILD"
-				class="com.ibm.microclimate.ui.internal.actions.StartBuildAction"/>
+				menubarPath="group.generate"
+				icon="%RUN_ICON_PATH"
+				label="%ACTION_RESTART_RUN_MODE"
+				class="com.ibm.microclimate.ui.internal.actions.RestartRunModeAction"/>
 			<action
 				id="com.ibm.microclimate.ui.enableDisableAutoBuild"
 				enablesFor="1"
 				menubarPath="group.build"
 				label="%ACTION_ENABLE_DISABLE_AUTO_BUILD"
 				class="com.ibm.microclimate.ui.internal.actions.EnableDisableAutoBuildAction"/>
+			<action
+				id="com.ibm.microclimate.ui.buildApplication"
+				enablesFor="1"
+				menubarPath="group.build"
+				icon="%BUILD_ICON_PATH"
+				label="%ACTION_START_BUILD"
+				class="com.ibm.microclimate.ui.internal.actions.StartBuildAction"/>
 			<action
 				id="com.ibm.microclimate.ui.refreshApplication"
 				enablesFor="1"
