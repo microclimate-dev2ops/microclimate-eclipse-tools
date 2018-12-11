@@ -1,10 +1,12 @@
 <!--
-    IBM Confidential
-    OCO Source Materials
-    (C) Copyright IBM Corp. 2018 All Rights Reserved.
-    The source code for this program is not published or otherwise
-    divested of its trade secrets, irrespective of what has
-    been deposited with the U.S. Copyright Office.
+    Copyright (c) 2018 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v2.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v20.html
+
+    Contributors:
+        IBM Corporation - initial API and implementation
 -->
 
 <!--  Note: If you're adding new dependencies, be sure to also add them to prereqs.properties so they are copied into the plugin that requires them. -->
@@ -12,17 +14,6 @@
 <ivy-module version="2.0">
   	<info organisation="dev" module="prereq.published"/>
   	<dependencies>
-  	    <!--  dependency from: https://repo1.maven.org/maven2/  -->
   		<dependency org="com.ibm.ws.componenttest" name="infra.buildtasks-core" rev="latest.integration"/>
-        <!--  dependency from: http://public.dhe.ibm.com/ibmdl/export/pub/software/openliberty/wasliberty-open-liberty/   -->
-  		<!-- <dependency org="io.openliberty" name="com.ibm.websphere.javaee.jsonp.1.0" 	rev="latest.integration"/>
-  		<dependency org="io.openliberty" name="com.ibm.ws.org.glassfish.json.1.0" 		rev="latest.integration"/>
-  		<dependency org="io.openliberty" name="com.ibm.ws.crypto.passwordutil" 		rev="latest.integration"/>
-		<dependency org="io.openliberty" name="com.ibm.ws.kernel.boot" 				rev="latest.integration"/>
-  		<dependency org="io.openliberty" name="com.ibm.ws.kernel.cmdline" 				rev="latest.integration"/>
-  		<dependency org="io.openliberty" name="com.ibm.ws.kernel.service" 				rev="latest.integration"/>
-  		<dependency org="io.openliberty" name="com.ibm.ws.logging" 					rev="latest.integration"/>
-  		<dependency org="io.openliberty" name="com.ibm.ws.kernel.feature.resolver"                     rev="latest.integration"/>
-  		<dependency org="io.openliberty" name="com.ibm.ws.jmx.connector.client.restConnector" rev="latest.integration"/> -->
   	</dependencies>
 </ivy-module>
