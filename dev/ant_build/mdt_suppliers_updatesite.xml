@@ -7,11 +7,11 @@
     been deposited with the U.S. Copyright Office.
 -->
 
-<project name="olt_suppliers_updatesite">	
+<project name="mdt_suppliers_updatesite">	
 	<!--target name="doGenerateSuppliersUpdateSite"-->
 	<target name="generateSuppliersUpdateSite">
 		
-	    	<property name="gen.suppliers.updatesite.file" location="${basedir}/resources/olt_updatesite-properties/generateSuppliersP2Metadata.xml" />
+	    	<property name="gen.suppliers.updatesite.file" location="${basedir}/resources/mdt_updatesite-properties/generateSuppliersP2Metadata.xml" />
 	    	<echo message="Script location at ${gen.suppliers.updatesite.file}" />
 	    	
 	    	<property name="suppliersUpdateSiteDir" value="${sourceDir}/suppliers/update-site" />

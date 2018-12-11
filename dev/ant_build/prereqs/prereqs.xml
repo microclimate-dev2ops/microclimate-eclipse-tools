@@ -29,23 +29,23 @@
 		- these DO take precedence over the above file -->
 	<property environment="env"/>
 
-	<!-- olt_build_type is 'personal' by default  -->
+	<!-- mdt_build_type is 'personal' by default  -->
 	<contrib:if>
 		<and>
-	    	    <not><equals arg1="nightly" arg2="${env.olt_build_type}"/></not>
-	    	    <not><equals arg1="release" arg2="${env.olt_build_type}"/></not>
+	    	    <not><equals arg1="nightly" arg2="${env.mdt_build_type}"/></not>
+	    	    <not><equals arg1="release" arg2="${env.mdt_build_type}"/></not>
 	    	</and>
         <then>
-            <property name="olt_build_type" value="personal"/>
+            <property name="mdt_build_type" value="personal"/>
         </then>
 		<else>
-			<property name="olt_build_type" value="${env.olt_build_type}"/>
+			<property name="mdt_build_type" value="${env.mdt_build_type}"/>
 		</else>
     </contrib:if>
 
 	<!-- for a personal test build, we don't use artifactory -->
 	<contrib:if>
-	    <equals arg1="personal" arg2="${olt_build_type}"/>
+	    <equals arg1="personal" arg2="${mdt_build_type}"/>
 	    <then>
 	    	    <var name="artifactory_download_server" unset="true"/>
 	      	<var name="artifactory_download_user" unset="true"/>

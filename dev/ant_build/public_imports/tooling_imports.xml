@@ -53,7 +53,7 @@
   <basename property="pluginName" file="${ant.project.name}"/>	
 	
 	<!--NL gathering is done here-->
-  <taskdef name="oltnlsfilter" classname="com.ibm.wdt.ant.tasks.filters.WdtNLSFileFilter" >
+  <taskdef name="mdtnlsfilter" classname="com.ibm.wdt.ant.tasks.filters.WdtNLSFileFilter" >
 	<classpath>
 		<pathelement location="../ant_build/lib/wdt-updatesite_0.0.2_v.20131018_1700.jar"/>
 	</classpath>
@@ -89,7 +89,7 @@
 			 dir="${nls.gathering}"/>
 	     <delete file="${lib.dir}/${output.jar}"/>
   		
-	     <oltnlsfilter filesetRefName="pii.files"
+	     <mdtnlsfilter filesetRefName="pii.files"
 	     	defaultExcludes="**/*.jar,**/*.class,**/*.gif,**/nls.xml,**/*nl1*,**/*nl2*,**/.metadata,**/bin,**/build.properties,**/buildcontrol.properties,
 	     	**/ccpackage.properties,**/build.xml,**/buildZip.xml,**/component.xml,**/feature.xml,**/fragment.xml,**/plugin.xml,**/package.xml,**/trust.p12,**/*.css"
 	     	defaultIncludes="**/*.properties,**/*.xml,**/*.htm*"

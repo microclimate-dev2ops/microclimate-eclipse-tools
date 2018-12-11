@@ -38,7 +38,7 @@ dependencies {
     corelibs "io.socket:socket.io-client:1.0.0"
 }
 
-defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenLTUpdateSite'
+defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite', 'deployDHE'
 
 task importAnt {
     ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader
@@ -47,16 +47,16 @@ task importAnt {
         antClassLoader.addURL(f.toURI().toURL())
     }
 
-    // The below taskdefs are only used in prereqs.xml. build-olt.xml has its taskdefs loaded in the ant code.
+    // The below taskdefs are only used in prereqs.xml. build-mdt.xml has its taskdefs loaded in the ant code.
     ant.taskdef(resource:'net/sf/antcontrib/antlib.xml',classpath:configurations.antcp.asPath)
     ant.taskdef(uri:'antlib:org.apache.ivy.ant', resource:'org/apache/ivy/ant/antlib.xml',classpath: configurations.antcp.asPath)
 
     // prereqs uses ivy to resolve and download our runtime dependencies and some open source libs
     // and move them into /lib/ folders of dependant plugins
     ant.importBuild('ant_build/prereqs/prereqs.xml')
-    // build-olt provides the generateOpenLTUpdateSite target, which is the entry point
+    // build-mdt provides the generateOpenMDTUpdateSite target, which is the entry point
     // for the compilation and assembling of updatesites
-    ant.importBuild('ant_build/build-olt.xml')
+    ant.importBuild('ant_build/build-mdt.xml')
 }
 
 def projDir = projectDir.getAbsolutePath()
@@ -122,7 +122,7 @@ task downloadEclipseTargetPlatform {
     }
 
     onlyIf {
-        System.env['skip_compile_olt'] == null
+        System.env['skip_compile_mdt'] == null
     }
 }
 
@@ -164,7 +164,7 @@ task downloadEclipseSDK {
     }
 
     onlyIf {
-        System.env['skip_compile_olt'] == null
+        System.env['skip_compile_mdt'] == null
     }
 }
 
@@ -178,15 +178,15 @@ task gradleCompile {
     }
 }
 
-task gradleGenerateOpenLTUpdateSite {
+task gradleGenerateMDTUpdateSite {
     doLast {
     }
 }
 
-gradleGenerateOpenLTUpdateSite.dependsOn generateOpenLTUpdateSite
+gradleGenerateMDTUpdateSite.dependsOn generateOpenMDTUpdateSite
 
 build.dependsOn compile
-build.dependsOn generateOpenLTUpdateSite
+build.dependsOn generateOpenMDTUpdateSite
 
 preparePrereqsIvy.dependsOn importAnt
 compile.dependsOn preparePrereqsIvy
@@ -248,8 +248,8 @@ task deployArtifactory {
     }
 
     onlyIf {
-        ((System.getenv("olt_build_type") == "nightly") ||
-             (System.getenv("olt_build_type") == "release"))
+        ((System.getenv("mdt_build_type") == "nightly") ||
+             (System.getenv("mdt_build_type") == "release"))
     }
 }
 
@@ -259,7 +259,7 @@ task deployDHE {
     doLast {
 
         def version = getBuildLabelFromArtifact()
-        def buildType = System.getenv("olt_build_type")
+        def buildType = System.getenv("mdt_build_type")
         def buildLog = System.getenv("BUILD_LOG")
 
         println "Publishing ${buildType} build: ${version}"
@@ -275,7 +275,7 @@ task deployDHE {
 
         // Put all files to be published into a directory
         def toPublish = ant.path {
-             fileset(dir: 'ant_build/artifacts/', includes: "microclimate-eclipse-plugin-*.zip")
+             fileset(dir: 'ant_build/artifacts/', includes: "microclimate-eclipse-tools-*.zip")
         }
 
         toPublish.list().each { file ->
@@ -289,17 +289,6 @@ task deployDHE {
 
         def workingDir = ant.path {
              fileset(dir: '${user.dir}', includes: "**")
-        }
-
-        workingDir.list().each { file ->
-            println "workingDir : " + file
-        }
-
-        println "Publishing " + ${buildLog} + " to DHE"
-
-        copy {
-            from "${buildLog}"
-            into toPublishDir
         }
 
         def user = System.getenv("intranet.user")
@@ -317,7 +306,7 @@ task deployDHE {
         }
 
         def userAtHost = user + "@" + host
-        def dir = "/www/stage/export/pub/software/openliberty/tools"
+        def dir = "/www/stage/export/pub/software/microclimate/eclipse-tools"
         def destDHEStaging = userAtHost + ':' + dir
 
         println "Publishing build: ${version}"
@@ -360,8 +349,8 @@ task deployDHE {
             if (json.getText() != null && json.getText() != "") {
                 object = new JsonSlurper().parseText(json.getText())
             } else {
-                  def infoJsonDHEPublicUrl = "http://public.dhe.ibm.com/ibmdl/export/pub/software/openliberty/tools/${buildType}/${infoJson}"
-
+                  def infoJsonDHEPublicUrl = "http://public.dhe.ibm.com/ibmdl/export/pub/software/microclimate/eclipse-tools/${buildType}/${infoJson}"
+					
                   // if ${infoJson} in staging server is empty then download ${infoJson} from DHEPublic
                   println "${destDHEStaging}/${buildType}/${infoJson} is already published."
                   println "Downloading ${infoJsonDHEPublicUrl}"
@@ -402,8 +391,8 @@ task deployDHE {
     }
 
     onlyIf {
-        ((System.getenv("olt_build_type") == "nightly") ||
-             (System.getenv("olt_build_type") == "release"))
+        ((System.getenv("mdt_build_type") == "nightly") ||
+             (System.getenv("mdt_build_type") == "release"))
     }
 }
 
@@ -429,7 +418,7 @@ task cleanPrereqs(type: Delete) {
     }
 
     onlyIf {
-        System.env['skip_compile_olt'] == null
+        System.env['skip_compile_mdt'] == null
     }
 }
 
@@ -445,7 +434,7 @@ task cleanBuilds(type: Delete) {
     }
 
     onlyIf {
-        System.env['skip_compile_olt'] == null
+        System.env['skip_compile_mdt'] == null
     }
 }
 
@@ -459,7 +448,7 @@ task clean(type: Delete) {
     }
 
     onlyIf {
-        System.env['skip_compile_olt'] == null
+        System.env['skip_compile_mdt'] == null
     }
 }
 

@@ -7,14 +7,14 @@
     been deposited with the U.S. Copyright Office.
 -->
 
-<project name="olt_test_imports">
+<project name="mdt_test_imports">
 
-    <dirname property="olt_test_imports.basedir" file="${ant.file.olt_imports}" />
-    <import file="${olt_test_imports.basedir}/public_imports/updatesite_imports.xml"/>
+    <dirname property="mdt_test_imports.basedir" file="${ant.file.mdt_imports}" />
+    <import file="${mdt_test_imports.basedir}/public_imports/updatesite_imports.xml"/>
 
-	<target name="generateOLTTestUpdateSite">
+	<target name="generateMDTTestUpdateSite">
 
-		<echo>Open OLT generate Test updateSite call</echo>
+		<echo>Open MDT generate Test updateSite call</echo>
 
 	    <condition property="java.executable" value="java" else="java.exe">
 	      <not>
@@ -22,7 +22,7 @@
 	      </not>
 	    </condition>
 
-		<property name="local.workspace" location="${olt_test_imports.basedir}/.."/>
+		<property name="local.workspace" location="${mdt_test_imports.basedir}/.."/>
 	    <property name="target.jvm" location="${java.home}/bin/${java.executable}" />
 		<property name="delegate.build.dir" location = "${local.workspace}"/>
 
@@ -43,13 +43,13 @@
 			</filterchain>
 		</loadresource>
 		<var name="fileNameVersion" unset="true" />
-		<property name="fileName" value="microclimate-eclipse-plugin-test" />
+		<property name="fileName" value="microclimate-eclipse-tools-test" />
     <property name="fileNameVersion" value="${newVersion}" />
     <property name="qualifier" value="${buildLabel}"/>
 	  	<property name="updatesite-test-name" value="${fileName}-${fileNameVersion}.v${qualifier}" />
 	  	<property file="${eclipse.properties.file}" />
 
-	  	<property name="gen.updatesite.file" location="${olt_test_imports.basedir}/resources/olt_updatesite-properties/generateP2Metadata.xml" />
+	  	<property name="gen.updatesite.file" location="${mdt_test_imports.basedir}/resources/mdt_updatesite-properties/generateP2Metadata.xml" />
 	  	<echo message="Script location at ${gen.updatesite.file}" />
 
 	  	<property name="target.updatesite.repository" location="${updateSiteDir}/repository" />
@@ -95,7 +95,7 @@
 			<category name="was4d"
 				label="Microclimate Developer Tools V${version} Unit Tests"
 				description="Microclimate Developer Tools V${version} Unit Tests">
-				<feature id="com.ibm.ws.st.liberty.tools.test" />
+				<feature id="com.ibm.microclimate.test" />
 		  	</category>
 		</generateUpdateSite>
 
@@ -108,8 +108,7 @@
 			addIncludedFeatures="true">
 
 		<!-- Add Main feature here -->
-			<feature id="com.ibm.ws.st.liberty.tools.test" />
-			<feature id="com.ibm.xwt.dde.tests.feature"/>
+			<feature id="com.ibm.microclimate.test" />
 	  	</generateUpdateSite>
 
 	  	<!-- Step 3 -->

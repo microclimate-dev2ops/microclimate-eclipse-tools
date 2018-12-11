@@ -1,0 +1,67 @@
+<!--
+    IBM Confidential
+    OCO Source Materials
+    (C) Copyright IBM Corp. 2018 All Rights Reserved.
+    The source code for this program is not published or otherwise
+    divested of its trade secrets, irrespective of what has
+    been deposited with the U.S. Copyright Office.
+-->
+
+<project name="mdt_build" default="generateOpenMDTUpdateSite">
+    <property name="level_tag" value="18.12"/>
+    <property name="delegate.build.dir" location="${basedir}/../" />
+    <property name="disable.run.executeMetatypeValidation" value="true"/>
+    <property name="disable.run.unzipIfixReleaseZip" value="true"/>
+    <property name="javac.source.file.encoding" value="Cp1252" />
+    <property name="tools.image" value="true" />
+
+    <dirname property="mdt_build.basedir" file="${ant.file.mdt_build}" />
+
+    <import file="${mdt_build.basedir}/resources/build_imports/liberty-macros.xml" />
+    <import file="${mdt_build.basedir}/resources/build_imports/liberty-all.xml" />
+    <import file="${mdt_build.basedir}/mdt_imports.xml"/>
+    <import file="${mdt_build.basedir}/mdt_test_imports.xml"/>
+    <import file="${mdt_build.basedir}/prereqs/prereqs.xml" />
+
+     <target name="getMDTBuildLabel" depends="createBuildLabelFile">
+          <loadproperties srcFile="${mdt_build.basedir}/buildLabel.properties"/>
+          <echo>Build label is "${buildLabel}"</echo>
+     </target>
+
+    <target name="checkBuildLabelFile" >
+        <available file="${mdt_build.basedir}/buildLabel.properties" property="buildLabel.present"/>
+    </target>
+
+    <target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present">
+        <tstamp>
+              <format property="buildLabel" pattern="yyyyMMdd_HHmm" timezone="UTC"/>
+        </tstamp>
+
+        <propertyfile file="${mdt_build.basedir}/buildLabel.properties" comment="Creating buildlabel.propertiess">
+              <entry key="buildLabel" value="${buildLabel}"/>
+        </propertyfile>
+    </target>
+
+    <target name="compile" depends="getMDTBuildLabel, preparePrereqsIvy" unless="${env.skip_compile_mdt}">
+        <echo message="Build label is ${buildLabel}"/>
+        <antcall target="liberty-all.compile" />
+        <echo message="mdt_imports.generateMDTSuppliersUpdateSite call"/>
+        <antcall target="mdt_imports.generateMDTSuppliersUpdateSite"/>
+    </target>
+
+    <property name="artifacts.dir" value="${mdt_build.basedir}/artifacts"/>
+    <mkdir dir="${artifacts.dir}"/>
+
+    <target name="generateOpenMDTUpdateSite" depends="getMDTBuildLabel" unless="${env.skip_generate_mdt}">
+        <echo message="Build label is ${buildLabel}"/>
+
+        <antcall target="mdt_imports.generateMDTSuppliersUpdateSiteRestore"/>
+
+        <antcall target="mdt_imports.generateMDTUpdateSite"/>
+        <!-- <antcall target="mdt_test_imports.generateMDTTestUpdateSite"/> -->
+
+        <echo message="Delete tools.image"/>
+        <delete dir="${mdt_build.basedir}/tools.image" failonerror="false"/>
+    </target>
+
+</project>

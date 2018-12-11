@@ -8,14 +8,14 @@
 -->
 
 <ivy-settings>
-  <settings defaultResolver="oltResolver" />
+  <settings defaultResolver="mdtResolver" />
   
   <!--'Artifactory Realm' is the realm used by Artifactory so don't change it.-->
   <credentials realm="Artifactory Realm" host="${artifactory_download_server}" username="${artifactory_download_user}"
 		passwd="${artifactory_download_apikey}" />
 
   <resolvers>
-    <chain name="oltResolver" returnFirst="true" >  
+    <chain name="mdtResolver" returnFirst="true" >  
         <ibiblio name="artifactory"
                m2compatible="true"
                root="https://na.artifactory.swg-devops.com:443/artifactory/wasliberty-open-liberty" />
@@ -27,10 +27,10 @@
   </resolvers>
 
   <modules>
-    <module organisation="dev" name="ivy-bootstrapping" resolver="oltResolver" />
+    <module organisation="dev" name="ivy-bootstrapping" resolver="mdtResolver" />
   </modules>
   
   <modules>
-    <module organisation="dev" name="prereq.published" resolver="oltResolver"/>
+    <module organisation="dev" name="prereq.published" resolver="mdtResolver"/>
   </modules>
 </ivy-settings>
