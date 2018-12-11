@@ -38,6 +38,23 @@ For more information see the [documentation](https://microclimate-dev2ops.github
 
 We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/issues) and contributions from the public! See [CONTRIBUTING.md](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/tree/master/CONTRIBUTING.md).
 
+## Building
+
+1. Clone the repository to your system.
+
+    ```git clone https://github.com/microclimate-dev2ops/microclimate-eclipse-tools```
+
+2. [Optional] Copy 'microclimate-eclipse-tools' folder to 'build' to get a test build. This will keep your source folder intact.
+3. Run a gradle build.
+
+    ```cd build/dev```
+
+    ```./gradlew```
+
+4. Test the driver built from Step. 3
+
+    ```build/dev/ant_build/artifacts/microclimate-eclipse-plugin-[Version].vYYYYMMDD_hhmm.zip```
+
 ## License
 
 [EPL 2.0](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/tree/master/LICENSE)
