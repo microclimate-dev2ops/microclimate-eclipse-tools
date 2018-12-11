@@ -143,7 +143,6 @@ public class MicroclimateConnection {
 			envResponse = HttpUtil.get(envUrl).response;
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Environment endpoint", e); //$NON-NLS-1$
-			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrContactingServerDialogTitle, Messages.MicroclimateConnection_ErrContactingServerDialogMsg + envUrl);
 			throw e;
 		}
 
@@ -219,9 +218,7 @@ public class MicroclimateConnection {
 		try {
 			projectsResponse = HttpUtil.get(projectsURL).response;
 		} catch (IOException e) {
-			MCLogger.logError("Error contacting Projects endpoint", e);
-			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrContactingServerDialogTitle,
-					NLS.bind(Messages.MicroclimateConnection_ErrContactingServerDialogMsg, projectsURL));
+			MCLogger.logError("Error contacting Projects endpoint", e);  //$NON-NLS-1$
 			return;
 		}
 
@@ -468,7 +465,7 @@ public class MicroclimateConnection {
 		} else if (type.isType(ProjectType.TYPE_SPRING)) {
 			requestSpringProjectCreate(name);
 		} else {
-			MCLogger.log("Creation of projects with type " + type + " is not supported.");
+			MCLogger.log("Creation of projects with type " + type + " is not supported.");  //$NON-NLS-1$ //$NON-NLS-2$
 		}	
 	}
 
