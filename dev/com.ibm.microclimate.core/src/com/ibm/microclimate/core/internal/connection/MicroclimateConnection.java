@@ -94,7 +94,7 @@ public class MicroclimateConnection {
 					version, MCConstants.REQUIRED_MC_VERSION));
 		}
 
-		if (MCConstants.VERSION_LATEST.equals(version)) {
+		if (MCConstants.VERSION_LATEST.equals(version) || pattern.matcher(version).matches()) {
 			// There's not much we can do here but assume everything is supported.
 			this.mcVersion = Integer.MAX_VALUE;
 			MCLogger.log("Can't determine Microclimate version from dev build");			// $NON-NLS-1$
