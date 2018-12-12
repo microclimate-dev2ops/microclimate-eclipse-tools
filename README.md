@@ -5,7 +5,7 @@
 Complete the following steps to install Microclimate Developer Tools for Eclipse:
 
 1. Download and install the latest [Eclipse IDE for Java EE Developers](https://www.eclipse.org/downloads/packages/release/) or use an existing installation. The earliest supported version of the Eclipse IDE for Microclimate Developer Tools for Eclipse is 4.8 (Photon).
-2. Install the [Microclimate Developer Tools from Eclipse Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools-beta).
+2. Install the [Microclimate Developer Tools from Eclipse Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools).
 
 ## How to use
 
