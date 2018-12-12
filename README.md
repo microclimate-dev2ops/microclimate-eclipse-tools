@@ -53,7 +53,7 @@ We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse
 
 4. Test the driver built from Step. 3
 
-    ```build/dev/ant_build/artifacts/microclimate-eclipse-plugin-[Version].vYYYYMMDD_hhmm.zip```
+    ```build/dev/ant_build/artifacts/microclimate-eclipse-tools-[Version].vYYYYMMDD_hhmm.zip```
 
 ## License
 
