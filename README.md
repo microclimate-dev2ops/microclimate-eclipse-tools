@@ -5,7 +5,7 @@
 Complete the following steps to install Microclimate Developer Tools for Eclipse:
 
 1. Download and install the latest [Eclipse IDE for Java EE Developers](https://www.eclipse.org/downloads/packages/release/) or use an existing installation. The earliest supported version of the Eclipse IDE for Microclimate Developer Tools for Eclipse is 4.8 (Photon).
-2. Install the [Microclimate Developer Tools from Eclipse Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools-beta).
+2. Install the [Microclimate Developer Tools from Eclipse Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools).
 
 ## How to use
 
@@ -32,13 +32,40 @@ Complete the following steps to install Microclimate Developer Tools for Eclipse
 - Toggle the project auto build setting
 - Manually initiate project builds
 
-(Add documentation link)
+For more information see the [documentation](https://microclimate-dev2ops.github.io/mdteclipseoverview#doc)
 
 ## Contributing
 
-We welcome issues (make this a link) and contributions from the public! See [CONTRIBUTING.md](https://github.ibm.com/dev-ex/microclimate-vscode/tree/master/CONTRIBUTING.md)
+We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/issues) and contributions from the public! See [CONTRIBUTING.md](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/tree/master/CONTRIBUTING.md).
 
+## Building
 
+1. Clone the repository to your system.
 
+    ```git clone https://github.com/microclimate-dev2ops/microclimate-eclipse-tools```
 
+2. [Optional] Copy 'microclimate-eclipse-tools' folder to 'build' to get a test build. This will keep your source folder intact.
+3. Run a gradle build.
+
+    ```cd build/dev```
+
+    ```./gradlew```
+
+4. Test the driver built from Step. 3
+
+    ```build/dev/ant_build/artifacts/microclimate-eclipse-tools-[Version].vYYYYMMDD_hhmm.zip```
+
+## License
+
+[EPL 2.0](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/tree/master/LICENSE)
+
+## Dependencies
+
+| Dependency | License |
+| ---------- | ------- |
+| [socket.io-client-1.0.0.jar](https://mvnrepository.com/artifact/io.socket/socket.io-client/1.0.0) | [MIT](http://opensource.org/licenses/mit-license) |
+| [engine.io-client-1.0.0.jar](https://mvnrepository.com/artifact/io.socket/engine.io-client/1.0.0) | [MIT](https://opensource.org/licenses/mit-license) |
+| [json-20090211.jar](https://mvnrepository.com/artifact/org.json/json/20090211) | [The JSON License](http://www.json.org/license.html) |
+| [okhttp-3.8.1.jar](https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp/3.8.1) | [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |
+| [okio-1.13.0.jar](https://mvnrepository.com/artifact/com.squareup.okio/okio/1.13.0) | [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |
 

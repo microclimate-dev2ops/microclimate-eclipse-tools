@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -45,6 +47,8 @@ public class MicroclimateConnection {
 
 	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace"; //$NON-NLS-1$
 	private static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
+	private static final String BRANCH_VERSION = "\\d{4}_M\\d{1,2}_\\D";
+	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
 	public final URI baseUrl;
 	public final IPath localWorkspacePath;
@@ -143,7 +147,6 @@ public class MicroclimateConnection {
 			envResponse = HttpUtil.get(envUrl).response;
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Environment endpoint", e); //$NON-NLS-1$
-			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrContactingServerDialogTitle, Messages.MicroclimateConnection_ErrContactingServerDialogMsg + envUrl);
 			throw e;
 		}
 
@@ -174,6 +177,11 @@ public class MicroclimateConnection {
 
 		if (MCConstants.VERSION_LATEST.equals(versionStr)) {
 			// Development build - possible other values to check for?
+			return true;
+		}
+		
+		Matcher matcher = pattern.matcher(versionStr);
+		if (matcher.matches()) {
 			return true;
 		}
 
@@ -219,9 +227,7 @@ public class MicroclimateConnection {
 		try {
 			projectsResponse = HttpUtil.get(projectsURL).response;
 		} catch (IOException e) {
-			MCLogger.logError("Error contacting Projects endpoint", e);
-			MCUtil.openDialog(true, Messages.MicroclimateConnection_ErrContactingServerDialogTitle,
-					NLS.bind(Messages.MicroclimateConnection_ErrContactingServerDialogMsg, projectsURL));
+			MCLogger.logError("Error contacting Projects endpoint", e);  //$NON-NLS-1$
 			return;
 		}
 
@@ -468,7 +474,7 @@ public class MicroclimateConnection {
 		} else if (type.isType(ProjectType.TYPE_SPRING)) {
 			requestSpringProjectCreate(name);
 		} else {
-			MCLogger.log("Creation of projects with type " + type + " is not supported.");
+			MCLogger.log("Creation of projects with type " + type + " is not supported.");  //$NON-NLS-1$ //$NON-NLS-2$
 		}	
 	}
 
