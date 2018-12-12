@@ -119,8 +119,8 @@ public class MCConstants {
 
 			;
 
-	// Microclimate 18.11 is required as earlier versions are missing needed APIs.
+	// Microclimate 18.12 is required as earlier versions are missing needed APIs.
 	public static final int
-			REQUIRED_MC_VERSION = 1811;
+			REQUIRED_MC_VERSION = 1812;
 
 }
