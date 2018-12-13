@@ -6,6 +6,8 @@
 - **[Documentation](https://microclimate-dev2ops.github.io/mdteclipseoverview)**
 - **[Slack](https://slack-invite-ibm-cloud-tech.mybluemix.net/)**
 
+You can use Microclimate Developer Tools for Eclipse to develop your [Microclimate](https://microclimate-dev2ops.github.io) projects from within EClipse. Use the tools to access Microclimate features in the comfort of your IDE.
+
 ## How to install [(Documentation)](https://microclimate-dev2ops.github.io/mdteclipseinstall)
 
 Complete the following steps to install Microclimate Developer Tools for Eclipse:
