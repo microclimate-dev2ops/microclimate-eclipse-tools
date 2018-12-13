@@ -1,13 +1,19 @@
 # Microclimate Developer Tools for Eclipse
 
-## How to install
+[![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-2.0/)
+
+- **[Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools)**
+- **[Documentation](https://microclimate-dev2ops.github.io/mdteclipseoverview)**
+- **[Slack](https://slack-invite-ibm-cloud-tech.mybluemix.net/)**
+
+## How to install [(Documentation)](https://microclimate-dev2ops.github.io/mdteclipseinstall)
 
 Complete the following steps to install Microclimate Developer Tools for Eclipse:
 
 1. Download and install the latest [Eclipse IDE for Java EE Developers](https://www.eclipse.org/downloads/packages/release/) or use an existing installation. The earliest supported version of the Eclipse IDE for Microclimate Developer Tools for Eclipse is 4.8 (Photon).
 2. Install the [Microclimate Developer Tools from Eclipse Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools).
 
-## How to use
+## How to use [(Documentation)](https://microclimate-dev2ops.github.io/mdteclipsegettingstarted)
 
 - Create a new connection to Microclimate:
     - From the **File** menu select **New** > **Other** > **Microclimate** > **New Microclimate Connection**
@@ -19,20 +25,16 @@ Complete the following steps to install Microclimate Developer Tools for Eclipse
 - Right click on the connection to see the available actions for connections
 - Right click on a project to see the available actions for projects
 
-## Features
+## Features [(Documentation)](https://microclimate-dev2ops.github.io/mdteclipseoverview)
 
 - View all Microclimate projects for a connection including the application and build status
 - Import your Microclimate project into the Eclipse workspace
 - Debug **Microprofile/Java EE** and **Spring** applications
 - View application and build logs in the **Console** view
-- Open your application in the default Eclipse browser
 - Integrate Microclimate validation errors into the **Markers** view
 - Open a shell session into a Microclimate application container
-- Open the application monitor page
-- Toggle the project auto build setting
-- Manually initiate project builds
-
-For more information see the [documentation](https://microclimate-dev2ops.github.io/mdteclipseoverview#doc)
+- Toggle the project auto build setting and manually initiate project builds
+- Disable and enable projects
 
 ## Contributing
 
