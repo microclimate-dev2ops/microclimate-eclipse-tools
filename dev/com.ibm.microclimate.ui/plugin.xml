@@ -38,7 +38,7 @@
 	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
 		<launchConfigurationTabGroup
 			id="com.ibm.microclimate.ui.internal.launchConfigTabGroup"
-			type="com.ibm.microclimate.core.internal.launchConfigType"
+			type="com.ibm.microclimate.core.internal.launchConfigurationType"
 			class="com.ibm.microclimate.ui.internal.MicroclimateLaunchConfigTabGroup"/>
 	</extension>
 
