@@ -6,7 +6,7 @@
 - **[Documentation](https://microclimate-dev2ops.github.io/mdteclipseoverview)**
 - **[Slack](https://slack-invite-ibm-cloud-tech.mybluemix.net/)**
 
-You can use Microclimate Developer Tools for Eclipse to develop your [Microclimate](https://microclimate-dev2ops.github.io) projects from within EClipse. Use the tools to access Microclimate features in the comfort of your IDE.
+You can use Microclimate Developer Tools for Eclipse to develop your [Microclimate](https://microclimate-dev2ops.github.io) projects from within Eclipse. Use the tools to access Microclimate features in the comfort of your IDE.
 
 ## How to install [(Documentation)](https://microclimate-dev2ops.github.io/mdteclipseinstall)
 
@@ -36,7 +36,7 @@ Complete the following steps to install Microclimate Developer Tools for Eclipse
 - Integrate Microclimate validation errors into the **Markers** view
 - Open a shell session into a Microclimate application container
 - Toggle the project auto build setting and manually initiate project builds
-- Disable and enable projects
+- Open your application and the application monitor in a browser
 
 ## Contributing
 
