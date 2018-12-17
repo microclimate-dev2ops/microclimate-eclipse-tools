@@ -1,11 +1,20 @@
 # Microclimate Developer Tools for Eclipse
 
+[![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-2.0/)
+
+- **[Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools)**
+- **[Documentation](https://microclimate-dev2ops.github.io/mdteclipseoverview)**
+- **[Slack](https://slack-invite-ibm-cloud-tech.mybluemix.net/)**
+
+You can use Microclimate Developer Tools for Eclipse to develop your [Microclimate](https://microclimate-dev2ops.github.io) projects from within Eclipse. Use the tools to access Microclimate features in the comfort of your IDE.
+
 ## How to install
 
 Complete the following steps to install Microclimate Developer Tools for Eclipse:
 
 1. Download and install the latest [Eclipse IDE for Java EE Developers](https://www.eclipse.org/downloads/packages/release/) or use an existing installation. The earliest supported version of the Eclipse IDE for Microclimate Developer Tools for Eclipse is 4.8 (Photon).
-2. Install the [Microclimate Developer Tools from Eclipse Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools).
+2. Install and start a local instance of [Microclimate](https://microclimate-dev2ops.github.io/installlocally) version 18.12 or later.
+3. Install the [Microclimate Developer Tools from Eclipse Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools).
 
 ## How to use
 
@@ -25,18 +34,16 @@ Complete the following steps to install Microclimate Developer Tools for Eclipse
 - Import your Microclimate project into the Eclipse workspace
 - Debug **Microprofile/Java EE** and **Spring** applications
 - View application and build logs in the **Console** view
-- Open your application in the default Eclipse browser
 - Integrate Microclimate validation errors into the **Markers** view
 - Open a shell session into a Microclimate application container
-- Open the application monitor page
-- Toggle the project auto build setting
-- Manually initiate project builds
+- Toggle the project auto build setting and manually initiate project builds
+- Open your application and the application monitor in a browser
 
 For more information see the [documentation](https://microclimate-dev2ops.github.io/mdteclipseoverview#doc)
 
 ## Contributing
 
-We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/issues) and contributions from the public! See [CONTRIBUTING.md](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/tree/master/CONTRIBUTING.md).
+We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/issues) and contributions. For more information, see [CONTRIBUTING.md](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/tree/master/CONTRIBUTING.md).
 
 ## Building
 
@@ -54,6 +61,11 @@ We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse
 4. Test the driver built from Step. 3
 
     ```build/dev/ant_build/artifacts/microclimate-eclipse-tools-[Version].vYYYYMMDD_hhmm.zip```
+
+## Builds
+
+- **[Nightly builds](https://public.dhe.ibm.com/ibmdl/export/pub/software/microclimate/eclipse-tools/nightly/)**
+- **[Release builds](https://public.dhe.ibm.com/ibmdl/export/pub/software/microclimate/eclipse-tools/release/)**
 
 ## License
 
