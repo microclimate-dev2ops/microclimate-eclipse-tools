@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -114,7 +115,7 @@ public class TestUtil {
 	    }
     }
     
-    public static void updateFile(String path, String originalString, String replaceString) throws Exception{
+    public static void updateFile(String path, String originalString, String replaceString) throws Exception {
         File fileNeedsUpdate = new File(path);
         BufferedReader br = null;
         FileWriter writer = null;
@@ -141,4 +142,15 @@ public class TestUtil {
 	    }
     }
     
+    public static void deleteFile(String path) throws Exception {
+    	File file = new File(path);
+    	if (!file.delete()) {
+    		throw new IOException("The file did not delete successfully: " + file.getPath());
+    	}
+    }
+    
+    public static boolean isWindows() {
+    	return System.getProperty("os.name").toLowerCase().contains("windows");
+    }
+
 }
