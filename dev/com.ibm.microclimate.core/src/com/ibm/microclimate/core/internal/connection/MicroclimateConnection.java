@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -52,7 +52,7 @@ public class MicroclimateConnection {
 
 	public final URI baseUrl;
 	public final IPath localWorkspacePath;
-	public final int mcVersion;
+	public final String versionStr;
 
 	public final MicroclimateSocket mcSocket;
 	
@@ -83,27 +83,17 @@ public class MicroclimateConnection {
 
 		JSONObject env = getEnvData(this.baseUrl);
 
-		String version = getMCVersion(env);
+		this.versionStr = getMCVersion(env);
 
-		if (UNKNOWN_VERSION.equals(version)) {
+		if (UNKNOWN_VERSION.equals(versionStr)) {
 			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_VersionUnknown,
 					MCConstants.REQUIRED_MC_VERSION));
-		}
-		else if (!isSupportedVersion(version)) {
+		} else if (!isSupportedVersion(versionStr)) {
 			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_OldVersion,
-					version, MCConstants.REQUIRED_MC_VERSION));
+					versionStr, MCConstants.REQUIRED_MC_VERSION));
 		}
 
-		if (MCConstants.VERSION_LATEST.equals(version) || pattern.matcher(version).matches()) {
-			// There's not much we can do here but assume everything is supported.
-			this.mcVersion = Integer.MAX_VALUE;
-			MCLogger.log("Can't determine Microclimate version from dev build");			// $NON-NLS-1$
-		}
-		else {
-			// isSupportedVersion already tried to parse this as an int, so we know this will succeed
-			this.mcVersion = Integer.parseInt(version);
-		}
-		MCLogger.log("Microclimate version is " + mcVersion);			// $NON-NLS-1$
+		MCLogger.log("Microclimate version is: " + versionStr);			// $NON-NLS-1$
 
 		this.localWorkspacePath = getWorkspacePath(env);
 		if (localWorkspacePath == null) {
@@ -194,6 +184,45 @@ public class MicroclimateConnection {
 			MCLogger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
 			return false;
 		}
+	}
+	
+	public boolean checkVersion(int requiredVersion, String requiredVersionBr) {
+		if (UNKNOWN_VERSION.equals(versionStr)) {
+			return false;
+		}
+		
+		if (MCConstants.VERSION_LATEST.equals(versionStr)) {
+			// Development build - possible other values to check for?
+			return true;
+		}
+		
+		Matcher matcher = pattern.matcher(versionStr);
+		if (matcher.matches()) {
+			String actualYear = versionStr.substring(0, 4);
+			String requiredYear = requiredVersionBr.substring(0, 4);
+			try {
+				if (Integer.parseInt(actualYear) >= (Integer.parseInt(requiredYear))) {
+					int index = versionStr.lastIndexOf('_');
+					String actualIteration = versionStr.substring(6, index);
+					index = requiredVersionBr.lastIndexOf('_');
+					String requiredIteration = requiredVersionBr.substring(6, index);
+					if (Integer.parseInt(actualIteration) >= Integer.parseInt(requiredIteration)) {
+						return true;
+					}
+				}
+			} catch (NumberFormatException e) {
+				MCLogger.logError("Failed to parse the actual version: " + versionStr + ", or the required version: " + requiredVersionBr);
+			}
+			return false;
+		}
+		
+		try {
+			return Integer.parseInt(versionStr) >= requiredVersion;
+		} catch(NumberFormatException e) {
+			MCLogger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
+		}
+		
+		return false;
 	}
 
 	private static Path getWorkspacePath(JSONObject env) throws JSONException {
@@ -376,10 +405,25 @@ public class MicroclimateConnection {
 	}
 	
 	public void requestValidate(MicroclimateApplication app) throws JSONException, IOException {
-		URI url = baseUrl.resolve(MCConstants.APIPATH_VALIDATE);
+		boolean projectIdInPath = checkVersion(1901, "2019_M1_E");
+		
+		String endpoint;
+		if (projectIdInPath) {
+			endpoint = MCConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
+					+ app.projectID + "/"	//$NON-NLS-1$
+					+ MCConstants.APIPATH_VALIDATE;
+		} else {
+			endpoint = MCConstants.APIPATH_BASE	+ "/"	//$NON-NLS-1$
+					+ MCConstants.APIPATH_VALIDATE;
+					
+		}
+		
+		URI url = baseUrl.resolve(endpoint);
 		
 		JSONObject buildPayload = new JSONObject();
-		buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+		if (!projectIdInPath) {
+			buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+		}
 		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.type);
 		
 		HttpResult result = HttpUtil.post(url, buildPayload);
@@ -391,10 +435,25 @@ public class MicroclimateConnection {
 	}
 	
 	public void requestValidateGenerate(MicroclimateApplication app) throws JSONException, IOException {
-		URI url = baseUrl.resolve(MCConstants.APIPATH_VALIDATE_GENERATE);
+		boolean projectIdInPath = checkVersion(1901, "2019_M1_E");
+		
+		String endpoint;
+		if (projectIdInPath) {
+			endpoint = MCConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
+					+ app.projectID + "/"	//$NON-NLS-1$
+					+ MCConstants.APIPATH_VALIDATE_GENERATE;
+		} else {
+			endpoint = MCConstants.APIPATH_BASE	+ "/"	//$NON-NLS-1$
+					+ MCConstants.APIPATH_VALIDATE_GENERATE;
+					
+		}
+		
+		URI url = baseUrl.resolve(endpoint);
 		
 		JSONObject buildPayload = new JSONObject();
-		buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+		if (!projectIdInPath) {
+			buildPayload.put(MCConstants.KEY_PROJECT_ID, app.projectID);
+		}
 		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.type);
 		buildPayload.put(MCConstants.KEY_AUTO_GENERATE, true);
 		
