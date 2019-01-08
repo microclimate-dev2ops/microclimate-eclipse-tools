@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -35,6 +35,7 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
 public class OpenMicroclimateUIAction implements IObjectActionDelegate {
 	
 	private final String CREATE_NEW_PROJECT_ID = "com.ibm.microclimate.ui.createNewProject";
+	private final String IMPORT_PROJECT_ID = "com.ibm.microclimate.ui.importProject";
 
     protected MicroclimateConnection connection;
 
@@ -75,6 +76,8 @@ public class OpenMicroclimateUIAction implements IObjectActionDelegate {
 			URI uri = null;
 			if (CREATE_NEW_PROJECT_ID.equals(action.getId())) {
 				uri = connection.getNewProjectURI();
+			} else if (IMPORT_PROJECT_ID.equals(action.getId())) {
+				uri = connection.getImportProjectURI();
 			}
 			if (uri == null) {
 				uri = connection.baseUrl;

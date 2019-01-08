@@ -111,6 +111,7 @@ public class MCConstants {
 			DOCKERFILE_BUILD = "Dockerfile-build",
 			
 			QUERY_NEW_PROJECT = "new-project",
+			QUERY_IMPORT_PROJECT = "import-project",
 			VALUE_TRUE = "true",
 			
 			QUERY_PROJECT = "project",
