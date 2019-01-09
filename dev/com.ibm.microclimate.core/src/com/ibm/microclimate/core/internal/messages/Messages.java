@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v20.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+
 package com.ibm.microclimate.core.internal.messages;
 
 import org.eclipse.osgi.util.NLS;
@@ -47,6 +58,9 @@ public class Messages extends NLS {
 	
 	public static String DebugLaunchError;
 	public static String ReconnectDebugJob;
+	
+	public static String RefreshResourceJobLabel;
+	public static String RefreshResourceError;
 
 	static {
 		// initialize resource bundle

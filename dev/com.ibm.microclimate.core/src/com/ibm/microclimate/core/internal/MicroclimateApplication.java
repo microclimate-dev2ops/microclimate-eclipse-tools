@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -96,11 +96,16 @@ public class MicroclimateApplication {
 	
 	public synchronized void setBuildStatus(String buildStatus, String buildDetails) {
 		if (buildStatus != null) {
-			this.buildStatus = BuildStatus.get(buildStatus);
+			BuildStatus newStatus = BuildStatus.get(buildStatus);
+			boolean hasChanged = newStatus != this.buildStatus;
+			this.buildStatus = newStatus;
 			if (buildDetails != null && buildDetails.trim().isEmpty()) {
 				this.buildDetails = null;
 			} else {
 				this.buildDetails = buildDetails;
+			}
+			if (hasChanged && newStatus.isComplete()) {
+				buildComplete();
 			}
 		}
 	}
@@ -271,6 +276,10 @@ public class MicroclimateApplication {
 	public boolean supportsDebug() {
 		// Override as needed
 		return false;
+	}
+	
+	public void buildComplete() {
+		// Override to perform actions when a build has completed
 	}
 
 	@Override
