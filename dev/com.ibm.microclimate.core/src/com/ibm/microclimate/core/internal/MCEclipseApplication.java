@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -289,6 +289,28 @@ public class MCEclipseApplication extends MicroclimateApplication {
 			return capabilities.supportsDebugMode() && capabilities.canRestart();
 		}
 		return false;
+	}
+
+	@Override
+	public void buildComplete() {
+		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
+    	if (project != null && project.isAccessible()) {
+    		Job job = new Job(NLS.bind(Messages.RefreshResourceJobLabel, project.getName())) {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					try {
+						project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+			            return Status.OK_STATUS;
+					} catch (Exception e) {
+						MCLogger.logError("An error occurred while refreshing the resource: " + project.getLocation()); //$NON-NLS-1$
+						return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID,
+								NLS.bind(Messages.RefreshResourceError, project.getLocation()), e);
+					}
+				}
+			};
+			job.setPriority(Job.LONG);
+			job.schedule();
+    	}
 	}
     
 }

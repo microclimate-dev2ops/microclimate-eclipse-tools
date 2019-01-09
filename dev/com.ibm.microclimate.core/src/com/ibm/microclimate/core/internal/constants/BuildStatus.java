@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -46,6 +46,10 @@ public enum BuildStatus {
 		}
 		MCLogger.logError("Unrecognized application state: " + buildStatus);
 		return BuildStatus.UNKOWN;
+	}
+	
+	public boolean isComplete() {
+		return this == SUCCESS || this == FAILED;
 	}
 	
 	public String getDisplayString() {

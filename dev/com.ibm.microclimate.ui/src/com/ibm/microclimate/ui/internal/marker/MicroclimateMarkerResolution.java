@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -50,7 +50,7 @@ public class MicroclimateMarkerResolution implements IMarkerResolution {
 			app.mcConnection.requestValidateGenerate(app);
 			IResource resource = marker.getResource();
 			if (resource != null) {
-				Job job = new Job(Messages.refreshResourceJobLabel) {
+				Job job = new Job(NLS.bind(Messages.refreshResourceJobLabel, resource.getName())) {
 					@Override
 					protected IStatus run(IProgressMonitor monitor) {
 						try {
