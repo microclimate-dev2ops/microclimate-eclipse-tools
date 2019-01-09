@@ -67,7 +67,7 @@ public class MicroclimateApplication {
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
 		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
-		this.fullLocalPath = MCUtil.appendPathWithoutDupe(mcConnection.localWorkspacePath, pathInWorkspace);
+		this.fullLocalPath = MCUtil.appendPathWithoutDupe(mcConnection.getWorkspacePath(), pathInWorkspace);
 
 		setBaseUrl();
 

@@ -23,6 +23,7 @@ public class Messages extends NLS {
 	public static String MicroclimateConnection_ErrContactingServerDialogMsg;
 	public static String MicroclimateConnection_ErrContactingServerDialogTitle;
 	public static String MicroclimateConnection_ErrGettingProjectListTitle;
+	public static String MicroclimateConnection_ErrConnection_UpdateCacheException;
 
 	public static String MicroclimateConnectionException_ConnectingToMCFailed;
 
