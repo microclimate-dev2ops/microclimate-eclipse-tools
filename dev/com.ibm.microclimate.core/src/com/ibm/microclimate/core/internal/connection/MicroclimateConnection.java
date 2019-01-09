@@ -599,13 +599,21 @@ public class MicroclimateConnection {
 	}
 	
 	public URI getNewProjectURI() {
+		return getProjectURI(MCConstants.QUERY_NEW_PROJECT);
+	}
+	
+	public URI getImportProjectURI() {
+		return getProjectURI(MCConstants.QUERY_IMPORT_PROJECT);
+	}
+	
+	private URI getProjectURI(String projectQuery) {
 		try {
 			URI uri = baseUrl;
-			String query = MCConstants.QUERY_NEW_PROJECT + "=" + MCConstants.VALUE_TRUE;
+			String query = projectQuery + "=" + MCConstants.VALUE_TRUE;
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
 			return uri;
 		} catch (Exception e) {
-			MCLogger.logError("Failed to get the URI for the new project page.", e);  //$NON-NLS-1$
+			MCLogger.logError("Failed to get the project URI for the query: " + projectQuery, e);  //$NON-NLS-1$
 		}
 		return null;
 	}

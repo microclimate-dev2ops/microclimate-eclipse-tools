@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    Copyright (c) 2018 IBM Corporation and others.
+    Copyright (c) 2018, 2019 IBM Corporation and others.
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v2.0
     which accompanies this distribution, and is available at
@@ -210,6 +210,13 @@
 				menubarPath="group.additions"
 				label="%ACTION_REMOVE_CONNECTION"
 				class="com.ibm.microclimate.ui.internal.actions.RemoveConnectionAction"/>
+			<action
+				id="com.ibm.microclimate.ui.importProject"
+				enablesFor="1"
+				menubarPath="group.new"
+				icon="%DEFAULT_ICON_PATH"
+				label="%ACTION_IMPORT_PROJECT"
+				class="com.ibm.microclimate.ui.internal.actions.OpenMicroclimateUIAction"/>
 			<action
 				id="com.ibm.microclimate.ui.createNewProject"
 				enablesFor="1"
