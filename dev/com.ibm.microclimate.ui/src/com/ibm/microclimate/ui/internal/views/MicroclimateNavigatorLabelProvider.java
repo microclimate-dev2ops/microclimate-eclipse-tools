@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -48,7 +48,11 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 			MicroclimateConnection connection = (MicroclimateConnection)element;
 			String text = Messages.MicroclimateConnectionLabel + " " + connection.baseUrl;
 			if (!connection.isConnected()) {
-				text = text + " (" + Messages.MicroclimateDisconnected + ")";
+				String errorMsg = connection.getConnectionErrorMsg();
+				if (errorMsg == null) {
+					errorMsg = Messages.MicroclimateDisconnected;
+				}
+				text = text + " (" + errorMsg + ")";
 			} else if (connection.getApps().size() == 0) {
 				text = text + " (" + Messages.MicroclimateConnectionNoProjects + ")";
 			}
@@ -85,7 +89,11 @@ public class MicroclimateNavigatorLabelProvider extends LabelProvider implements
 			styledString = new StyledString(Messages.MicroclimateConnectionLabel + " " );
 			styledString.append(connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
 			if (!connection.isConnected()) {
-				styledString.append(" (" + Messages.MicroclimateDisconnected + ")", ERROR_STYLER);
+				String errorMsg = connection.getConnectionErrorMsg();
+				if (errorMsg == null) {
+					errorMsg = Messages.MicroclimateDisconnected;
+				}
+				styledString.append(" (" + errorMsg + ")", ERROR_STYLER);
 			} else if (connection.getApps().size() == 0) {
 				styledString.append(" (" + Messages.MicroclimateConnectionNoProjects + ")", StyledString.DECORATIONS_STYLER);
 			}

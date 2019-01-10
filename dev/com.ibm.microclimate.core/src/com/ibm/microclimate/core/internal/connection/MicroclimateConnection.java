@@ -51,8 +51,9 @@ public class MicroclimateConnection {
 	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
 	public final URI baseUrl;
-	public final IPath localWorkspacePath;
-	public final String versionStr;
+	private IPath localWorkspacePath;
+	private String versionStr;
+	private String connectionErrorMsg = null;
 
 	public final MicroclimateSocket mcSocket;
 	
@@ -223,6 +224,10 @@ public class MicroclimateConnection {
 		}
 		
 		return false;
+	}
+	
+	public String getConnectionErrorMsg() {
+		return this.connectionErrorMsg;
 	}
 
 	private static Path getWorkspacePath(JSONObject env) throws JSONException {
@@ -507,6 +512,41 @@ public class MicroclimateConnection {
 	 */
 	public synchronized void clearConnectionError() {
 		MCLogger.log("MCConnection to " + baseUrl + " restored"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		// Reset any cached information in case it has changed
+		try {
+			JSONObject envData = getEnvData(baseUrl);
+			String version = getMCVersion(envData);
+			if (UNKNOWN_VERSION.equals(versionStr)) {
+				MCLogger.logError("Failed to get the Microclimate version after reconnect");
+				this.connectionErrorMsg = NLS.bind(Messages.MicroclimateConnection_ErrConnection_VersionUnknown, MCConstants.REQUIRED_MC_VERSION);
+				MCUtil.updateConnection(this);
+				return;
+			}
+			if (!isSupportedVersion(version)) {
+				MCLogger.logError("The detected version of Microclimate after reconnect is not supported: " + version);
+				this.connectionErrorMsg = NLS.bind(Messages.MicroclimateConnection_ErrConnection_OldVersion, versionStr, MCConstants.REQUIRED_MC_VERSION);
+				MCUtil.updateConnection(this);
+				return;
+			}
+			this.versionStr = version;
+			IPath path = getWorkspacePath(envData);
+			if (path == null) {
+				// This should not happen since the version was ok
+				MCLogger.logError("Failed to get the local workspace path after reconnect");
+				this.connectionErrorMsg = Messages.MicroclimateConnection_ErrConnection_WorkspaceErr;
+				MCUtil.updateConnection(this);
+				return;
+			}
+			this.localWorkspacePath = path;
+		} catch (Exception e) {
+			MCLogger.logError("An exception occurred while trying to update the connection information", e);
+			this.connectionErrorMsg = Messages.MicroclimateConnection_ErrConnection_UpdateCacheException;
+			MCUtil.updateConnection(this);
+			return;
+		}
+		
+		this.connectionErrorMsg = null;
 		isConnected = true;
 		refreshApps(null);
 		MCUtil.updateConnection(this);
