@@ -22,7 +22,7 @@ import com.ibm.microclimate.test.util.MicroclimateUtil;
 import com.ibm.microclimate.test.util.TestUtil;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class BaseAutoBuildTest extends BaseTest {
+public abstract class BaseAutoBuildTest extends BaseTest {
 	
 	protected static String text1, text2, text3;
 	

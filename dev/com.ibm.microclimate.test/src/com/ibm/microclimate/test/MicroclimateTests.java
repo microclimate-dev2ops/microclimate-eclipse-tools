@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,17 +11,17 @@
 
 package com.ibm.microclimate.test;
 
-import com.ibm.microclimate.core.internal.constants.ProjectType;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
-public class LibertyDebugTest extends BaseDebugTest {
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+	LibertyDebugTest.class,
+	SpringDebugTest.class,
+	SpringAutoBuildTest.class,
+	NodeValidationTest.class
+})
 
-	static {
-		projectName = "libertydebugtest";
-		projectType = new ProjectType(ProjectType.TYPE_LIBERTY, ProjectType.LANGUAGE_JAVA);
-		relativeURL = "/v1/example";
-		srcPath = "src/main/java/application/rest/v1/Example.java";
-		currentText = "Congratulations";
-		newText = "Hello";
-		dockerfile = "Dockerfile";
-	}
+public class MicroclimateTests {
+	// intentionally empty
 }
