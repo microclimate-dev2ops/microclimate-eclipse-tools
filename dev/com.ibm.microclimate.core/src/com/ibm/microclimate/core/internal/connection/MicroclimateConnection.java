@@ -590,7 +590,6 @@ public class MicroclimateConnection {
 		createProjectPayload.put(MCConstants.KEY_NAME, name);
 		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "java");
 		createProjectPayload.put(MCConstants.KEY_FRAMEWORK, "microprofile");
-		createProjectPayload.put(MCConstants.KEY_CONTEXTROOT, name);
 
 		HttpUtil.post(url, createProjectPayload);
 	}

@@ -27,7 +27,7 @@ import com.ibm.microclimate.test.util.MicroclimateUtil;
 import com.ibm.microclimate.test.util.TestUtil;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class BaseValidationTest extends BaseTest {
+public abstract class BaseValidationTest extends BaseTest {
 	
 	protected static String text;
 	protected static String dockerfile;
