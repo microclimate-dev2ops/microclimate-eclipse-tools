@@ -24,4 +24,5 @@ Import-Package: org.eclipse.tm.terminal.view.core.interfaces.constants,
  org.eclipse.tm.terminal.view.ui.launcher,
  org.eclipse.ui.console,
  org.eclipse.ui.navigator,
+ org.eclipse.ui.internal.browser,
  org.eclipse.ui.internal.wizards.datatransfer

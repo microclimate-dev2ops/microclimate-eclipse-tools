@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -32,7 +32,8 @@ public class ProjectCapabilities {
 	
 	public enum StartMode {
 		RUN("run"),
-		DEBUG("debug");
+		DEBUG("debug"),
+		DEBUG_NO_INIT("debugNoInit");
 		
 		private final String name;
 		
@@ -117,6 +118,10 @@ public class ProjectCapabilities {
 	
 	public boolean supportsDebugMode() {
 		return startModes.contains(StartMode.DEBUG);
+	}
+	
+	public boolean supportsDebugNoInitMode() {
+		return startModes.contains(StartMode.DEBUG_NO_INIT);
 	}
 
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -12,12 +12,15 @@
 package com.ibm.microclimate.core;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.ibm.microclimate.core.internal.IDebugLauncher;
 import com.ibm.microclimate.core.internal.IUpdateHandler;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
@@ -35,11 +38,15 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	public static final String
 			// Int option for debug timeout in seconds
 			DEBUG_CONNECT_TIMEOUT_PREFSKEY = "serverDebugTimeout"; //$NON-NLS-1$
+	
+	public static final String NODEJS_DEBUG_BROWSER_PREFSKEY = "nodejsDebugBrowserName"; //$NON-NLS-1$
 
 	// The shared instance
 	private static MicroclimateCorePlugin plugin;
 	
 	private static IUpdateHandler updateHandler;
+	
+	private static Map<String, IDebugLauncher> debugLaunchers = new HashMap<String, IDebugLauncher>();
 
 	/**
 	 * The constructor
@@ -94,6 +101,14 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	
 	public static IUpdateHandler getUpdateHandler() {
 		return updateHandler;
+	}
+	
+	public static void addDebugLauncher(String language, IDebugLauncher launcher) {
+		debugLaunchers.put(language, launcher);
+	}
+	
+	public static IDebugLauncher getDebugLauncher(String language) {
+		return debugLaunchers.get(language);
 	}
 
 }

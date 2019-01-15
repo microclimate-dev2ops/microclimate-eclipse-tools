@@ -58,7 +58,7 @@ public class Messages extends NLS {
 	public static String BuildStateUnknown;
 	
 	public static String DebugLaunchError;
-	public static String ReconnectDebugJob;
+	public static String ConnectDebugJob;
 	
 	public static String RefreshResourceJobLabel;
 	public static String RefreshResourceError;
