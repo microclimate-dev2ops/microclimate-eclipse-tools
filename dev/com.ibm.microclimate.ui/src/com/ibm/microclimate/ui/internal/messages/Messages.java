@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -92,6 +92,22 @@ public class Messages extends NLS {
 	public static String BrowserTooltipApp;
 	public static String BrowserTooltipAppMonitor;
 	public static String BrowserTooltipAppOverview;
+	
+	public static String NodeJsBrowserDialogCopyToClipboardButton;
+	public static String NodeJsBrowserDialogOpenChromeButton;
+	public static String NodeJsBrowserDialogPasteMessage;
+	public static String NodeJSOpenBrowserTitle;
+	public static String NodeJSOpenBrowserDesc;
+	public static String NodeJSOpenBrowserJob;
+	public static String NodeJSDebugURLError;
+	
+	public static String BrowserSelectionTitle;
+	public static String BrowserSelectionDescription;
+	public static String BrowserSelectionLabel;
+	public static String BrowserSelectionAlwaysUseMsg;
+	public static String BrowserSelectionManageButtonText;
+	public static String BrowserSelectionListLabel;
+	public static String BrowserSelectionNoBrowserSelected;
 	
 	static {
 		// initialize resource bundle

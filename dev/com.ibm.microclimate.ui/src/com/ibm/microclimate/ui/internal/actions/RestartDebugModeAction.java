@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,7 @@ import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.constants.AppState;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
@@ -77,40 +78,44 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
 			return;
 		}
         
-        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
-        // Check if the project has been imported into Eclipse. If not, offer to import it.
-        if (project == null || !project.exists()) {
-        	int result = openDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
-        	if (result == 0) {
-        		// Import the project
-        		ImportProjectAction.importProject(app);
-        	} else if (result == 2) {
-        		// Cancel selected
-        		return;
-        	}
-        // Check if the project is open in Eclipse. If not, offer to open it.
-        } else if (!project.isOpen()) {
-        	int result = openDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
-        	if (result == 0) {
-        		// Open the project
-        		Job job = new Job(NLS.bind(Messages.ProjectOpenJob, app.name)) {
-        			@Override
-        			protected IStatus run(IProgressMonitor monitor) {
-        				try {
-        					project.open(monitor);
-        					return Status.OK_STATUS;
-        				} catch (CoreException e) {
-        					return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID,
-        							NLS.bind(Messages.ProjectOpenError, app.name), e);
-        				}
-        			}
-        		};
-        		job.setPriority(Job.LONG);
-        		job.schedule();
-        	} else if (result == 2) {
-        		// Cancel selected
-        		return;
-        	}
+        // Check for a project for Java applications only since currently this is the only
+        // language that can be debugged within Eclipse
+        if (app.projectType.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+	        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+	        // Check if the project has been imported into Eclipse. If not, offer to import it.
+	        if (project == null || !project.exists()) {
+	        	int result = openDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
+	        	if (result == 0) {
+	        		// Import the project
+	        		ImportProjectAction.importProject(app);
+	        	} else if (result == 2) {
+	        		// Cancel selected
+	        		return;
+	        	}
+	        // Check if the project is open in Eclipse. If not, offer to open it.
+	        } else if (!project.isOpen()) {
+	        	int result = openDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
+	        	if (result == 0) {
+	        		// Open the project
+	        		Job job = new Job(NLS.bind(Messages.ProjectOpenJob, app.name)) {
+	        			@Override
+	        			protected IStatus run(IProgressMonitor monitor) {
+	        				try {
+	        					project.open(monitor);
+	        					return Status.OK_STATUS;
+	        				} catch (CoreException e) {
+	        					return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID,
+	        							NLS.bind(Messages.ProjectOpenError, app.name), e);
+	        				}
+	        			}
+	        		};
+	        		job.setPriority(Job.LONG);
+	        		job.schedule();
+	        	} else if (result == 2) {
+	        		// Cancel selected
+	        		return;
+	        	}
+	        }
         }
 
         try {
@@ -119,7 +124,16 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
         	
         	// Restart the project in debug mode. The debugger will be attached when the restart result
         	// event is received from Microclimate.
-			app.mcConnection.requestProjectRestart(app, StartMode.DEBUG.startMode);
+        	// Try debug mode first since it allows debug of initialization.  If not supported use
+        	// debugNoInit mode.
+        	if (app.getProjectCapabilities().supportsDebugMode()) {
+        		app.mcConnection.requestProjectRestart(app, StartMode.DEBUG.startMode);
+        	} else if (app.getProjectCapabilities().supportsDebugNoInitMode()) {
+        		app.mcConnection.requestProjectRestart(app, StartMode.DEBUG_NO_INIT.startMode);
+        	} else {
+        		// Should never get here
+        		MCLogger.logError("Project restart in debug mode requested but project does not support any debug modes: " + app.name); //$NON-NLS-1$
+        	}
 		} catch (Exception e) {
 			MCLogger.logError("Error initiating restart for project: " + app.name, e); //$NON-NLS-1$
 			MCUtil.openDialog(true, Messages.ErrorOnRestartDialogTitle, e.getMessage());

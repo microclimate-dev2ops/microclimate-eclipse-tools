@@ -138,23 +138,31 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	@Override
 	public void connectDebugger() {
 		final MCEclipseApplication app = this;
-		Job job = new Job(Messages.ReconnectDebugJob) {
+		Job job = new Job(Messages.ConnectDebugJob) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-			        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(MicroclimateLaunchConfigDelegate.LAUNCH_CONFIG_ID);
-			        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
-			        MicroclimateLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
-			        ILaunchConfiguration launchConfig = workingCopy.doSave();
-		            ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);
-		            app.setLaunch(launch);
-		            return Status.OK_STATUS;
+					if (app.projectType.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+						ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+				        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(MicroclimateLaunchConfigDelegate.LAUNCH_CONFIG_ID);
+				        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
+				        MicroclimateLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
+				        ILaunchConfiguration launchConfig = workingCopy.doSave();
+			            ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);
+			            app.setLaunch(launch);
+			            return Status.OK_STATUS;
+					} else {
+						IDebugLauncher launcher = MicroclimateCorePlugin.getDebugLauncher(app.projectType.language);
+						if (launcher != null) {
+							return launcher.launchDebugger(app);
+						}
+					}
 				} catch (Exception e) {
 					MCLogger.logError("An error occurred while trying to launch the debugger for project: " + app.name); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID,
 							NLS.bind(Messages.DebugLaunchError, app.name), e);
 				}
+				return Status.CANCEL_STATUS;
 			}
 		};
 		job.setPriority(Job.LONG);
@@ -179,6 +187,20 @@ public class MCEclipseApplication extends MicroclimateApplication {
 				}
 			}
 		}
+	}
+	
+	public boolean canAttachDebugger() {
+		if (projectType.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+			IDebugTarget debugTarget = getDebugTarget();
+			return (debugTarget == null || debugTarget.isDisconnected());
+		} else {
+			IDebugLauncher launcher = MicroclimateCorePlugin.getDebugLauncher(projectType.language);
+			if (launcher != null) {
+				return launcher.canAttachDebugger(this);
+			}
+		}
+		return false;
+		
 	}
 	
 	public void attachDebugger() {
@@ -283,10 +305,10 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	@Override
 	public boolean supportsDebug() {
 		// Only supported for certain project types
-		if (projectType.isType(ProjectType.TYPE_LIBERTY) || projectType.isType(ProjectType.TYPE_SPRING)) {
+		if (projectType.isType(ProjectType.TYPE_LIBERTY) || projectType.isType(ProjectType.TYPE_SPRING) || projectType.isType(ProjectType.TYPE_NODEJS)) {
 			// And only if the project supports it
 			ProjectCapabilities capabilities = getProjectCapabilities();
-			return capabilities.supportsDebugMode() && capabilities.canRestart();
+			return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();
 		}
 		return false;
 	}

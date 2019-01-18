@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,8 @@ import org.osgi.framework.BundleContext;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
+import com.ibm.microclimate.ui.internal.debug.NodeJSDebugLauncher;
 import com.ibm.microclimate.ui.internal.views.UpdateHandler;
 
 /**
@@ -72,6 +74,7 @@ public class MicroclimateUIPlugin extends AbstractUIPlugin {
 		super.start(context);
 		plugin = this;
 		MicroclimateCorePlugin.setUpdateHandler(new UpdateHandler());
+		MicroclimateCorePlugin.addDebugLauncher(ProjectType.LANGUAGE_NODEJS, new NodeJSDebugLauncher());
 	}
 
 	/*
