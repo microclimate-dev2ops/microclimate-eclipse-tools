@@ -69,6 +69,7 @@ public class Messages extends NLS {
 	
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;
+	public static String LaunchDebugSessionLabel;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
 	
