@@ -18,6 +18,7 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.constants.AppState;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
@@ -41,6 +42,11 @@ public class AttachDebuggerAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MCEclipseApplication) {
             	app = (MCEclipseApplication) obj;
+            	if (app.projectType.isLanguage(ProjectType.LANGUAGE_NODEJS)) {
+            		this.setText(Messages.LaunchDebugSessionLabel);
+            	} else {
+            		this.setText(Messages.AttachDebuggerLabel);
+            	}
             	if (app.isAvailable() && StartMode.DEBUG_MODES.contains(app.getStartMode()) && app.getDebugPort() != -1 &&
             			(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING)) {
             		setEnabled(app.canAttachDebugger());
