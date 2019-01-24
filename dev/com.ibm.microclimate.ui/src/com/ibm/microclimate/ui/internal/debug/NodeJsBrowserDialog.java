@@ -68,6 +68,8 @@ final String url;
 		Text l = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
 		l.setText(Messages.NodeJsBrowserDialogPasteMessage);
 		l.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+		l.setBackground(composite.getBackground());
+		l.setForeground(composite.getForeground());
 		
 		// Text for the URL
 		Text l2 = new Text(composite, SWT.BORDER);
@@ -120,7 +122,6 @@ final String url;
 	protected boolean isResizable() {
 		return true;
 	}
-	
 
 	protected void launchWebBrowser(String browserName, String urlStr) {
 		MCLogger.log("Launch web browser " + browserName + " with url: " + url); //$NON-NLS-1$ //$NON-NLS-2$

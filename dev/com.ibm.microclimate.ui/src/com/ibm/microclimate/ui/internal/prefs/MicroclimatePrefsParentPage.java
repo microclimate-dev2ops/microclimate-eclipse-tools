@@ -99,21 +99,29 @@ public class MicroclimatePrefsParentPage extends PreferencePage implements IWork
 		Label separator = new Label(composite, SWT.HORIZONTAL);
 	    separator.setLayoutData(new GridData(GridData.FILL_HORIZONTAL, GridData.CENTER, true, false, 2, 1));
 	    	    	    
-	    final Group selectWebBrowserComposite = new Group(composite, SWT.NONE);
+	    Text browserSelectionLabel = new Text(composite, SWT.READ_ONLY | SWT.SINGLE);
+	    browserSelectionLabel.setText(Messages.BrowserSelectionLabel);
+	    browserSelectionLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 3, 1));
+	    browserSelectionLabel.setBackground(composite.getBackground());
+	    browserSelectionLabel.setForeground(composite.getForeground());
+	    
+	    
+	    final Composite selectWebBrowserComposite = new Composite(composite, SWT.NONE);
 	    layout = new GridLayout();
 		layout.horizontalSpacing = convertHorizontalDLUsToPixels(4);
 		layout.verticalSpacing = convertVerticalDLUsToPixels(3);
 		layout.marginWidth = 20;
-		layout.marginHeight = 10;
+		layout.marginHeight = 2;
 	    layout.numColumns = 3;
 	    selectWebBrowserComposite.setLayout(layout);
-	    selectWebBrowserComposite.setText(Messages.BrowserSelectionLabel);
 	    selectWebBrowserComposite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 	    
         selectWebBrowserLabel = new Text(selectWebBrowserComposite, SWT.READ_ONLY | SWT.SINGLE );
         selectWebBrowserLabel.setText(Messages.BrowserSelectionListLabel);	
-        selectWebBrowserLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 1, 1));
-	    
+        selectWebBrowserLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 1, 1));
+	    selectWebBrowserLabel.setBackground(selectWebBrowserComposite.getBackground());
+	    selectWebBrowserLabel.setForeground(selectWebBrowserComposite.getForeground());
+        
         webBrowserCombo = new Combo(selectWebBrowserComposite, SWT.BORDER | SWT.READ_ONLY);
         
 	    refreshPreferencesPage();

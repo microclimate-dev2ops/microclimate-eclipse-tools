@@ -71,6 +71,8 @@ public class WebBrowserSelectionDialog extends MessageDialog {
         
         Text label = new Text(composite, SWT.READ_ONLY | SWT.SINGLE );
         label.setText(Messages.BrowserSelectionListLabel);
+        label.setBackground(composite.getBackground());
+        label.setForeground(composite.getForeground());
         
         updateWebBrowserCombo(composite);
         
@@ -148,19 +150,18 @@ public class WebBrowserSelectionDialog extends MessageDialog {
 			    		webBrowserCombo.add(tempBrowser.getName());
 			    		String location = tempBrowser.getLocation();
 		    			// Try to select the first Chrome browser that can be found (use location to determine if it's Chrome) 
-		    		   if (location != null && location.indexOf("chrome") >= 0){ //$NON-NLS-1$
+		    		   if (location != null && location.toLowerCase().indexOf("chrome") >= 0){ //$NON-NLS-1$
 		    			   selectedIndex = i;
 		    		   }
 		        	}
-		        }        
+		        }
 		        
+		        // Only enable the OK button if something is selected
 				Button okButton = this.getButton(IDialogConstants.OK_ID);
-		        
-				// Only show the OK button enabled if there is a browser to select
-				if(okButton != null){
-					okButton.setEnabled(len > 0);
+				if (okButton != null) {
+					okButton.setEnabled(selectedIndex >= 0);
 				}
-				
+		        
 		        if (selectedIndex >= 0){
 			        webBrowserCombo.select(selectedIndex);
 			        browserName = validBrowsers.get(selectedIndex).getName();
@@ -168,10 +169,16 @@ public class WebBrowserSelectionDialog extends MessageDialog {
 		        
 				webBrowserCombo.addSelectionListener(new SelectionAdapter() {
 					public void widgetSelected(SelectionEvent e) {
+						boolean valid = false;
 						if (validBrowsers != null){
 							if (webBrowserCombo.getSelectionIndex() >= 0){
 								browserName = validBrowsers.get(webBrowserCombo.getSelectionIndex()).getName();
+								valid = true;
 							}
+						}
+						Button okButton = getButton(IDialogConstants.OK_ID);
+						if (okButton != null) {
+							okButton.setEnabled(valid);
 						}
 					}
 				});
@@ -189,10 +196,10 @@ public class WebBrowserSelectionDialog extends MessageDialog {
 	}
 	
 	public int open(){
-		// Make sure the OK button is disabled if no valid browser exists
+		// Make sure the OK button is only enabled if there is a selection
 		Button okButton = this.getButton(IDialogConstants.OK_ID);		
-		if (okButton != null && validBrowsers != null){
-			okButton.setEnabled(validBrowsers.size() > 0);
+		if (okButton != null) {
+			okButton.setEnabled(webBrowserCombo != null && webBrowserCombo.getSelectionIndex() >= 0);
 		}
 		
 		return super.open();
