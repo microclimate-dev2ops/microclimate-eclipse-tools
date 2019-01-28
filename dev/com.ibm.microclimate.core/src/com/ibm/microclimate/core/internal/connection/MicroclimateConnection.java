@@ -17,9 +17,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -283,6 +285,12 @@ public class MicroclimateConnection {
 	public List<MicroclimateApplication> getApps() {
 		synchronized(appMap) {
 			return new ArrayList<MicroclimateApplication>(appMap.values());
+		}
+	}
+	
+	public Set<String> getAppIds() {
+		synchronized(appMap) {
+			return new HashSet<String>(appMap.keySet());
 		}
 	}
 
