@@ -67,6 +67,7 @@ public class MCConstants {
 
 			KEY_ENV_WORKSPACE_LOC = "workspace_location",
 			KEY_ENV_MC_VERSION = "microclimate_version",
+			KEY_ENV_MC_SOCKET_NAMESPACE = "socket_namespace",
 
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",

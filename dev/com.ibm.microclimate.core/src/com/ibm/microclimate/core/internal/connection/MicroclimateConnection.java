@@ -56,8 +56,9 @@ public class MicroclimateConnection {
 	private IPath localWorkspacePath;
 	private String versionStr;
 	private String connectionErrorMsg = null;
+	private String socketNamespace = null;
 
-	public final MicroclimateSocket mcSocket;
+	private MicroclimateSocket mcSocket;
 	
 	private volatile boolean isConnected = true;
 
@@ -76,14 +77,7 @@ public class MicroclimateConnection {
 		if (MicroclimateConnectionManager.getActiveConnection(uri.toString()) != null) {
 			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_AlreadyExists, baseUrl));
 		}
-
-		// Must set host, port fields before doing this
-		mcSocket = new MicroclimateSocket(this);
-		if(!mcSocket.blockUntilFirstConnection()) {
-			close();
-			throw new MicroclimateConnectionException(mcSocket.socketUri);
-		}
-
+		
 		JSONObject env = getEnvData(this.baseUrl);
 
 		this.versionStr = getMCVersion(env);
@@ -104,10 +98,26 @@ public class MicroclimateConnection {
 			// This should never happen since we have already determined it is a supported version of microclimate.
 			onInitFail(Messages.MicroclimateConnection_ErrConnection_WorkspaceErr);
 		}
+		
+		this.socketNamespace = getSocketNamespace(env);
+		
+		mcSocket = new MicroclimateSocket(this);
+		if(!mcSocket.blockUntilFirstConnection()) {
+			close();
+			throw new MicroclimateConnectionException(mcSocket.socketUri);
+		}
 
 		refreshApps(null);
 
 		MCLogger.log("Created " + this); //$NON-NLS-1$
+	}
+	
+	public String getSocketNamespace() {
+		return socketNamespace;
+	}
+	
+	public MicroclimateSocket getMCSocket() {
+		return mcSocket;
 	}
 
 	private void onInitFail(String msg) throws ConnectException {
@@ -121,11 +131,8 @@ public class MicroclimateConnection {
 	 */
 	public void close() {
 		MCLogger.log("Closing " + this); //$NON-NLS-1$
-		if (mcSocket != null && mcSocket.socket != null) {
-			if (mcSocket.socket.connected()) {
-				mcSocket.socket.disconnect();
-			}
-			mcSocket.socket.close();
+		if (mcSocket != null) {
+			mcSocket.close();
 		}
 		for (MicroclimateApplication app : appMap.values()) {
 			app.dispose();
@@ -249,6 +256,19 @@ public class MicroclimateConnection {
 			workspaceLoc = device + ":" + workspaceLoc.substring(2); //$NON-NLS-1$
 		}
 		return new Path(workspaceLoc);
+	}
+	
+	private static String getSocketNamespace(JSONObject env) throws JSONException {
+		if (env.has(MCConstants.KEY_ENV_MC_SOCKET_NAMESPACE)) {
+			Object nsObj = env.get(MCConstants.KEY_ENV_MC_SOCKET_NAMESPACE);
+			if (nsObj instanceof String) {
+				String namespace = (String)nsObj;
+				if (!namespace.isEmpty()) {
+					return namespace;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -547,6 +567,21 @@ public class MicroclimateConnection {
 				return;
 			}
 			this.localWorkspacePath = path;
+			
+			String socketNS = getSocketNamespace(envData);
+			if ((socketNS != null && !socketNS.equals(this.socketNamespace)) || (this.socketNamespace != null && !this.socketNamespace.equals(socketNS))) {
+				// The socket namespace has changed so need to recreate the socket
+				this.socketNamespace = socketNS;
+				mcSocket.close();
+				mcSocket = new MicroclimateSocket(this);
+				if(!mcSocket.blockUntilFirstConnection()) {
+					// Still not connected
+					MCLogger.logError("Failed to create a new socket with updated URI: " + mcSocket.socketUri);
+					// Clear the message so that it just shows the basic disconnected message
+					this.connectionErrorMsg = null;
+					return;
+				}
+			}
 		} catch (Exception e) {
 			MCLogger.logError("An exception occurred while trying to update the connection information", e);
 			this.connectionErrorMsg = Messages.MicroclimateConnection_ErrConnection_UpdateCacheException;
