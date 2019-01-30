@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,9 @@
  *******************************************************************************/
 
 package com.ibm.microclimate.core.internal;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,11 +41,13 @@ public class MicroclimateApplicationFactory {
 		try {
 			MCLogger.log(projectsJson);
 			JSONArray appArray = new JSONArray(projectsJson);
+			Set<String> idSet = new HashSet<String>();
 	
 			for(int i = 0; i < appArray.length(); i++) {
 				JSONObject appJso = appArray.getJSONObject(i);
 				try {
 					String id = appJso.getString(MCConstants.KEY_PROJECT_ID);
+					idSet.add(id);
 					// If a project id was passed in then only process the JSON object for that project
 					if (projectID == null || projectID.equals(id)) {
 						synchronized(MicroclimateApplicationFactory.class) {
@@ -63,6 +68,17 @@ public class MicroclimateApplicationFactory {
 					}
 				} catch (Exception e) {
 					MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
+				}
+			}
+			
+			// If refreshing all of the projects, remove any projects that are not in the list returned by Microclimate.
+			// This will only happen if something goes wrong and no delete event is received from Microclimate for a
+			// project.
+			if (projectID == null) {
+				for (String id : mcConnection.getAppIds()) {
+					if (!idSet.contains(id)) {
+						mcConnection.removeApp(id);
+					}
 				}
 			}
 		} catch (Exception e) {
