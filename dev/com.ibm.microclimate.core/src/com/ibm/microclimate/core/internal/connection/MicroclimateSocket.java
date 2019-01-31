@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -72,10 +72,14 @@ public class MicroclimateSocket {
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 		this.mcConnection = mcConnection;
 		
-		socketUri = mcConnection.baseUrl;
+		URI uri = mcConnection.baseUrl;
+		if (mcConnection.getSocketNamespace() != null) {
+			uri = uri.resolve(mcConnection.getSocketNamespace());
+		}
+		socketUri = uri;
 
 		socket = IO.socket(socketUri);
-
+		
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
@@ -230,6 +234,15 @@ public class MicroclimateSocket {
 		socket.connect();
 
 		MCLogger.log("Created MicroclimateSocket connected to " + socketUri); //$NON-NLS-1$
+	}
+	
+	public void close() {
+		if (socket != null) {
+			if (socket.connected()) {
+				socket.disconnect();
+			}
+			socket.close();
+		}
 	}
 	
 	private void onProjectCreation(JSONObject event) throws JSONException {

@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v20.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+
 package com.ibm.microclimate.core.internal.console;
 
 import java.io.IOException;
@@ -29,7 +40,7 @@ public class SocketConsole extends IOConsole {
 
 		this.projectID = app.projectID;
 		this.outputStream = newOutputStream();
-		this.socket = app.mcConnection.mcSocket;
+		this.socket = app.mcConnection.getMCSocket();
 		socket.registerSocketConsole(this);
 
 		try {
