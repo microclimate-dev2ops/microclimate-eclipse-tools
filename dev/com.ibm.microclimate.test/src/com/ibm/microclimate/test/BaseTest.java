@@ -19,6 +19,10 @@ import java.util.Set;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceDescription;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.ui.IMarkerResolution;
@@ -61,7 +65,12 @@ public abstract class BaseTest extends TestCase {
 	protected static String relativeURL;
 	protected static String srcPath;
 	
+	protected static Boolean origAutoBuildSetting = null;
+	
     public void doSetup() throws Exception {
+    	// Disable workspace auto build
+    	origAutoBuildSetting = setWorkspaceAutoBuild(false);
+    	
         // Create a microclimate connection
         connection = MicroclimateObjectFactory.createMicroclimateConnection(new URI(MICROCLIMATE_URI));
         MicroclimateConnectionManager.add(connection);
@@ -81,6 +90,19 @@ public abstract class BaseTest extends TestCase {
         project = ImportUtil.waitForProject(projectName);
         assertNotNull("The " + projectName + " project should be imported in eclipse", project);
     }
+    
+	public void doTearDown() {
+		try {
+			MicroclimateUtil.cleanup(connection);
+		} catch (Exception e) {
+			TestUtil.print("Test case cleanup failed", e);
+		}
+    	
+		// Restore workspace auto build setting
+		if (origAutoBuildSetting != null) {
+			setWorkspaceAutoBuild(origAutoBuildSetting.booleanValue());
+		}
+	}
     
     public void checkApp(String text) throws Exception {
     	MicroclimateApplication app = connection.getAppByName(projectName);
@@ -200,5 +222,21 @@ public abstract class BaseTest extends TestCase {
         resolutions[0].run(markers[0]);
         TestUtil.waitForJobs(10, 1);
     }
+    
+	public static Boolean setWorkspaceAutoBuild(boolean enabled) {
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IWorkspaceDescription wsDescription = workspace.getDescription();
+		boolean origEnabled = wsDescription.isAutoBuilding();
+		if (enabled != origEnabled) {
+			try {
+				wsDescription.setAutoBuilding(enabled);
+				workspace.setDescription(wsDescription);
+				return origEnabled ? Boolean.TRUE : Boolean.FALSE;
+			} catch (CoreException e) {
+				TestUtil.print("Failed to set workspace auto build enabled to: " + enabled, e);
+			}
+		}
+		return null;
+	}
 
 }

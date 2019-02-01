@@ -87,11 +87,7 @@ public abstract class BaseDebugTest extends BaseTest {
     
     @Test
     public void test99_tearDown() {
-    	try {
-			MicroclimateUtil.cleanup(connection);
-		} catch (Exception e) {
-			TestUtil.print("Test case cleanup failed", e);
-		}
+    	doTearDown();
     	TestUtil.print("Ending test: " + getName());
     }
 
