@@ -371,6 +371,9 @@ public class MicroclimateSocket {
 		StartMode startMode = StartMode.get(event);
 		app.setStartMode(startMode);
 		
+		// Update the application
+		MCUtil.updateApplication(app);
+		
 		// Make sure no old debugger is running
 		app.clearDebugger();
 		
