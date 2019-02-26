@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 
@@ -79,16 +80,25 @@ public class HttpUtil {
 			return list.get(0);
 		}
 	}
-
+	
 	public static HttpResult get(URI uri) throws IOException {
+		return get(uri, null, 5000);
+	}
+
+	public static HttpResult get(URI uri, Map<String, String> requestProperties, int timeout) throws IOException {
+		return get(uri, requestProperties, null, timeout);
+	}
+	
+	public static HttpResult get(URI baseUri, Map<String, String> requestProperties, Map<String, Object> params, int timeout) throws IOException {
 		HttpURLConnection connection = null;
 
 		try {
+			URI uri = addParams(baseUri, params);
 			connection = (HttpURLConnection) uri.toURL().openConnection();
-
 			connection.setRequestMethod("GET");
-			connection.setReadTimeout(5000);
-
+			connection.setReadTimeout(timeout);
+			addRequestProperties(connection, requestProperties);
+			
 			return new HttpResult(connection);
 		} finally {
 			if (connection != null) {
@@ -96,8 +106,12 @@ public class HttpUtil {
 			}
 		}
 	}
-
+	
 	public static HttpResult post(URI uri, JSONObject payload) throws IOException {
+		return post(uri, null, payload);
+	}
+
+	public static HttpResult post(URI uri, Map<String, String> requestProperties, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
 
 		MCLogger.log("POST " + payload.toString() + " TO " + uri);
@@ -107,7 +121,8 @@ public class HttpUtil {
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "application/json");
 			connection.setDoOutput(true);
-
+			addRequestProperties(connection, requestProperties);
+			
 			DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
 			payloadStream.write(payload.toString().getBytes());
 
@@ -169,4 +184,35 @@ public class HttpUtil {
 			}
 		}
 	}
+	
+	private static void addRequestProperties(HttpURLConnection connection, Map<String, String> requestProperties) {
+		if (requestProperties != null) {
+			for (Map.Entry<String, String> prop : requestProperties.entrySet()) {
+				  connection.setRequestProperty(prop.getKey(), prop.getValue());
+			}
+		}
+	}
+
+    private static URI addParams(URI uri, Map<String, Object> params) throws IOException {
+    	try {
+	    	if (params == null || params.isEmpty()) {
+	    		return uri;
+	    	}
+	        StringBuilder data = new StringBuilder();
+	        for (Map.Entry<String, Object> param : params.entrySet()) {
+	            if (data.length() != 0)
+	                data.append('&');
+	            data.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+	            data.append('=');
+	            data.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+	        }
+	        return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), data.toString(), uri.getFragment());
+    	} catch (Exception e) {
+    		String msg = "Adding parameters to the URI failed";
+    		MCLogger.logError(msg, e);
+    		throw new IOException(msg, e);
+    	}
+    }
+
+
 }

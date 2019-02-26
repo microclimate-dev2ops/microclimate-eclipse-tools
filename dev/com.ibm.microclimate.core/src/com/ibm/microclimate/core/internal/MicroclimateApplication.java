@@ -32,10 +32,9 @@ public class MicroclimateApplication {
 
 	public final MicroclimateConnection mcConnection;
 	public final String projectID, name, host;
+	public final String pathInWorkspace;
 	public final String contextRoot;	// can be null
-	public final IPath fullLocalPath;
 	public final ProjectType projectType;
-
 	
 	private StartMode startMode;
 	private AppState appState;
@@ -61,13 +60,10 @@ public class MicroclimateApplication {
 		this.mcConnection = mcConnection;
 		this.projectID = id;
 		this.name = name;
+		this.pathInWorkspace = pathInWorkspace;
 		this.projectType = projectType;
 		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
-
-		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
-		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
-		this.fullLocalPath = MCUtil.appendPathWithoutDupe(mcConnection.getWorkspacePath(), pathInWorkspace);
 
 		setBaseUrl();
 
@@ -88,6 +84,10 @@ public class MicroclimateApplication {
 		if (contextRoot != null) {
 			baseUrl = new URL(baseUrl, contextRoot);
 		}
+	}
+	
+	public IPath getLocalPath() {
+		return mcConnection.getLocalAppPath(this);
 	}
 	
 	public synchronized void setAppStatus(String appStatus) {
@@ -286,7 +286,7 @@ public class MicroclimateApplication {
 	public String toString() {
 		return String.format("%s@%s id=%s name=%s type=%s loc=%s", //$NON-NLS-1$
 				MicroclimateApplication.class.getSimpleName(), baseUrl.toString(),
-				projectID, name, projectType, fullLocalPath.toOSString());
+				projectID, name, projectType, getLocalPath().toOSString());
 	}
 }
 

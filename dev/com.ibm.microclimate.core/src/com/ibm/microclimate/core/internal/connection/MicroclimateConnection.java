@@ -45,7 +45,7 @@ import com.ibm.microclimate.core.internal.messages.Messages;
 /**
  * Represents a connection to a Microclimate instance
  */
-public class MicroclimateConnection {
+public abstract class MicroclimateConnection {
 
 	public static final String MICROCLIMATE_WORKSPACE_PROPERTY = "com.ibm.microclimate.internal.workspace"; //$NON-NLS-1$
 	private static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
@@ -110,6 +110,10 @@ public class MicroclimateConnection {
 		refreshApps(null);
 
 		MCLogger.log("Created " + this); //$NON-NLS-1$
+	}
+	
+	public String getHost() {
+		return baseUrl.getHost();
 	}
 	
 	public String getSocketNamespace() {
@@ -720,4 +724,6 @@ public class MicroclimateConnection {
 		}
 		return null;
 	}
+	
+	public abstract IPath getLocalAppPath(MicroclimateApplication app);
 }

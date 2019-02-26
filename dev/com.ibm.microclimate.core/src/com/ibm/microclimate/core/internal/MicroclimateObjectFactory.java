@@ -13,6 +13,7 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.URI;
 
+import com.ibm.microclimate.core.internal.connection.LocalMicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 
@@ -26,7 +27,7 @@ import com.ibm.microclimate.core.internal.constants.ProjectType;
 public class MicroclimateObjectFactory {
 	
 	public static MicroclimateConnection createMicroclimateConnection(URI uri) throws Exception {
-		return new MicroclimateConnection(uri);
+		return new LocalMicroclimateConnection(uri);
 	}
 	
 	public static MicroclimateApplication createMicroclimateApplication(MicroclimateConnection mcConnection,
