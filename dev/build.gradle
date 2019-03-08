@@ -32,12 +32,14 @@ dependencies {
     antcp 'org.apache.aries:org.apache.aries.util:1.1.3'
 
     antScp 'org.apache.ant:ant-jsch:1.7.1', 'jsch:jsch:0.1.29'
-    
+
     corelibs "io.socket:engine.io-client:1.0.0"
     corelibs "org.json:json:20090211"
     corelibs "com.squareup.okhttp3:okhttp:3.8.1"
     corelibs "com.squareup.okio:okio:1.13.0"
     corelibs "io.socket:socket.io-client:1.0.0"
+
+    // corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
 }
 
 defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite', 'deployDHE'
@@ -53,9 +55,6 @@ task importAnt {
     ant.taskdef(resource:'net/sf/antcontrib/antlib.xml',classpath:configurations.antcp.asPath)
     ant.taskdef(uri:'antlib:org.apache.ivy.ant', resource:'org/apache/ivy/ant/antlib.xml',classpath: configurations.antcp.asPath)
 
-    // prereqs uses ivy to resolve and download our runtime dependencies and some open source libs
-    // and move them into /lib/ folders of dependant plugins
-    ant.importBuild('ant_build/prereqs/prereqs.xml')
     // build-mdt provides the generateOpenMDTUpdateSite target, which is the entry point
     // for the compilation and assembling of updatesites
     ant.importBuild('ant_build/build-mdt.xml')
@@ -80,11 +79,14 @@ def corelibFolder = file(projDir + project.properties['microclimate.core.prereql
 
 // Download dependent plugins from maven repository for 'com.ibm.microclimate.core'
 task getCoreDependencies(type: Copy) {
-	
+
     if (!corelibFolder.exists()) {
-    	corelibFolder.mkdir()
+        corelibFolder.mkdir()
     }
-            
+    println("Copying core dependencies into ${corelibFolder}")
+
+    eachFile { println "Copying ${it.file.name}" }
+
     from configurations.corelibs
     into corelibFolder
 }
@@ -110,7 +112,7 @@ task downloadEclipseTargetPlatform {
             }
             else {
                 println 'Untar existing ' + eclipseTargetPlatformArchive.getAbsolutePath() + ' into ' + eclipseTargetPlatformIESFolder
-                println 'Run \'gradle clean build\' to build by downloading target platform files again.'
+                println 'Run \'gradle cleanEclipse build\' to download Eclipse target platform files again'
             }
 
             copy {
@@ -152,7 +154,7 @@ task downloadEclipseSDK {
              }
              else {
                   println 'Untar existing ' + eclipseSdkArchive.getAbsolutePath() + ' into ' + eclipseSdkFolder
-                  println 'Run \'gradle clean build\' to build by downloading Eclipse SDK files again'
+                  println 'Run \'gradle cleanEclipse build\' to download Eclipse SDK files again'
              }
 
             copy {
@@ -175,11 +177,6 @@ task build {
     }
 }
 
-task gradleCompile {
-    doLast {
-    }
-}
-
 task gradleGenerateMDTUpdateSite {
     doLast {
     }
@@ -190,12 +187,10 @@ gradleGenerateMDTUpdateSite.dependsOn generateOpenMDTUpdateSite
 build.dependsOn compile
 build.dependsOn generateOpenMDTUpdateSite
 
-preparePrereqsIvy.dependsOn importAnt
-compile.dependsOn preparePrereqsIvy
+compile.dependsOn importAnt
 compile.dependsOn downloadEclipseSDK
 compile.dependsOn downloadEclipseTargetPlatform
-
-gradleCompile.dependsOn compile
+compile.dependsOn getCoreDependencies
 
 //// build version from the artifacts to avoid version mismatch
 import static groovy.io.FileType.FILES
@@ -352,7 +347,7 @@ task deployDHE {
                 object = new JsonSlurper().parseText(json.getText())
             } else {
                   def infoJsonDHEPublicUrl = "http://public.dhe.ibm.com/ibmdl/export/pub/software/microclimate/eclipse-tools/${buildType}/${infoJson}"
-					
+
                   // if ${infoJson} in staging server is empty then download ${infoJson} from DHEPublic
                   println "${destDHEStaging}/${buildType}/${infoJson} is already published."
                   println "Downloading ${infoJsonDHEPublicUrl}"
@@ -398,18 +393,18 @@ task deployDHE {
     }
 }
 
-// Delete all prereq files and extracted SDK and target platform files.
-task cleanPrereqs(type: Delete) {
+task cleanEclipse(type: Delete) {
     doLast {
         println 'Delete ' + eclipseSdkFolder
         file(eclipseSdkFolder).deleteDir()
         println 'Delete ' + eclipseTargetPlatformFolder
         file(eclipseTargetPlatformFolder).deleteDir()
+    }
+}
 
-        def prereqslibFolder  = file(projDir + project.properties['ant.prereqslib.folder'])
-        println 'Delete ' + prereqslibFolder
-        file(prereqslibFolder).deleteDir()
-
+// Delete all prereq files and extracted SDK and target platform files.
+task cleanPrereqs(type: Delete) {
+    doLast {
         // for each plugin, delete lib/ folder so that ivy will re-retrieve prereqs
         fileTree(dir: projDir, include: 'com.ibm.*/lib/').visit {  FileVisitDetails details ->
             if(details.file.isDirectory() && 'lib'.equals(details.file.name)) {
@@ -443,10 +438,7 @@ task cleanBuilds(type: Delete) {
 // Delete all prereq files, downloaded artifacts and build output
 task clean(type: Delete) {
     doLast {
-        println 'Delete ' + eclipseSdkArchive
-        file(eclipseSdkArchive).delete()
-        println 'Delete ' + eclipseTargetPlatformArchive
-        file(eclipseTargetPlatformArchive).delete()
+
     }
 
     onlyIf {

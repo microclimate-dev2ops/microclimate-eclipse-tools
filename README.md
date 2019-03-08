@@ -45,6 +45,15 @@ For more information see the [documentation](https://microclimate-dev2ops.github
 
 We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/issues) and contributions. For more information, see [CONTRIBUTING.md](https://github.com/microclimate-dev2ops/microclimate-eclipse-tools/tree/master/CONTRIBUTING.md).
 
+### Enabling Debug Logs
+
+1. Create a file called `.options` in your Eclipse install directory (the same directory with the `eclipse` executable) with the following content:
+
+`com.ibm.microclimate.core/debug/info=true`
+
+2. Launch eclipse with the `-debug` flag.
+3. The logs are written to the Eclipse workspace directory, to `.metadata/.log`.
+
 ## Building
 
 1. Clone the repository to your system.
@@ -80,4 +89,3 @@ We welcome [issues](https://github.com/microclimate-dev2ops/microclimate-eclipse
 | [json-20090211.jar](https://mvnrepository.com/artifact/org.json/json/20090211) | [The JSON License](http://www.json.org/license.html) |
 | [okhttp-3.8.1.jar](https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp/3.8.1) | [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |
 | [okio-1.13.0.jar](https://mvnrepository.com/artifact/com.squareup.okio/okio/1.13.0) | [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |
-
