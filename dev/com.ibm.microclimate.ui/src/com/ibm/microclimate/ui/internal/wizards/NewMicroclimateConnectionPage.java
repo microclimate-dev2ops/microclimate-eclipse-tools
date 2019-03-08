@@ -14,6 +14,7 @@ package com.ibm.microclimate.ui.internal.wizards;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -35,6 +36,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
+import com.ibm.microclimate.core.internal.connection.auth.Authenticator;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
@@ -143,6 +145,25 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		} else {
 			testConnectionBtn.setFocus();
 		}
+
+		///// Temp ICP connection test stuff
+		final Text masterIPText = new Text(shell, SWT.BORDER);
+		masterIPText.setText("9.42.28.18");
+
+		final Button authBtn = new Button(shell, SWT.PUSH);
+		authBtn.setText("Authorize");
+		authBtn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					final String masterIP = masterIPText.getText();
+					Authenticator.instance().authenticate(masterIP);
+				} catch (Exception e) {
+					MCLogger.logError("Auth error", e);
+					MessageDialog.openError(shell.getShell(), "Auth error", e.getMessage());
+				}
+			}
+		});
 	}
 
 	void removePreviousMCConnection() {

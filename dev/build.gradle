@@ -39,7 +39,7 @@ dependencies {
     corelibs "com.squareup.okio:okio:1.13.0"
     corelibs "io.socket:socket.io-client:1.0.0"
 
-    // corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
+    corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
 }
 
 defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite', 'deployDHE'

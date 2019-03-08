@@ -42,7 +42,7 @@ import io.socket.emitter.Emitter;
  * its applications.
  */
 public class MicroclimateSocket {
-	
+
 	private final MicroclimateConnection mcConnection;
 
 	public final Socket socket;
@@ -71,7 +71,7 @@ public class MicroclimateSocket {
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 		this.mcConnection = mcConnection;
-		
+
 		URI uri = mcConnection.baseUrl;
 		if (mcConnection.getSocketNamespace() != null) {
 			uri = uri.resolve(mcConnection.getSocketNamespace());
@@ -79,7 +79,7 @@ public class MicroclimateSocket {
 		socketUri = uri;
 
 		socket = IO.socket(socketUri);
-		
+
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
@@ -207,7 +207,7 @@ public class MicroclimateSocket {
 			public void call(Object... arg0) {
 				// can't print this whole thing because the logs strings flood the output
 				// MCLogger.log(EVENT_CONTAINER_LOGS + ": " + arg0[0].toString()); //$NON-NLS-1$
-				MCLogger.log(EVENT_CONTAINER_LOGS);
+				// MCLogger.log(EVENT_CONTAINER_LOGS);
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
@@ -235,7 +235,7 @@ public class MicroclimateSocket {
 
 		MCLogger.log("Created MicroclimateSocket connected to " + socketUri); //$NON-NLS-1$
 	}
-	
+
 	public void close() {
 		if (socket != null) {
 			if (socket.connected()) {
@@ -244,7 +244,7 @@ public class MicroclimateSocket {
 			socket.close();
 		}
 	}
-	
+
 	private void onProjectCreation(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		mcConnection.refreshApps(projectID);
@@ -264,16 +264,16 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found matching the project id for the project changed event: " + projectID); //$NON-NLS-1$
 			return;
 		}
-		
+
 		app.setEnabled(true);
-		
+
 		// Update container id
 		String containerId = null;
 		if (event.has(MCConstants.KEY_CONTAINER_ID)) {
 		    containerId = event.getString(MCConstants.KEY_CONTAINER_ID);
 		}
 		app.setContainerId(containerId);
-	
+
         // Update ports
         JSONObject portsObj = event.getJSONObject(MCConstants.KEY_PORTS);
 
@@ -293,7 +293,7 @@ public class MicroclimateSocket {
 		} else {
 			app.setDebugPort(-1);
 		}
-		
+
 		if (event.has(MCConstants.KEY_AUTO_BUILD)) {
 			boolean autoBuild = event.getBoolean(MCConstants.KEY_AUTO_BUILD);
 			app.setAutoBuild(autoBuild);
@@ -309,9 +309,9 @@ public class MicroclimateSocket {
 			MCUtil.updateConnection(mcConnection);
 			return;
 		}
-		
+
 		app.setEnabled(true);
-		
+
 		if (event.has(MCConstants.KEY_APP_STATUS)) {
 			String appStatus = event.getString(MCConstants.KEY_APP_STATUS);
 			app.setAppStatus(appStatus);
@@ -326,7 +326,7 @@ public class MicroclimateSocket {
 			}
 			app.setBuildStatus(buildStatus, detail);
 		}
-		
+
 		MCUtil.updateApplication(app);
 	}
 
@@ -337,9 +337,9 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found matching the project id for the project restart event: " + projectID); //$NON-NLS-1$
 			return;
 		}
-		
+
 		app.setEnabled(true);
-		
+
 		String status = event.getString(MCConstants.KEY_STATUS);
 		if (!MCConstants.REQUEST_STATUS_SUCCESS.equalsIgnoreCase(status)) {
 			MCLogger.logError("Project restart failed on the application: " + event.toString()); //$NON-NLS-1$
@@ -367,21 +367,21 @@ public class MicroclimateSocket {
 			debugPort = MCUtil.parsePort(portsObj.getString(MCConstants.KEY_EXPOSED_DEBUG_PORT));
 		}
 		app.setDebugPort(debugPort);
-		
+
 		StartMode startMode = StartMode.get(event);
 		app.setStartMode(startMode);
-		
+
 		// Update the application
 		MCUtil.updateApplication(app);
-		
+
 		// Make sure no old debugger is running
 		app.clearDebugger();
-		
+
 		if (StartMode.DEBUG_MODES.contains(startMode) && debugPort != -1) {
 			app.connectDebugger();
 		}
 	}
-	
+
 	private void onProjectClosed(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		MicroclimateApplication app = mcConnection.getAppByID(projectID);
@@ -429,7 +429,7 @@ public class MicroclimateSocket {
 			}
 		}
 	}
-	
+
 	private void onValidationEvent(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		MicroclimateApplication app = mcConnection.getAppByID(projectID);
@@ -437,17 +437,17 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found for project: " + projectID); //$NON-NLS-1$
 			return;
 		}
-		
+
 		// Clear out any old validation objects
 		app.resetValidation();
-		
+
 		// If the validation is successful then just return
 		String status = event.getString(MCConstants.KEY_VALIDATION_STATUS);
 		if (MCConstants.VALUE_STATUS_SUCCESS.equals(status)) {
 			// Nothing to do
 			return;
 		}
-		
+
 		// If the validation is not successful, create validation objects for each problem
 		if (event.has(MCConstants.KEY_VALIDATION_RESULTS)) {
 			JSONArray results = event.getJSONArray(MCConstants.KEY_VALIDATION_RESULTS);
@@ -478,7 +478,7 @@ public class MicroclimateSocket {
 			MCLogger.log("Validation event indicates failure but no validation results,"); //$NON-NLS-1$
 		}
 	}
-	
+
 	private boolean supportsQuickFix(MicroclimateApplication app, String type, String filename) {
 		// The regenerate job only works in certain cases so only show the quickfix in the working cases
 		if (!MCConstants.VALUE_TYPE_MISSING.equals(type) || app.projectType.isType(ProjectType.TYPE_DOCKER)) {

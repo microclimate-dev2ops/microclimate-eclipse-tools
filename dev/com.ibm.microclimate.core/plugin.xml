@@ -14,7 +14,7 @@
 <plugin>
  
 <!-- This relies on com.ibm.microclimate.ui org.eclipse.debug.ui.launchConfigurationTabGroups extension -->
-<extension point="org.eclipse.debug.core.launchConfigurationTypes">
+  <extension point="org.eclipse.debug.core.launchConfigurationTypes">
     <launchConfigurationType
       id="com.ibm.microclimate.core.internal.launchConfigurationType"
       name="%LAUNCH_CONFIG_NAME"
@@ -23,21 +23,29 @@
       public="false"
       sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
       sourcePathComputerId="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"/>
-</extension>
+  </extension>
 
-<extension point="org.eclipse.debug.core.sourcePathComputers">
+  <extension point="org.eclipse.debug.core.sourcePathComputers">
 	<sourcePathComputer
 		id="com.ibm.microclimate.core.internal.MicroclimateSourcePathComputer"
 		class="com.ibm.microclimate.core.internal.launch.MicroclimateSourcePathComputer"
 		name="Microclimate Source Path Computer">
 	</sourcePathComputer>
-</extension>
+  </extension>
 
   <extension point="org.eclipse.core.resources.markers"
     id="validationMarker"
     name="%VALIDATION_MARKER">
     <persistent value="true"/>
     <super type="org.eclipse.core.resources.problemmarker"/>
+  </extension>
+  
+  <extension point="org.eclipse.urischeme.uriSchemeHandlers">
+  	<uriSchemeHandler
+  		uriScheme="mdteclipse"
+  		uriSchemeDescription="Microclimate Developer Tools for Eclipse URI scheme"
+  		class="com.ibm.microclimate.core.internal.connection.auth.AuthCallbackHandler"
+  	/>
   </extension>
 
 </plugin>

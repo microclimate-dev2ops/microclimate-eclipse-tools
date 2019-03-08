@@ -11,21 +11,31 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.launching,
  org.eclipse.debug.core,
  org.eclipse.jdt.debug,
- org.eclipse.ui.console
+ org.eclipse.ui.console,
+ org.eclipse.equinox.security,
+ org.eclipse.urischeme
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: com.ibm.microclimate.core;singleton:=true
 Bundle-ActivationPolicy: lazy
 Export-Package: com.ibm.microclimate.core,
  com.ibm.microclimate.core.internal,
  com.ibm.microclimate.core.internal.connection,
+ com.ibm.microclimate.core.internal.connection.auth,
  com.ibm.microclimate.core.internal.console,
  com.ibm.microclimate.core.internal.constants,
- io.socket.client,
- io.socket.emitter,
  org.json
 Bundle-ClassPath: .,
  lib/engine.io-client-1.0.0.jar,
  lib/json-20090211.jar,
  lib/socket.io-client-1.0.0.jar,
  lib/okhttp-3.8.1.jar,
- lib/okio-1.13.0.jar
+ lib/okio-1.13.0.jar,
+ lib/accessors-smart-1.2.jar,
+ lib/activation-1.1.jar,
+ lib/asm-5.0.4.jar,
+ lib/javax.mail-1.6.1.jar,
+ lib/jcip-annotations-1.0-1.jar,
+ lib/json-smart-2.3.jar,
+ lib/lang-tag-1.4.4.jar,
+ lib/nimbus-jose-jwt-7.0.1.jar,
+ lib/oauth2-oidc-sdk-6.5.jar
