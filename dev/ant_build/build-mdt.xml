@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2018 IBM Corporation and others.
+    Copyright (c) 2018, 2019 IBM Corporation and others.
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v2.0
     which accompanies this distribution, and is available at
@@ -23,18 +23,18 @@
     <import file="${mdt_build.basedir}/resources/build_imports/liberty-all.xml" />
     <import file="${mdt_build.basedir}/mdt_imports.xml"/>
     <import file="${mdt_build.basedir}/mdt_test_imports.xml"/>
-    <import file="${mdt_build.basedir}/prereqs/prereqs.xml" />
 
      <target name="getMDTBuildLabel" depends="createBuildLabelFile">
           <loadproperties srcFile="${mdt_build.basedir}/buildLabel.properties"/>
           <echo>Build label is "${buildLabel}"</echo>
      </target>
 
-    <target name="checkBuildLabelFile" >
+    <!--target name="checkBuildLabelFile" >
         <available file="${mdt_build.basedir}/buildLabel.properties" property="buildLabel.present"/>
-    </target>
+    </target-->
 
-    <target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present">
+    <!--target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present"-->
+    <target name="createBuildLabelFile">
         <tstamp>
               <format property="buildLabel" pattern="yyyyMMdd_HHmm" timezone="UTC"/>
         </tstamp>
@@ -44,7 +44,7 @@
         </propertyfile>
     </target>
 
-    <target name="compile" depends="getMDTBuildLabel, preparePrereqsIvy" unless="${env.skip_compile_mdt}">
+    <target name="compile" depends="getMDTBuildLabel" unless="${env.skip_compile_mdt}">
         <echo message="Build label is ${buildLabel}"/>
         <antcall target="liberty-all.compile" />
         <echo message="mdt_imports.generateMDTSuppliersUpdateSite call"/>
