@@ -1,5 +1,6 @@
 # Microclimate Developer Tools for Eclipse
 
+[![Build Status](https://travis-ci.com/microclimate-dev2ops/microclimate-eclipse-tools.svg?branch=master)](https://travis-ci.com/microclimate-dev2ops/microclimate-eclipse-tools)
 [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-2.0/)
 
 - **[Marketplace](https://marketplace.eclipse.org/content/microclimate-developer-tools)**
