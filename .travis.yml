@@ -13,3 +13,8 @@ script:
   - cd dev/
   - ./gradlew -s
   - ls ant_build/artifacts/*.zip
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
