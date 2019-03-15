@@ -24,6 +24,9 @@ import com.ibm.microclimate.core.internal.IDebugLauncher;
 import com.ibm.microclimate.core.internal.IUpdateHandler;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.PlatformUtil;
+import com.ibm.microclimate.core.internal.remote.SyncUtils;
+import com.ibm.microclimate.core.internal.remote.Syncthing;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -47,7 +50,13 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	private static IUpdateHandler updateHandler;
 	
 	private static Map<String, IDebugLauncher> debugLaunchers = new HashMap<String, IDebugLauncher>();
+	
+	private Syncthing syncthing;
 
+    public static MicroclimateCorePlugin getInstance() {
+        return plugin;
+    }
+    
 	/**
 	 * The constructor
 	 */
@@ -69,6 +78,8 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 		// Set default preferences once, here
 		getPreferenceStore().setDefault(DEBUG_CONNECT_TIMEOUT_PREFSKEY,
 				MCEclipseApplication.DEFAULT_DEBUG_CONNECT_TIMEOUT);
+		
+//		startSyncthing();
 	}
 
 	/*
@@ -77,6 +88,7 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		stopSyncthing();
 		plugin = null;
 		super.stop(context);
 	}
@@ -109,6 +121,28 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	
 	public static IDebugLauncher getDebugLauncher(String language) {
 		return debugLaunchers.get(language);
+	}
+	
+	public String getStateLocationString() {
+		return getStateLocation().toOSString();
+	}
+	
+	public synchronized Syncthing getSyncthing() throws Exception {
+		if (syncthing == null) {
+			syncthing = new Syncthing(PlatformUtil.getHostName(), SyncUtils.getSyncthingExecutable(), SyncUtils.getSyncthingDir(), SyncUtils.getHostConfigBaseFile());
+		}
+		return syncthing;
+	}
+	
+	public synchronized void startSyncthing() throws Exception {
+		Syncthing syncthing = getSyncthing();
+		syncthing.start();
+	}
+	
+	public synchronized void stopSyncthing() throws Exception {
+		if (syncthing != null && syncthing.isRunning()) {
+			syncthing.stop();
+		}
 	}
 
 }

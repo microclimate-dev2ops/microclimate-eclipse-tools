@@ -79,7 +79,7 @@ public class ImportProjectAction implements IObjectActionDelegate {
 	 */
 	public static void importProject(MicroclimateApplication app) {
 		try {
-			IPath path = app.fullLocalPath;
+			IPath path = app.getLocalPath();
 			SmartImportJob importJob = new SmartImportJob(path.toFile(), null, true, false);
 			importJob.schedule();
 		} catch (Exception e) {
