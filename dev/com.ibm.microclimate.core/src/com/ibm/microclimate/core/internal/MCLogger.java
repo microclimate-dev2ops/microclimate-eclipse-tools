@@ -60,7 +60,7 @@ public class MCLogger implements DebugOptionsListener {
 		// com.ibm.microclimate.core/debug/info=true
 		// and then passing eclipse the '-debug' option
 
-		logInfo = debugOptions.getBooleanOption(MicroclimateCorePlugin.PLUGIN_ID + INFO_LEVEL, false);
+		logInfo = debugOptions.getBooleanOption(MicroclimateCorePlugin.PLUGIN_ID + INFO_LEVEL, true);
 	}
 
 	public static void log(String msg) {

@@ -1,6 +1,8 @@
 package com.ibm.microclimate.core.internal.connection.auth;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,15 +12,26 @@ import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.nimbusds.oauth2.sdk.AccessTokenResponse;
+import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.AuthorizationResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
+import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
+import com.nimbusds.oauth2.sdk.auth.Secret;
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -45,29 +58,94 @@ public class Authenticator {
 
 	private static final String CLIENT_ID = "microclimate-tools";
 	static final String CALLBACK_URI = "mdteclipse://authcb";
+	
+	private static final Scope OIDC_SCOPE = new Scope(OIDCScopeValue.OPENID);
 
 	private static final String TOKEN_PREFIX = "token-";
 	private static final String EXPIRY_PREFIX = "expires-";
 
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
 	// Only one 'pending auth' at a time -> starting a new one cancels the previous
+	// only used by the auth flows that open the browser (implicit / code)
 	private PendingAuth pendingAuth;
 
+	private String getOIDCServerURL(String masterNodeIP) {
+		// add "/.well-known/openid-configuration" to get the OIDC config object.
+		// add "/registration/$CLIENT_ID to get the OIDC config object 
+		// for our microclimate-tools client (requires oauthadmin credentials)
+		return String.format("https://%s:8443/oidc/endpoint/OP", masterNodeIP);
+	}
+	
+	/**
+	 * Directly exchange the user's credentials for an access_token. No browser required.
+	 * 
+	 * https://connect2id.com/products/nimbus-oauth-openid-connect-sdk/examples/oauth/token-request#password
+	 * https://static.javadoc.io/com.nimbusds/oauth2-oidc-sdk/5.11/com/nimbusds/openid/connect/sdk/package-summary.html
+	 * 
+	 * @throws AuthException in the case of bad credentials, or any unexpected auth failure.
+	 */
+	public void authorizePassword(String masterNodeIP, String username, String password) 
+			throws Exception {
+		
+		MCLogger.log("Password grant authorization against master IP " + masterNodeIP);
+		
+		URI tokenEndpoint = new URI(getOIDCServerURL(masterNodeIP) + "/token");
+		MCLogger.log("Token endpoint is " + tokenEndpoint);
+		AuthorizationGrant pwGrant = new ResourceOwnerPasswordCredentialsGrant(username, new Secret(password));
+		
+		ClientAuthentication clientAuth = new ClientAuthentication(ClientAuthenticationMethod.NONE, new ClientID(CLIENT_ID)) {
+			@Override
+			public void applyTo(HTTPRequest req) {
+//				String qs = req.getQuery();
+//				if (qs == null) {
+//					qs = "client_id=" + CLIENT_ID;
+//				}
+//				else {
+//					qs += "&client_id=" + CLIENT_ID;
+//				}
+//				req.setQuery(qs);
+//				MCLogger.log("The new QS is " + req.getQuery());
+			}
+		};
+		
+		TokenRequest tokenReq = new TokenRequest(tokenEndpoint, clientAuth, pwGrant, OIDC_SCOPE);
+		
+		HTTPRequest req = tokenReq.toHTTPRequest();
+		// Timeout must be set or a bad request will hang
+		req.setConnectTimeout(5000);
+		MCLogger.log("REQUEST URL IS: " + req.getURL() + "?" + req.getQuery());
+
+		TokenResponse res = TokenResponse.parse(req.send());
+
+		if (!res.indicatesSuccess()) {
+			MCLogger.log("Password auth failure");
+			throw new AuthException(res.toErrorResponse());
+		}
+
+		MCLogger.log("Password auth success");
+		AccessTokenResponse successResp = res.toSuccessResponse();
+		saveToken(masterNodeIP, successResp.getTokens().getAccessToken());
+	}
+	
 	/**
 	 * Assemble the AuthorizationRequest and open the user's browser to the authorization login page.
+	 * After the user logs in, Eclipse receives the callback 
+	 * and passes the callback URI to handleAuthorizationCallback.
 	 * <br>
 	 * <br>
 	 * https://connect2id.com/products/nimbus-oauth-openid-connect-sdk/examples/oauth/authorization-request#implicit-flow
 	 * <br>
 	 * https://www.javadoc.io/doc/com.nimbusds/oauth2-oidc-sdk/6.5
 	 */
-	public void authenticate(String masterNodeIP) throws Exception {
-		MCLogger.log("Authenticating against " + masterNodeIP);
-
-		final String oidcServerUrl = String.format("https://%s:8443/oidc/endpoint/OP", masterNodeIP);
+	public void authorizeImplicit(String masterNodeIP) 
+			throws URISyntaxException, PartInitException, MalformedURLException {
+		
+		MCLogger.log("Implicit grant authorization against master IP " + masterNodeIP);
+		
 		// This is obtained from oidcServerUrl + /.well-known/openid-configuration
-		final URI authorizeEndpoint = new URI(oidcServerUrl + "/authorize");
+		// We should do a proper "discover" to that endpoint 
+		// but since we only need /token and /authorize it's not really necessary.
+		final URI authorizeEndpoint = new URI(getOIDCServerURL(masterNodeIP) + "/authorize");
+		MCLogger.log("Authorize endpoint is " + authorizeEndpoint);
 
 		// https://connect2id.com/products/nimbus-oauth-openid-connect-sdk/examples/oauth/authorization-request#implicit-flow
 		// https://www.javadoc.io/doc/com.nimbusds/oauth2-oidc-sdk/6.5
@@ -81,7 +159,7 @@ public class Authenticator {
 
 		final URI authReqUri = new AuthorizationRequest
 			.Builder(new ResponseType(ResponseType.Value.TOKEN), new ClientID(CLIENT_ID))
-			.scope(new Scope(OIDCScopeValue.OPENID))
+			.scope(OIDC_SCOPE)
 			.state(state)
 			.redirectionURI(callback)
 			.endpointURI(authorizeEndpoint)
@@ -107,7 +185,8 @@ public class Authenticator {
 	 *
 	 * See references above
 	 */
-	void handleAuthorizationCallback(String uri) throws Exception {
+	void handleAuthorizationCallback(String uri) 
+			throws AuthException, ParseException, URISyntaxException, StorageException {
 		if (pendingAuth == null) {
 			MCLogger.logError("Received auth callback but no pending auth is in progress");
 			return;
@@ -122,36 +201,35 @@ public class Authenticator {
 
 		if (!response.indicatesSuccess()) {
 			MCLogger.log("Oh no, it failed");
-			throw new Exception(response.toErrorResponse().getErrorObject().toString());
+			throw new AuthException(response.toErrorResponse().getErrorObject().toString());
 		}
-		MCLogger.log("Auth response is a success");
+		MCLogger.log("Implicit auth success");
 
 		final AuthorizationSuccessResponse successResp = (AuthorizationSuccessResponse) response;
 		if (!state.equals(successResp.getState())) {
-			throw new Exception("State mismatch! Please restart the authorization process.");
+			throw new AuthException("State mismatch! Please restart the authorization process.");
 		}
 		MCLogger.log("State verified");
+		saveToken(masterNodeIP, successResp.getAccessToken());
+	}
 
-
-		AccessToken token = successResp.getAccessToken();
-
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+	
+	private void saveToken(String masterNodeIP, AccessToken token) throws StorageException {
 		// Expected: lifetime 12hr, scope 'openid', type 'bearer'
-		String msg = String.format("Got access token with lifetime %d, scope %s, type %s",
+		MCLogger.log(String.format("Got access token with lifetime %d, scope %s, type %s",
 			token.getLifetime(),
 			token.getScope(),
 			token.getType()
-		);
-		MCLogger.log(msg);
-
-		saveToken(masterNodeIP, token);
-	}
-
-	private void saveToken(String masterNodeIP, AccessToken token) throws StorageException {
+		));
+		
 		// https://help.eclipse.org/photon/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2Fsecure_storage_dev.htm
 
 		Date now = new Date(Calendar.getInstance().getTimeInMillis());
 		Date expiry = new Date(now.getTime() + token.getLifetime() * 1000);
-		MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Authorization Success", "Access token will expire at " + sdf.format(expiry));
+		MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
+				"Authorization Success", 
+				"Access token will expire at " + sdf.format(expiry));
 
 		ISecurePreferences secureStore = SecurePreferencesFactory.getDefault();
 		secureStore.put(TOKEN_PREFIX + masterNodeIP, token.getValue(), true);
