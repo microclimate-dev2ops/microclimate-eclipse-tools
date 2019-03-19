@@ -18,6 +18,7 @@ public class SyncthingFolder {
 	public final String folderId;
 	private List<String> errors = null;
 	private FolderState state = FolderState.IDLE;
+	private AbstractDevice shareDevice;
 	
 	public enum FolderState {
 
@@ -49,8 +50,9 @@ public class SyncthingFolder {
 		}
 	};
 	
-	public SyncthingFolder(String folderId) {
+	public SyncthingFolder(String folderId, AbstractDevice shareDevice) {
 		this.folderId = folderId;
+		this.shareDevice = shareDevice;
 	}
 	
 	public void setErrors(List<String> errors) {
@@ -68,5 +70,12 @@ public class SyncthingFolder {
 	public FolderState getState() {
 		return state;
 	}
+	
+	public AbstractDevice getShareDevice() {
+		return shareDevice;
+	}
 
+	public boolean isSharedWithDevice(AbstractDevice device) {
+		return shareDevice.getDeviceId().equals(device.getDeviceId());
+	}
 }
