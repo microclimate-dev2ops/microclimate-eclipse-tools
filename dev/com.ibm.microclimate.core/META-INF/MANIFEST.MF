@@ -23,6 +23,8 @@ Export-Package: com.ibm.microclimate.core,
  com.ibm.microclimate.core.internal.connection.auth,
  com.ibm.microclimate.core.internal.console,
  com.ibm.microclimate.core.internal.constants,
+ io.socket.client,
+ io.socket.emitter,
  org.json
 Bundle-ClassPath: .,
  lib/engine.io-client-1.0.0.jar,

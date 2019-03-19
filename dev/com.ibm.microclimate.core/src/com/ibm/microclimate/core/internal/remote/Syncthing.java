@@ -135,6 +135,8 @@ public class Syncthing {
 		
 		try {
 			icpDevice.addFolderEntry(projectName, hostDevice);
+			
+			// Wait for the folder to be updated before returning
 			for (int i = 0; i < 60 && !upToDate[0]; i++) {
 				try {
 					Thread.sleep(500);
@@ -151,7 +153,20 @@ public class Syncthing {
 			MCLogger.logError(msg);
 			throw new IOException(msg);
 		}
+		
+		// Keep track of the folder in the host device (state, errors);
+		hostDevice.addFolder(projectName);
+		
+		// Return the local path for the folder
 		return hostDevice.getLocalFolder(projectName);
+	}
+	
+	public boolean hasSharedFolders() {
+		return hostDevice.getSharedFolderCount() > 0;
+	}
+	
+	public void restore() throws Exception {
+		
 	}
 	
 	private ICPDevice addICPDevice(String host, String namespace) throws Exception {

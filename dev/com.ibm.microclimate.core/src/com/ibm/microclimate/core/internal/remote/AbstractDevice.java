@@ -17,26 +17,29 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.ibm.microclimate.core.internal.HttpUtil;
-import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 
 public abstract class AbstractDevice {
 	
-	protected static final int DEFAULT_TIMEOUT = 5000;
 	protected static final String LOCALHOST = "127.0.0.1";
-	protected static final String API_KEY_PROP = "X-API-Key";
-	protected static final String GET_PING_REST_PATH = "/rest/system/ping";
-	protected static final String POST_SHUTDOWN_REST_PATH = "/rest/system/shutdown";
-	protected static final String CONFIG_REST_PATH = "/rest/system/config";
+	
+	protected static final String DEVICES_KEY = "devices";
+	protected static final String DEVICE_ID_KEY = "deviceID";
+	protected static final String DEVICE_NAME_KEY = "name";
+	protected static final String DEVICE_ADDRESSES_KEY = "addresses";
+	protected static final String DEVICE_DYNAMIC_VALUE = "dynamic";
+	
+	protected static final String FOLDERS_KEY = "folders";
+	protected static final String FOLDER_ID_KEY = "id";
+	protected static final String FOLDER_DEVICES_KEY = "devices";
+	
+	protected static final String ADDR_PREFIX = "tcp://";
 
 	// Template for adding devices
 	protected static JSONObject deviceTemplate = new JSONObject();
@@ -113,12 +116,34 @@ public abstract class AbstractDevice {
 		this.host = host;
 		this.guiPort = guiPort;
 		this.connectionPort = connectionPort;
-		this.connectionAddress = "tcp://" + host + ":" + connectionPort;
+		this.connectionAddress = ADDR_PREFIX + host + ":" + connectionPort;
 		
 		try {
 			this.guiBaseUri = new URI("http", null, getGUIHost(), guiPort, null, null, null);
 		} catch (URISyntaxException e1) {
 			throw new IOException("Failed to create the URI for the device: " + e1.getMessage());
+		}
+	}
+	
+	public AbstractDevice(String configContent, String host, int guiPort, int connectionPort) throws IOException, JSONException {
+		this.host = host;
+		this.guiPort = guiPort;
+		this.connectionPort = connectionPort;
+		this.connectionAddress = ADDR_PREFIX + host + ":" + connectionPort;
+		
+		URI baseUri = null;
+		try {
+			baseUri = new URI("http", null, getGUIHost(), guiPort, null, null, null);
+			this.guiBaseUri = baseUri;
+		} catch (URISyntaxException e1) {
+			throw new IOException("Failed to create the URI for the device: " + e1.getMessage());
+		}
+		
+		String apiKey = ConfigInfo.getAPIKey(configContent);
+		this.configInfo = getConfigInfo(baseUri, apiKey);
+		
+		if (this.configInfo == null) {
+			throw new IOException("Could not get the configuration info for this device");
 		}
 	}
 	
@@ -129,17 +154,7 @@ public abstract class AbstractDevice {
 	}
 
 	public boolean testConnection(int connectTimeout) {
-		// Try to connect
-		final URI uri = guiBaseUri.resolve(GET_PING_REST_PATH);
-		try {
-			HttpResult result = HttpUtil.get(uri, getRequestProperties(configInfo), connectTimeout);
-			checkResult(uri, result);
-		} catch (IOException e) {
-			MCLogger.logError("Exception while testing the connection for " + configInfo.deviceName, e);
-			return false;
-		}
-
-		return true;
+		return APIUtils.ping(guiBaseUri, configInfo.apiKey, connectTimeout);
 	}
 	
 	public String getConnectionAddress() {
@@ -147,32 +162,25 @@ public abstract class AbstractDevice {
 	}
 	
 	public void stop() throws IOException {
-		final URI uri = guiBaseUri.resolve(POST_SHUTDOWN_REST_PATH);
-		HttpResult result = HttpUtil.post(uri, getRequestProperties(configInfo), new JSONObject());
-		
-		if (!result.isGoodResponse) {
-			MCLogger.logError(String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
-					result.responseCode, result.error));
-			throw new IOException("Failed to stop the syncthing host device.");
-		}
+		APIUtils.shutdown(guiBaseUri, configInfo.apiKey);
 	}
 	
 	public void addDeviceEntry(AbstractDevice device) throws IOException, JSONException {
-		JSONObject config = getConfig();
+		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
 		JSONObject jsonDevice = getDevice(config, device.configInfo.deviceId);
 		if (jsonDevice != null) {
 			return;
 		}
 		JSONObject deviceEntry = createDeviceEntry(device);
-		config.append("devices", deviceEntry);
-		putConfig(config);
+		config.append(DEVICES_KEY, deviceEntry);
+		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
 	}
 	
 	public JSONObject createDeviceEntry(AbstractDevice device) throws JSONException {
 		JSONObject entry = new JSONObject(deviceTemplate.toString());
-		entry.put("deviceID", device.configInfo.deviceId);
-		entry.put("name", device.configInfo.deviceName);
-		entry.append("addresses", device.getConnectionAddress());
+		entry.put(DEVICE_ID_KEY, device.configInfo.deviceId);
+		entry.put(DEVICE_NAME_KEY, device.configInfo.deviceName);
+		entry.append(DEVICE_ADDRESSES_KEY, device.getConnectionAddress());
 		return entry;
 	}
 	
@@ -181,11 +189,11 @@ public abstract class AbstractDevice {
 	}
 	
 	protected JSONObject getDevice(JSONObject config, String deviceId) throws JSONException {
-		JSONArray devices = config.getJSONArray("devices");
+		JSONArray devices = config.getJSONArray(DEVICES_KEY);
 		if (devices != null) {
 			for (int i = 0; i < devices.length(); i++) {
 				JSONObject device = devices.getJSONObject(i);
-				if (deviceId.equals(device.getString("deviceID"))) {
+				if (deviceId.equals(device.getString(DEVICE_ID_KEY))) {
 					return device;
 				}
 			}
@@ -197,33 +205,19 @@ public abstract class AbstractDevice {
 		// Override as needed
 	}
 
-	protected JSONObject getConfig() throws IOException, JSONException {
-		final URI uri = guiBaseUri.resolve(CONFIG_REST_PATH);
-		HttpResult result = HttpUtil.get(uri, getRequestProperties(configInfo), DEFAULT_TIMEOUT);
-		checkResult(uri, result);
-		JSONObject config = new JSONObject(result.response);
-		return config;
-	}
-	
-	protected void putConfig(JSONObject config) throws IOException {
-		final URI uri = guiBaseUri.resolve(CONFIG_REST_PATH);
-		HttpResult result = HttpUtil.post(uri, getRequestProperties(configInfo), config);
-		checkResult(uri, result);
-	}
-	
-	protected void checkResult(URI uri, HttpResult result) throws IOException {
-		if (!result.isGoodResponse) {
-			String msg = String.format("Received bad response %d with error message %s for request: %s", //$NON-NLS-1$
-					result.responseCode, result.error, uri);
-			MCLogger.logError(msg);
-			throw new IOException(msg);
+	public static ConfigInfo getConfigInfo(URI baseUri, String apiKey) throws IOException, JSONException {
+		String deviceId = APIUtils.getDeviceId(baseUri, apiKey);
+		JSONObject config = APIUtils.getConfig(baseUri, apiKey);
+		JSONArray devices = config.getJSONArray(DEVICES_KEY);
+		for (int devIndex = 0; devIndex < devices.length(); devIndex++) {
+			JSONObject device = devices.getJSONObject(devIndex);
+			JSONArray addresses = device.getJSONArray(DEVICE_ADDRESSES_KEY);
+			String address = addresses.getString(0);
+			if (deviceId.equals(device.getString(DEVICE_ID_KEY))) {
+				return new ConfigInfo(deviceId, device.getString(DEVICE_NAME_KEY), address, apiKey);
+			}
 		}
-	}
-	
-	public static Map<String, String> getRequestProperties(ConfigInfo configInfo) {
-		Map<String, String> requestProperties = new HashMap<String, String>();
-		requestProperties.put(API_KEY_PROP, configInfo.apiKey);
-		return requestProperties;
+		return null;
 	}
 	
 	public static ConfigInfo getConfigInfo(File configFile) throws IOException, FileNotFoundException {
@@ -263,8 +257,10 @@ public abstract class AbstractDevice {
 			this.deviceAddress = deviceAddress;
 			this.apiKey = apiKey;
 		}
-		
-		// Should really use XPath here
+
+		// This is called when the config has been generated and syncthing is not started yet.
+		// Allows the configuration to be set up with proper security before syncthing is started
+		// by reading in the generated values and using them to construct a new configuration.
 		public ConfigInfo(String configContent) throws IOException {
 			// Get the device id
 			int deviceIndex = configContent.indexOf(DEVICE_KEY_START);
@@ -278,16 +274,19 @@ public abstract class AbstractDevice {
 			startIndex = configContent.indexOf('"', nameIndex) + 1;
 			endIndex = configContent.indexOf('"', startIndex);
 			deviceName = getSubstring(configContent, startIndex, endIndex, "device name");
-			
+
 			// Get the device address
 			startIndex = configContent.indexOf(ADDRESS_START, deviceIndex) + ADDRESS_START.length();
 			endIndex = configContent.indexOf(ADDRESS_END, startIndex);
 			deviceAddress = getSubstring(configContent, startIndex, endIndex, "device address");
 			
-			// Get the API key
-			startIndex = configContent.indexOf(API_KEY_START) + API_KEY_START.length();
-			endIndex = configContent.indexOf(API_KEY_END, startIndex);
-			apiKey = getSubstring(configContent, startIndex, endIndex, "api key");
+			apiKey = getAPIKey(configContent);
+		}
+		
+		public static String getAPIKey(String configContent) throws IOException {
+			int startIndex = configContent.indexOf(API_KEY_START) + API_KEY_START.length();
+			int endIndex = configContent.indexOf(API_KEY_END, startIndex);
+			return getSubstring(configContent, startIndex, endIndex, "api key");
 		}
 	}
 	

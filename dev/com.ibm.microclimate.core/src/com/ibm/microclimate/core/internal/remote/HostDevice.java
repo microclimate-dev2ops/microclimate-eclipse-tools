@@ -16,6 +16,8 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,6 +34,8 @@ public class HostDevice extends AbstractDevice {
 	private static final String DEFAULT_FOLDER_REPLACE = "MC_REPLACE_DEFAULT_FOLDER_PATH";
 	
 	private final String folderDir;
+	
+	private final Map<String, SyncthingFolder> folders = new HashMap<String, SyncthingFolder>();
 	
 	public HostDevice(ConfigInfo configInfo, String host, int guiPort, int connectionPort, String folderDir) throws IOException {
 		super(configInfo, host, guiPort, connectionPort);
@@ -83,8 +87,20 @@ public class HostDevice extends AbstractDevice {
 		return entry;
 	}
 	
+	public synchronized void addFolder(String projectName) {
+		folders.put(projectName, new SyncthingFolder(projectName));
+	}
+	
+	public synchronized void removeFolder(String projectName) {
+		folders.remove(projectName);
+	}
+	
 	public String getLocalFolder(String projectName) {
 		return folderDir + File.separator + projectName;
+	}
+	
+	public int getSharedFolderCount() {
+		return folders.size();
 	}
 
 }
