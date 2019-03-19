@@ -39,7 +39,7 @@ public class ICPDevice extends AbstractDevice {
 	}
 
 	public void addFolderEntry(String name, AbstractDevice shareDevice) throws IOException, JSONException {
-		JSONObject config = getConfig();
+		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
 		JSONObject folder = getFolder(config, name);
 		if (folder == null) {
 			folder = createFolderEntry(name);
@@ -50,7 +50,7 @@ public class ICPDevice extends AbstractDevice {
 		JSONObject device = new JSONObject();
 		device.put("deviceID", shareDevice.configInfo.deviceId);
 		folder.append("devices", device);
-		putConfig(config);
+		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
 	}
 	
 	public boolean isThisDevice(String host, String namespace) {

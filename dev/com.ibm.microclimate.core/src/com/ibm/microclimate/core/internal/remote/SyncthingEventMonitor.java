@@ -20,8 +20,6 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.ibm.microclimate.core.internal.HttpUtil;
-import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.remote.AbstractDevice.ConfigInfo;
 
@@ -39,14 +37,9 @@ public class SyncthingEventMonitor implements Runnable {
 	public static final String FOLDER_KEY = "folder";
 	public static final String COMPLETION_KEY = "completion";
 	
-	private static final String EVENT_REST_PATH = "/rest/events";
-	private static final String SINCE_PARAM = "since";
-	private static final String EVENTS_PARAM = "events";
-	private static final String TIMEOUT_PARAM = "timeout";
-	private static final String LIMIT_PARAM = "limit";
-	
 	private static final int EVENT_TIMEOUT = 60000;
 	private static final int REQUEST_DELAY = 1000;
+	private static final int LAST_ID_TIMEOUT = 5000;
 	
 	private ConfigInfo configInfo;
 	private URI guiBaseUri;
@@ -91,21 +84,11 @@ public class SyncthingEventMonitor implements Runnable {
 	@Override
 	public void run() {
 		// First find out the latest event id
-		final URI uri = guiBaseUri.resolve(EVENT_REST_PATH);
 //		try {
-//			Map<String, Object> params = new HashMap<String, Object>();
-//			params.put(SINCE_PARAM, "0");
-//			params.put(LIMIT_PARAM, "1");
-//			params.put(TIMEOUT_PARAM, "5000");
-//			HttpResult result = HttpUtil.get(uri, AbstractDevice.getRequestProperties(configInfo), params, 10000);
-//			if (result.isGoodResponse) {
-//				if (result.response != null && !result.response.isEmpty()) {
-//					JSONArray events = new JSONArray(result.response);
-//					if (events.length() > 0) {
-//						SyncthingEvent event = new SyncthingEvent(events.getJSONObject(0));
-//						lastSeenId = event.id;
-//					}
-//				}
+//			JSONArray events = APIUtils.getEvents(guiBaseUri, configInfo.apiKey, 0, null, 1, LAST_ID_TIMEOUT);
+//			if (events.length() > 0) {
+//				SyncthingEvent event = new SyncthingEvent(events.getJSONObject(0));
+//				lastSeenId = event.id;
 //			}
 //		} catch (Exception e) {
 //			MCLogger.logError("Exception trying to determine the last event seen", e);
@@ -121,47 +104,20 @@ public class SyncthingEventMonitor implements Runnable {
 				continue;
 			}
 			try {
-				Map<String, Object> params = new HashMap<String, Object>();
-				params.put(SINCE_PARAM, String.valueOf(lastSeenId));
-				params.put(EVENTS_PARAM, getTypeList());
-				params.put(TIMEOUT_PARAM, String.valueOf(EVENT_TIMEOUT));
-				
-				HttpResult result = HttpUtil.get(uri, AbstractDevice.getRequestProperties(configInfo), params, EVENT_TIMEOUT);
-				if (!result.isGoodResponse) {
-					MCLogger.logError("Received a bad response when getting events: " + result.response);
-					continue;
-				}
-				if (result.response != null && !result.response.isEmpty()) {
-					JSONArray events = new JSONArray(result.response);
-					for (int i = 0; i < events.length(); i++) {
-						JSONObject eventJson = events.getJSONObject(i);
-						SyncthingEvent event = new SyncthingEvent(eventJson);
-						if (eventListeners.containsKey(event.type)) {
-							for (SyncthingEventListener listener : eventListeners.get(event.type)) {
-								listener.eventNotify(event);
-							}
+				JSONArray events = APIUtils.getEvents(guiBaseUri, configInfo.apiKey, lastSeenId, eventListeners.keySet(), EVENT_TIMEOUT);
+				for (int i = 0; i < events.length(); i++) {
+					JSONObject eventJson = events.getJSONObject(i);
+					SyncthingEvent event = new SyncthingEvent(eventJson);
+					if (eventListeners.containsKey(event.type)) {
+						for (SyncthingEventListener listener : eventListeners.get(event.type)) {
+							listener.eventNotify(event);
 						}
-						lastSeenId = event.id;
 					}
+					lastSeenId = event.id;
 				}
 			} catch (Exception e) {
 				MCLogger.logError("Exception while getting events for " + configInfo.deviceName, e);
 			}
 		}
 	}
-	
-	private String getTypeList() {
-		StringBuilder builder = new StringBuilder();
-		boolean start = true;
-		for (String type : eventListeners.keySet()) {
-			if (start) {
-				start = false;
-			} else {
-				builder.append(",");
-			}
-			builder.append(type);
-		}
-		return builder.toString();
-	}
-
 }
