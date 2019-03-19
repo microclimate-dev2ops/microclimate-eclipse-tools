@@ -27,7 +27,7 @@ import com.ibm.microclimate.core.internal.MCUtil;
 
 public abstract class AbstractDevice {
 	
-	protected static final String LOCALHOST = "127.0.0.1";
+	public static final String LOCALHOST = "127.0.0.1";
 	
 	protected static final String DEVICES_KEY = "devices";
 	protected static final String DEVICE_ID_KEY = "deviceID";
@@ -37,7 +37,6 @@ public abstract class AbstractDevice {
 	
 	protected static final String FOLDERS_KEY = "folders";
 	protected static final String FOLDER_ID_KEY = "id";
-	protected static final String FOLDER_DEVICES_KEY = "devices";
 	
 	protected static final String ADDR_PREFIX = "tcp://";
 
@@ -167,8 +166,26 @@ public abstract class AbstractDevice {
 	
 	public void addDeviceEntry(AbstractDevice device) throws IOException, JSONException {
 		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
-		JSONObject jsonDevice = getDevice(config, device.configInfo.deviceId);
+		JSONObject jsonDevice = getDevice(config, device.getDeviceId());
 		if (jsonDevice != null) {
+			// If the connection address has changed then update it
+			JSONArray addresses = jsonDevice.getJSONArray(DEVICE_ADDRESSES_KEY);
+			JSONArray newAddresses = new JSONArray();
+			boolean modified = false;
+			for (int addrIndex = 0; addrIndex < addresses.length(); addrIndex++) {
+				String addr = addresses.getString(addrIndex);
+				if (addr.contains(device.host) && !addr.equals(device.connectionAddress)) {
+					// Update
+					newAddresses.put(device.connectionAddress);
+					modified = true;
+				} else {
+					newAddresses.put(addr);
+				}
+			}
+			if (modified) {
+				jsonDevice.put(DEVICE_ADDRESSES_KEY, newAddresses);
+				APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
+			}
 			return;
 		}
 		JSONObject deviceEntry = createDeviceEntry(device);
@@ -182,6 +199,47 @@ public abstract class AbstractDevice {
 		entry.put(DEVICE_NAME_KEY, device.configInfo.deviceName);
 		entry.append(DEVICE_ADDRESSES_KEY, device.getConnectionAddress());
 		return entry;
+	}
+	
+	public void removeFolder(String name, AbstractDevice device) throws IOException, JSONException {
+		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
+		JSONArray folders = config.getJSONArray(FOLDERS_KEY);
+		JSONArray newFolders = new JSONArray();
+		for (int folderIndex = 0; folderIndex < folders.length(); folderIndex++) {
+			JSONObject folder = folders.getJSONObject(folderIndex);
+			if (name.equals(folder.getString(FOLDER_ID_KEY))) {
+				JSONArray devices = folder.getJSONArray(DEVICES_KEY);
+				JSONArray newDevices = new JSONArray();
+				for (int devIndex = 0; devIndex < devices.length(); devIndex++) {
+					JSONObject dev = devices.getJSONObject(devIndex);
+					if (!device.getDeviceId().equals(dev.getString(DEVICE_ID_KEY))) {
+						newDevices.put(dev);
+					}
+				}
+				if (newDevices.length() > 0) {
+					// Only include the folder if there are still devices in the new list
+					folder.put(DEVICES_KEY, newDevices);
+					newFolders.put(folder);
+				}
+			} else {
+				newFolders.put(folder);
+			}
+		}
+		config.put(FOLDERS_KEY, newFolders);
+		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
+	}
+	
+	public void removeDevice(AbstractDevice device) throws IOException, JSONException {
+		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
+		JSONArray devices = config.getJSONArray(DEVICES_KEY);
+		JSONArray newDevices = new JSONArray();
+		for (int devIndex = 0; devIndex < devices.length(); devIndex++) {
+			JSONObject dev = devices.getJSONObject(devIndex);
+			if (!device.getDeviceId().equals(dev.getString(DEVICE_ID_KEY))) {
+				newDevices.put(dev);
+			}
+		}
+		config.put(DEVICES_KEY, newDevices);
 	}
 	
 	public String getDeviceId() {
@@ -221,11 +279,15 @@ public abstract class AbstractDevice {
 	}
 	
 	public static ConfigInfo getConfigInfo(File configFile) throws IOException, FileNotFoundException {
+		String content = getConfigContent(configFile);
+		return new ConfigInfo(content);
+	}
+	
+	public static String getConfigContent(File configFile) throws IOException {
 		FileInputStream in = null;
 		try {
 			in = new FileInputStream(configFile);
-			String content = MCUtil.readAllFromStream(in);
-			return new ConfigInfo(content);
+			return MCUtil.readAllFromStream(in);
 		} finally {
 			if (in != null) {
 				try {
@@ -245,6 +307,8 @@ public abstract class AbstractDevice {
 		private static final String NAME_KEY = "name";
 		private static final String ADDRESS_START = "<address>";
 		private static final String ADDRESS_END = "</address>";
+		private static final String DEFAULT_FOLDER_START = "<defaultFolderPath>";
+		private static final String DEFAULT_FOLDER_END = "</defaultFolderPath>";
 		
 		public final String deviceId;
 		public final String deviceName;
@@ -287,6 +351,12 @@ public abstract class AbstractDevice {
 			int startIndex = configContent.indexOf(API_KEY_START) + API_KEY_START.length();
 			int endIndex = configContent.indexOf(API_KEY_END, startIndex);
 			return getSubstring(configContent, startIndex, endIndex, "api key");
+		}
+		
+		public static String getDefaultFolderPath(String configContent) throws IOException {
+			int startIndex = configContent.indexOf(DEFAULT_FOLDER_START) + DEFAULT_FOLDER_START.length();
+			int endIndex = configContent.indexOf(DEFAULT_FOLDER_END, startIndex);
+			return getSubstring(configContent, startIndex, endIndex, "default folder");
 		}
 	}
 	

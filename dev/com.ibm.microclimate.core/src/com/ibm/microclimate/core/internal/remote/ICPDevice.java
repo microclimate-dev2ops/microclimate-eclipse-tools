@@ -44,11 +44,11 @@ public class ICPDevice extends AbstractDevice {
 		if (folder == null) {
 			folder = createFolderEntry(name);
 			config.append("folders", folder);
-		} else if (isShared(folder, shareDevice.configInfo.deviceId)) {
+		} else if (isShared(folder, shareDevice.getDeviceId())) {
 			return;
 		}
 		JSONObject device = new JSONObject();
-		device.put("deviceID", shareDevice.configInfo.deviceId);
+		device.put("deviceID", shareDevice.getDeviceId());
 		folder.append("devices", device);
 		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
 	}
@@ -59,12 +59,10 @@ public class ICPDevice extends AbstractDevice {
 	
 	private JSONObject getFolder(JSONObject config, String name) throws JSONException {
 		JSONArray folders = config.getJSONArray("folders");
-		if (folders != null) {
-			for (int i = 0; i < folders.length(); i++) {
-				JSONObject folder = folders.getJSONObject(i);
-				if (name.equals(folder.getString("id"))) {
-					return folder;
-				}
+		for (int i = 0; i < folders.length(); i++) {
+			JSONObject folder = folders.getJSONObject(i);
+			if (name.equals(folder.getString("id"))) {
+				return folder;
 			}
 		}
 		return null;
@@ -76,7 +74,7 @@ public class ICPDevice extends AbstractDevice {
 		folder.put("label", name);
 		folder.put("path", FOLDER_DIR + "/" + name);
 		JSONObject device = new JSONObject();
-		device.put("deviceID", configInfo.deviceId);
+		device.put("deviceID", getDeviceId());
 		folder.append("devices", device);
 		return folder;
 	}

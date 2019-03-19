@@ -13,11 +13,15 @@ package com.ibm.microclimate.core.internal.remote;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.json.JSONException;
+
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.remote.AbstractDevice.ConfigInfo;
 import com.ibm.microclimate.core.internal.remote.ProcessHelper.ProcessResult;
 
 public class Syncthing {
@@ -28,6 +32,13 @@ public class Syncthing {
 	private static final String TMP_DIR = "tmp";
 	private static final int START_TIMEOUT = 10000;
 	
+	// TODO: use these if they are free, if not, get a free port and modify the config.xml with the new port
+	// Would also need to modify any connection addresses in ICP devices
+	private static final int GUI_PORT = 8384;
+	private static final int CONNECTION_PORT = 22000;
+	
+	private final String host;
+	private final File hostConfigBase;
 	private final String execPath;
 	private final String syncthingDir;
 	private final String configDir;
@@ -37,21 +48,29 @@ public class Syncthing {
 	private SyncthingEventMonitor eventListener;
 	
 	public Syncthing(String host, String execPath, String syncthingDir, File hostConfigBase) throws Exception {
+		this.host = host;
+		this.hostConfigBase = hostConfigBase;
 		this.execPath = execPath;
 		this.syncthingDir = syncthingDir;
 		this.configDir = syncthingDir + File.separator + CONFIG_DIR;
 		this.folderDir = syncthingDir + File.separator + FOLDER_DIR;
-		initialize(host, hostConfigBase);
 	}
 	
-	private void initialize(String host, File hostConfigBase) throws Exception {
+	private String setupHostConfig() throws Exception {
+		String configContent;
 		File configFile = new File(configDir + File.separator + CONFIG_FILE);
-		if (!configFile.exists()) {
-			generateConfig();
-			hostDevice = HostDevice.createHostDevice(host, new File(configDir + File.separator + CONFIG_FILE), folderDir, hostConfigBase);
-		} else {
-			hostDevice = HostDevice.createHostDevice(host, new File(configDir + File.separator + CONFIG_FILE), folderDir);
+		if (configFile.exists()) {
+			configContent = AbstractDevice.getConfigContent(configFile);
+			String defaultFolder = ConfigInfo.getDefaultFolderPath(configContent);
+			if (folderDir.equals(defaultFolder)) {
+				// The config file has already been set up
+				return configContent;
+			}
 		}
+		// The config file is not set up so regenerate
+		generateConfig();
+		configContent = HostDevice.setupHostDevice(configFile, folderDir, hostConfigBase);
+		return configContent;
 	}
 	
 	private void generateConfig() throws Exception {
@@ -64,14 +83,25 @@ public class Syncthing {
 		}
 	}
 	
-	public void start() throws IOException {
+	public void start() throws Exception {
+		String apiKey;
+		URI baseUri;
+		String configContent = null;
+		if (hostDevice == null) {
+			configContent = setupHostConfig();
+			apiKey = ConfigInfo.getAPIKey(configContent);
+			baseUri = new URI("http", null, AbstractDevice.LOCALHOST, GUI_PORT, null, null, null);
+		} else {
+			apiKey = hostDevice.configInfo.apiKey;
+			baseUri = hostDevice.guiBaseUri;
+		}
 		String[] command = {execPath, "-home=" + configDir};
 		ProcessBuilder builder = new ProcessBuilder(command);
 		Process process = builder.start();
 		
 		boolean started = false;
 		for (int i = 0; i < START_TIMEOUT/1000; i++) {
-			if (hostDevice.testConnection(1000)) {
+			if (APIUtils.ping(baseUri, apiKey, 10000)) {
 				started = true;
 				break;
 			}
@@ -80,6 +110,10 @@ public class Syncthing {
 		if (!started) {
 			process.destroy();
 			throw new IOException("Syncthing failed to start.");
+		}
+		
+		if (hostDevice == null) {
+			hostDevice = new HostDevice(configContent, host, GUI_PORT, CONNECTION_PORT, folderDir);
 		}
 		
 		eventListener = new SyncthingEventMonitor(hostDevice.configInfo, hostDevice.guiBaseUri);
@@ -115,7 +149,7 @@ public class Syncthing {
 		}
 		return hostDevice.testConnection(5000);
 	}
-	
+
 	public String shareICPFolder(String host, String namespace, String projectName) throws Exception {
 		final ICPDevice icpDevice = addICPDevice(host, namespace);
 		final boolean[] upToDate = new boolean[] {false};
@@ -155,18 +189,28 @@ public class Syncthing {
 		}
 		
 		// Keep track of the folder in the host device (state, errors);
-		hostDevice.addFolder(projectName);
+		hostDevice.addFolder(projectName, icpDevice);
 		
 		// Return the local path for the folder
 		return hostDevice.getLocalFolder(projectName);
 	}
 	
-	public boolean hasSharedFolders() {
-		return hostDevice.getSharedFolderCount() > 0;
+	public String shareICPFolderNoWait(String host, String namespace, String projectName) throws Exception {
+		ICPDevice icpDevice = addICPDevice(host, namespace);
+		icpDevice.addFolderEntry(projectName, hostDevice);
+		hostDevice.addFolder(projectName, icpDevice);
+		return hostDevice.getLocalFolder(projectName);
 	}
 	
-	public void restore() throws Exception {
-		
+	public void stopSharingFolder(String projectName) throws IOException, JSONException {
+		SyncthingFolder folder = hostDevice.removeFolder(projectName);
+		if (folder != null) {
+			folder.getShareDevice().removeFolder(projectName, hostDevice);
+		}
+	}
+	
+	public boolean hasSharedFolders() {
+		return hostDevice.getSharedFolderCount() > 0;
 	}
 	
 	private ICPDevice addICPDevice(String host, String namespace) throws Exception {

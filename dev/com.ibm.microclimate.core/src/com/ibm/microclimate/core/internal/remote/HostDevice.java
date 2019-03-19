@@ -42,12 +42,12 @@ public class HostDevice extends AbstractDevice {
 		this.folderDir = folderDir;
 	}
 	
-	public static HostDevice createHostDevice(String host, File configFile, String folderDir) throws Exception {
-		ConfigInfo info = getConfigInfo(configFile);
-		return new HostDevice(info, host, 8384, 22000, folderDir);
+	public HostDevice(String configContent, String host, int guiPort, int connectionPort, String folderDir) throws IOException, JSONException {
+		super(configContent, host, guiPort, connectionPort);
+		this.folderDir = folderDir;
 	}
 	
-	public static HostDevice createHostDevice(String host, File configFile, String folderDir, File configBaseFile) throws Exception {
+	public static String setupHostDevice(File configFile, String folderDir, File configBaseFile) throws Exception {
 		ConfigInfo info = getConfigInfo(configFile);
 		InputStream in = null;
 		FileWriter out = null;
@@ -61,7 +61,7 @@ public class HostDevice extends AbstractDevice {
 			content = content.replace(DEFAULT_FOLDER_REPLACE, folderDir);
 			out = new FileWriter(configFile);
 			out.write(content);
-			return new HostDevice(info, host, 8384, 22000, folderDir);
+			return content;
 		} finally {
 			if (in != null) {
 				try {
@@ -79,7 +79,7 @@ public class HostDevice extends AbstractDevice {
 			}
 		}
 	}
-
+	
 	@Override
 	public JSONObject createDeviceEntry(AbstractDevice device) throws JSONException {
 		JSONObject entry = super.createDeviceEntry(device);
@@ -87,12 +87,17 @@ public class HostDevice extends AbstractDevice {
 		return entry;
 	}
 	
-	public synchronized void addFolder(String projectName) {
-		folders.put(projectName, new SyncthingFolder(projectName));
+	public synchronized void addFolder(String projectName, AbstractDevice device) {
+		SyncthingFolder folder = new SyncthingFolder(projectName, device);
+		folders.put(projectName, folder);
 	}
 	
-	public synchronized void removeFolder(String projectName) {
-		folders.remove(projectName);
+	public synchronized SyncthingFolder removeFolder(String projectName) throws IOException, JSONException {
+		SyncthingFolder folder = folders.remove(projectName);
+		if (folder != null) {
+			removeFolder(projectName, folder.getShareDevice());
+		}
+		return folder;
 	}
 	
 	public String getLocalFolder(String projectName) {
