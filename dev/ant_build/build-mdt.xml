@@ -29,12 +29,12 @@
           <echo>Build label is "${buildLabel}"</echo>
      </target>
 
-    <!--target name="checkBuildLabelFile" >
+    <target name="checkBuildLabelFile" >
         <available file="${mdt_build.basedir}/buildLabel.properties" property="buildLabel.present"/>
-    </target-->
+    </target>
 
-    <!--target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present"-->
-    <target name="createBuildLabelFile">
+    <target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present">
+    <!--target name="createBuildLabelFile"-->
         <tstamp>
               <format property="buildLabel" pattern="yyyyMMdd_HHmm" timezone="UTC"/>
         </tstamp>
