@@ -32,7 +32,7 @@ public class Syncthing {
 	private static final String CONFIG_FILE = "config.xml";
 	private static final String FOLDER_DIR = "folders";
 	private static final String TMP_DIR = "tmp";
-	private static final int START_TIMEOUT = 10000;
+	private static final int START_TIMEOUT = 30000;
 	
 	// TODO: use these if they are free, if not, get a free port and modify the config.xml with the new port
 	// Would also need to modify any connection addresses in ICP devices
@@ -47,7 +47,7 @@ public class Syncthing {
 	private final String folderDir;
 	private HostDevice hostDevice = null;
 	private Set<AbstractDevice> devices = Collections.synchronizedSet(new HashSet<AbstractDevice>());
-	private SyncthingEventMonitor eventListener;
+	private SyncthingEventMonitor eventMonitor;
 	
 	public Syncthing(String host, String execPath, String syncthingDir, File hostConfigBase) throws Exception {
 		this.host = host;
@@ -58,6 +58,7 @@ public class Syncthing {
 		this.folderDir = syncthingDir + File.separator + FOLDER_DIR;
 	}
 	
+	// If the configuration is not set up then create the configuration using the template
 	private String setupHostConfig() throws IOException, TimeoutException {
 		String configContent;
 		File configFile = new File(configDir + File.separator + CONFIG_FILE);
@@ -69,12 +70,22 @@ public class Syncthing {
 				return configContent;
 			}
 		}
-		// The config file is not set up so regenerate
+		// The config file is not set up so generate the default configuration
 		generateConfig();
+		// Replace the default configuration with the template (filled in with the device id, name, etc. from
+		// the default configuration).
 		configContent = HostDevice.setupHostDevice(configFile, folderDir, hostConfigBase);
+		
+		// Make sure the folders directory is created
+		File file = new File(folderDir);
+		if (!file.mkdirs()) {
+			throw new IOException("Could not create the folder directory: " + folderDir);
+		}
+		
 		return configContent;
 	}
 	
+	// Generate the default configuration.  This will not actually start Syncthing.
 	private void generateConfig() throws IOException, TimeoutException {
 		String[] command = {execPath, "-generate=" + configDir};
 		ProcessBuilder builder = new ProcessBuilder(command);
@@ -85,6 +96,7 @@ public class Syncthing {
 		}
 	}
 	
+	// Set up the host device and start Syncthing and the event monitor
 	public void start() throws IOException, TimeoutException, URISyntaxException, JSONException {
 		String apiKey;
 		URI baseUri;
@@ -102,8 +114,8 @@ public class Syncthing {
 		Process process = builder.start();
 		
 		boolean started = false;
-		for (int i = 0; i < START_TIMEOUT/1000; i++) {
-			if (APIUtils.ping(baseUri, apiKey, 10000)) {
+		for (int i = 0; i < START_TIMEOUT/5000; i++) {
+			if (APIUtils.ping(baseUri, apiKey, 5000)) {
 				started = true;
 				break;
 			}
@@ -118,21 +130,28 @@ public class Syncthing {
 			hostDevice = new HostDevice(configContent, host, GUI_PORT, CONNECTION_PORT, folderDir);
 		}
 		
-		eventListener = new SyncthingEventMonitor(hostDevice.configInfo, hostDevice.guiBaseUri);
-		Thread thread = new Thread(eventListener);
+		eventMonitor = new SyncthingEventMonitor(hostDevice.configInfo, hostDevice.guiBaseUri);
+		Thread thread = new Thread(eventMonitor);
 		thread.setDaemon(true);
 		thread.start();
 		
 //		try {
-//			shareICPFolder("xxx.xxx.xxx.xxx", "mcc", "node14a");
+//			String folderName = "node20a";
+//			String host = "xxx.xxx.xxx.xxx";
+//			String namespace = "mcf";
+//			shareICPFolder(host, namespace, folderName);
+//			scanFolder(folderName);
+//			stopSharingFolder(folderName);
+//			scanFolder(folderName);
 //		} catch (Exception e) {
 //			e.printStackTrace();
 //		}
 	}
 	
+	// Stop Syncthing and stop the event monitor
 	public void stop() throws IOException {
-		if (eventListener != null) {
-			eventListener.stopListener();
+		if (eventMonitor != null) {
+			eventMonitor.stopMonitor();
 		}
 		
 		if (hostDevice == null) {
@@ -145,6 +164,7 @@ public class Syncthing {
 		}
 	}
 	
+	// Check if Syncthing is running
 	public boolean isRunning() {
 		if (hostDevice == null) {
 			return false;
@@ -152,6 +172,7 @@ public class Syncthing {
 		return hostDevice.testConnection(5000);
 	}
 
+	// Shares an ICP folder with the host.  Waits for the folder sharing to be 100% complete before returning.
 	public String shareICPFolder(String host, String namespace, String projectName) throws IOException, JSONException {
 		final ICPDevice icpDevice = addICPDevice(host, namespace);
 		final boolean[] upToDate = new boolean[] {false};
@@ -167,21 +188,21 @@ public class Syncthing {
 				}
 			}
 		};
-		eventListener.addListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
+		eventMonitor.addListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
 		
 		try {
 			icpDevice.addFolderEntry(projectName, hostDevice);
 			
 			// Wait for the folder to be updated before returning
-			for (int i = 0; i < 60 && !upToDate[0]; i++) {
+			for (int i = 0; i < 120 && !upToDate[0]; i++) {
 				try {
-					Thread.sleep(500);
+					Thread.sleep(1000);
 				} catch (Exception e) {
 					// Ignore
 				}
 			}
 		} finally {
-			eventListener.removeListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
+			eventMonitor.removeListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
 		}
 		
 		if (!upToDate[0]) {
@@ -197,6 +218,7 @@ public class Syncthing {
 		return hostDevice.getLocalFolder(projectName);
 	}
 	
+	// Shares an ICP folder with the host.  Does not wait for completion.
 	public String shareICPFolderNoWait(String host, String namespace, String projectName) throws IOException, JSONException {
 		ICPDevice icpDevice = addICPDevice(host, namespace);
 		icpDevice.addFolderEntry(projectName, hostDevice);
@@ -204,24 +226,35 @@ public class Syncthing {
 		return hostDevice.getLocalFolder(projectName);
 	}
 	
+	// Start folder scan
+	public void scanFolder(String projectName) throws IOException {
+		hostDevice.scanFolder(projectName);
+	}
+	
+	// Stop sharing the given folder
 	public void stopSharingFolder(String projectName) throws IOException, JSONException {
-		SyncthingFolder folder = hostDevice.removeFolder(projectName);
+		SyncthingFolder folder = hostDevice.getFolder(projectName);
 		if (folder != null) {
 			folder.getShareDevice().removeFolder(projectName, hostDevice);
+			hostDevice.removeFolder(projectName);
 		}
 	}
 	
+	// Checks if there are currently any shared folders
 	public boolean hasSharedFolders() {
 		return hostDevice.getSharedFolderCount() > 0;
 	}
 	
+	// Remove an ICP device
 	public void removeICPDevice(String host, String namespace) throws IOException, JSONException {
 		ICPDevice device = getICPDevice(host, namespace);
 		if (device != null) {
+			device.removeDevice(hostDevice);
 			hostDevice.removeDevice(device);
 		}
 	}
 	
+	// Add an ICP device
 	private ICPDevice addICPDevice(String host, String namespace) throws IOException, JSONException {
 		ICPDevice icpDevice = getICPDevice(host, namespace);
 		if (icpDevice == null) {

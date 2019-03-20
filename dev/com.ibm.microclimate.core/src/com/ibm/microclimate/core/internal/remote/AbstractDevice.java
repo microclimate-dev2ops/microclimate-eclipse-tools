@@ -152,6 +152,7 @@ public abstract class AbstractDevice {
 		return LOCALHOST;
 	}
 
+	// Test connection to the API, used for checking that Syncthing is up and running
 	public boolean testConnection(int connectTimeout) {
 		return APIUtils.ping(guiBaseUri, configInfo.apiKey, connectTimeout);
 	}
@@ -164,6 +165,7 @@ public abstract class AbstractDevice {
 		APIUtils.shutdown(guiBaseUri, configInfo.apiKey);
 	}
 	
+	// Add an entry to this device's configuration for the given device
 	public void addDeviceEntry(AbstractDevice device) throws IOException, JSONException {
 		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
 		JSONObject jsonDevice = getDevice(config, device.getDeviceId());
@@ -193,6 +195,7 @@ public abstract class AbstractDevice {
 		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
 	}
 	
+	// Create a device entry for the given device
 	public JSONObject createDeviceEntry(AbstractDevice device) throws JSONException {
 		JSONObject entry = new JSONObject(deviceTemplate.toString());
 		entry.put(DEVICE_ID_KEY, device.configInfo.deviceId);
@@ -201,10 +204,19 @@ public abstract class AbstractDevice {
 		return entry;
 	}
 	
+	// Start a folder scan
+	public void scanFolder(String name) throws IOException {
+		APIUtils.rescan(guiBaseUri, configInfo.apiKey, name);
+	}
+	
+	// Remove the device from the folder.  If the folder is left with only its own host device
+	// then remove the folder as well.  If the device is no longer used by any folders then
+	// remove the device.
 	public void removeFolder(String name, AbstractDevice device) throws IOException, JSONException {
 		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
 		JSONArray folders = config.getJSONArray(FOLDERS_KEY);
 		JSONArray newFolders = new JSONArray();
+		boolean deviceIsUsed = false;
 		for (int folderIndex = 0; folderIndex < folders.length(); folderIndex++) {
 			JSONObject folder = folders.getJSONObject(folderIndex);
 			if (name.equals(folder.getString(FOLDER_ID_KEY))) {
@@ -216,21 +228,40 @@ public abstract class AbstractDevice {
 						newDevices.put(dev);
 					}
 				}
-				if (newDevices.length() > 0) {
-					// Only include the folder if there are still devices in the new list
+				if (newDevices.length() > 0 && !(newDevices.length() == 1 && getDeviceId().equals(newDevices.getJSONObject(0).getString(DEVICE_ID_KEY)))) {
+					// Only include the folder if there are still devices in the new list (other than this device)
 					folder.put(DEVICES_KEY, newDevices);
 					newFolders.put(folder);
 				}
 			} else {
 				newFolders.put(folder);
+				if (!deviceIsUsed) {
+					JSONArray devices = folder.getJSONArray(DEVICES_KEY);
+					for (int devIndex = 0; devIndex < devices.length(); devIndex++) {
+						JSONObject dev = devices.getJSONObject(devIndex);
+						if (device.getDeviceId().equals(dev.getString(DEVICE_ID_KEY))) {
+							deviceIsUsed = true;
+							break;
+						}
+					}
+				}
 			}
 		}
 		config.put(FOLDERS_KEY, newFolders);
+		if (!deviceIsUsed) {
+			removeDevice(config, device);
+		}
 		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
 	}
 	
+	// Remove a device from the configuration
 	public void removeDevice(AbstractDevice device) throws IOException, JSONException {
 		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
+		removeDevice(config, device);
+		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
+	}
+	
+	private void removeDevice(JSONObject config, AbstractDevice device) throws JSONException {
 		JSONArray devices = config.getJSONArray(DEVICES_KEY);
 		JSONArray newDevices = new JSONArray();
 		for (int devIndex = 0; devIndex < devices.length(); devIndex++) {
@@ -245,8 +276,26 @@ public abstract class AbstractDevice {
 	public String getDeviceId() {
 		return configInfo.deviceId;
 	}
-	
-	protected JSONObject getDevice(JSONObject config, String deviceId) throws JSONException {
+
+	public void dispose() {
+		// Override as needed
+	}
+
+	// Get the configuration info given the API connection information.  This method only works
+	// if Syncthing is up and running.
+	public static ConfigInfo getConfigInfo(URI baseUri, String apiKey) throws IOException, JSONException {
+		String deviceId = APIUtils.getDeviceId(baseUri, apiKey);
+		JSONObject config = APIUtils.getConfig(baseUri, apiKey);
+		JSONObject device = getDevice(config, deviceId);
+		if (device != null) {
+			JSONArray addresses = device.getJSONArray(DEVICE_ADDRESSES_KEY);
+			String address = addresses.getString(0);
+			return new ConfigInfo(deviceId, device.getString(DEVICE_NAME_KEY), address, apiKey);
+		}
+		return null;
+	}	
+
+	private static JSONObject getDevice(JSONObject config, String deviceId) throws JSONException {
 		JSONArray devices = config.getJSONArray(DEVICES_KEY);
 		if (devices != null) {
 			for (int i = 0; i < devices.length(); i++) {
@@ -259,25 +308,8 @@ public abstract class AbstractDevice {
 		return null;
 	}
 	
-	public void dispose() {
-		// Override as needed
-	}
-
-	public static ConfigInfo getConfigInfo(URI baseUri, String apiKey) throws IOException, JSONException {
-		String deviceId = APIUtils.getDeviceId(baseUri, apiKey);
-		JSONObject config = APIUtils.getConfig(baseUri, apiKey);
-		JSONArray devices = config.getJSONArray(DEVICES_KEY);
-		for (int devIndex = 0; devIndex < devices.length(); devIndex++) {
-			JSONObject device = devices.getJSONObject(devIndex);
-			JSONArray addresses = device.getJSONArray(DEVICE_ADDRESSES_KEY);
-			String address = addresses.getString(0);
-			if (deviceId.equals(device.getString(DEVICE_ID_KEY))) {
-				return new ConfigInfo(deviceId, device.getString(DEVICE_NAME_KEY), address, apiKey);
-			}
-		}
-		return null;
-	}
-	
+	// Get the configuration info given the config file.  This method can be used when Syncthing
+	// is not running.
 	public static ConfigInfo getConfigInfo(File configFile) throws IOException, FileNotFoundException {
 		String content = getConfigContent(configFile);
 		return new ConfigInfo(content);

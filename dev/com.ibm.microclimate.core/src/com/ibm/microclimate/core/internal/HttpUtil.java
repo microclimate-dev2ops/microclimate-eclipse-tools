@@ -14,9 +14,11 @@ package com.ibm.microclimate.core.internal;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -134,6 +136,28 @@ public class HttpUtil {
 		}
 	}
 	
+	public static HttpResult post(URI uri, Map<String, String> requestProperties, Map<String, Object> params) throws IOException {
+        String paramStr = getParamString(params);
+		byte[] postData = paramStr.getBytes(Charset.forName("UTF-8"));
+        HttpURLConnection connection = null;
+        try {
+        	connection = (HttpURLConnection) uri.toURL().openConnection();
+        	connection.setRequestMethod("POST");
+        	connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        	connection.setRequestProperty("Content-Length", String.valueOf(postData.length));
+        	addRequestProperties(connection, requestProperties);
+        	connection.setDoOutput(true);
+        	DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
+			payloadStream.write(postData);
+
+			return new HttpResult(connection);
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
+	
 	public static HttpResult put(URI uri) throws IOException {
 		HttpURLConnection connection = null;
 
@@ -212,6 +236,18 @@ public class HttpUtil {
     		MCLogger.logError(msg, e);
     		throw new IOException(msg, e);
     	}
+    }
+    
+    private static String getParamString(Map<String, Object> params) throws UnsupportedEncodingException {
+        StringBuilder postData = new StringBuilder();
+        for (Map.Entry<String, Object> param : params.entrySet()) {
+            if (postData.length() != 0)
+                postData.append('&');
+            postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+            postData.append('=');
+            postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+        }
+        return postData.toString();
     }
 
 

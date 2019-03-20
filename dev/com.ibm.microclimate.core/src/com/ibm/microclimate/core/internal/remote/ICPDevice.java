@@ -40,18 +40,23 @@ public class ICPDevice extends AbstractDevice {
 		this.icpHost = icpHost;
 	}
 
+	// Start synchronization for the given folder and device.
 	public void addFolderEntry(String name, AbstractDevice shareDevice) throws IOException, JSONException {
 		JSONObject config = APIUtils.getConfig(guiBaseUri, configInfo.apiKey);
 		JSONObject folder = getFolder(config, name);
 		if (folder == null) {
 			folder = createFolderEntry(name);
-			config.append("folders", folder);
+			config.append(FOLDERS_KEY, folder);
 		} else if (isShared(folder, shareDevice.getDeviceId())) {
 			return;
 		}
+		
+		// Add the share device to the device list
 		JSONObject device = new JSONObject();
-		device.put("deviceID", shareDevice.getDeviceId());
-		folder.append("devices", device);
+		device.put(DEVICE_ID_KEY, shareDevice.getDeviceId());
+		folder.append(DEVICES_KEY, device);
+		
+		// Save the configuration
 		APIUtils.putConfig(guiBaseUri, configInfo.apiKey, config);
 	}
 	
@@ -59,6 +64,7 @@ public class ICPDevice extends AbstractDevice {
 		return icpHost.equals(host) && icp.isThisConnection(namespace);
 	}
 	
+	// Get the folder for the given name from the list of folders
 	private JSONObject getFolder(JSONObject config, String name) throws JSONException {
 		JSONArray folders = config.getJSONArray("folders");
 		for (int i = 0; i < folders.length(); i++) {
@@ -70,6 +76,7 @@ public class ICPDevice extends AbstractDevice {
 		return null;
 	}
 	
+	// Create a folder entry based on the template
 	private JSONObject createFolderEntry(String name) throws JSONException {
 		JSONObject folder = new JSONObject(folderTemplate.toString());
 		folder.put("id", name);
@@ -81,6 +88,7 @@ public class ICPDevice extends AbstractDevice {
 		return folder;
 	}
 	
+	// Returns true if the folder is shared with the device
 	private boolean isShared(JSONObject folder, String deviceId) throws JSONException {
 		JSONArray devices = folder.getJSONArray("devices");
 		if (devices != null) {
@@ -94,6 +102,7 @@ public class ICPDevice extends AbstractDevice {
 		return false;
 	}
 
+	// Create a new ICP device.  This includes setting up the port forwarding from ICP to the local host.
 	public static ICPDevice createICPDevice(String host, String namespace, String tmpPath) throws IOException {
 		ICPConnection icp = null;
 		

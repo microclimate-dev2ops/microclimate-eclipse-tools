@@ -29,6 +29,12 @@ import com.ibm.microclimate.core.internal.remote.AbstractDevice.ConfigInfo;
  * class does not store events. If sharing a new folder, for example,
  * and it is necessary to know when the initial sharing is complete,
  * then register before actually sharing the folder.
+ * 
+ * Only listens to events if there is an event listener registered and
+ * only listens to event types that are registered with the listeners.
+ * 
+ * Keeps track of the last event id it has seen so that it only requests
+ * events it has not seen yet.
  */
 public class SyncthingEventMonitor implements Runnable {
 	
@@ -45,7 +51,7 @@ public class SyncthingEventMonitor implements Runnable {
 	private URI guiBaseUri;
 	
 	private int lastSeenId = 0;
-	private boolean stopListener = false;
+	private boolean stopMonitor = false;
 	
 	private Map<String, List<SyncthingEventListener>> eventListeners = new HashMap<String, List<SyncthingEventListener>>();
 	
@@ -54,8 +60,8 @@ public class SyncthingEventMonitor implements Runnable {
 		this.guiBaseUri = guiBaseUri;
 	}
 	
-	public void stopListener() {
-		stopListener = true;
+	public void stopMonitor() {
+		stopMonitor = true;
 	}
 	
 	public synchronized void addListener(SyncthingEventListener listener, String... eventTypes) {
@@ -80,6 +86,10 @@ public class SyncthingEventMonitor implements Runnable {
 			}
 		}
 	}
+	
+	private synchronized boolean hasEventListeners() {
+		return !eventListeners.isEmpty();
+	}
 
 	@Override
 	public void run() {
@@ -94,8 +104,8 @@ public class SyncthingEventMonitor implements Runnable {
 //			MCLogger.logError("Exception trying to determine the last event seen", e);
 //		}
 		
-		while (!stopListener) {
-			if (eventListeners.isEmpty()) {
+		while (!stopMonitor) {
+			if (!hasEventListeners()) {
 				try {
 					Thread.sleep(REQUEST_DELAY);
 				} catch (InterruptedException e) {
@@ -105,15 +115,19 @@ public class SyncthingEventMonitor implements Runnable {
 			}
 			try {
 				JSONArray events = APIUtils.getEvents(guiBaseUri, configInfo.apiKey, lastSeenId, eventListeners.keySet(), EVENT_TIMEOUT);
-				for (int i = 0; i < events.length(); i++) {
-					JSONObject eventJson = events.getJSONObject(i);
-					SyncthingEvent event = new SyncthingEvent(eventJson);
-					if (eventListeners.containsKey(event.type)) {
-						for (SyncthingEventListener listener : eventListeners.get(event.type)) {
-							listener.eventNotify(event);
+				if (events != null) {
+					for (int i = 0; i < events.length(); i++) {
+						JSONObject eventJson = events.getJSONObject(i);
+						SyncthingEvent event = new SyncthingEvent(eventJson);
+						if (eventListeners.containsKey(event.type)) {
+							synchronized(this) {
+								for (SyncthingEventListener listener : eventListeners.get(event.type)) {
+									listener.eventNotify(event);
+								}
+							}
 						}
+						lastSeenId = event.id;
 					}
-					lastSeenId = event.id;
 				}
 			} catch (Exception e) {
 				MCLogger.logError("Exception while getting events for " + configInfo.deviceName, e);
