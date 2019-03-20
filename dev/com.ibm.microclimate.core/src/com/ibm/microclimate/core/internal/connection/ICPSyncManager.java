@@ -43,13 +43,22 @@ public class ICPSyncManager {
 	}
 	
 	public void removeLocalProject(MicroclimateApplication app) throws Exception {
+		removeSyncedProject(app);
 		Syncthing syncthing = getSyncthing();
 		syncthing.stopSharingFolder(app.name);
-		removeSyncedProject(app);
 	}
 	
 	public void removeProjectsForConnection(MicroclimateConnection conn) throws Exception {
+		JSONArray projects = removeConnection(conn);
+		if (projects == null || projects.length() == 0) {
+			return;
+		}
 		
+		Syncthing syncthing = getSyncthing();
+		for (int projIndex = 0; projIndex < projects.length(); projIndex++) {
+			syncthing.stopSharingFolder(projects.getString(projIndex));
+		}
+		syncthing.removeICPDevice(conn.getHost(), conn.getSocketNamespace());
 	}
 	
 	public void initSynchronization() throws Exception {
@@ -156,8 +165,9 @@ public class ICPSyncManager {
 		}
 	}
 	
-	private void removeConnection(MicroclimateConnection conn) throws JSONException {
+	private JSONArray removeConnection(MicroclimateConnection conn) throws JSONException {
 		URI uri = conn.baseUrl;
+		JSONArray projects = null;
 		
 		JSONObject pref = getSyncedProjectsValue();
 		if (pref != null) {
@@ -167,10 +177,14 @@ public class ICPSyncManager {
 				JSONObject connection = connections.getJSONObject(connIndex);
 				if (!uri.equals(connection.get(URI_KEY))) {
 					newConnections.put(connection);
+				} else {
+					projects = connection.getJSONArray(PROJECTS_KEY);
 				}
 			}
 			pref.put(CONNECTIONS_KEY, newConnections);
 		}
+		
+		return projects;
 	}
 
 }

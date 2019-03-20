@@ -47,7 +47,7 @@ public class HostDevice extends AbstractDevice {
 		this.folderDir = folderDir;
 	}
 	
-	public static String setupHostDevice(File configFile, String folderDir, File configBaseFile) throws Exception {
+	public static String setupHostDevice(File configFile, String folderDir, File configBaseFile) throws IOException {
 		ConfigInfo info = getConfigInfo(configFile);
 		InputStream in = null;
 		FileWriter out = null;

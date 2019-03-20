@@ -14,9 +14,11 @@ package com.ibm.microclimate.core.internal.remote;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import org.json.JSONException;
 
@@ -56,7 +58,7 @@ public class Syncthing {
 		this.folderDir = syncthingDir + File.separator + FOLDER_DIR;
 	}
 	
-	private String setupHostConfig() throws Exception {
+	private String setupHostConfig() throws IOException, TimeoutException {
 		String configContent;
 		File configFile = new File(configDir + File.separator + CONFIG_FILE);
 		if (configFile.exists()) {
@@ -73,7 +75,7 @@ public class Syncthing {
 		return configContent;
 	}
 	
-	private void generateConfig() throws Exception {
+	private void generateConfig() throws IOException, TimeoutException {
 		String[] command = {execPath, "-generate=" + configDir};
 		ProcessBuilder builder = new ProcessBuilder(command);
 		ProcessResult result = ProcessHelper.waitForProcess(builder.start(), 500, 5);
@@ -83,7 +85,7 @@ public class Syncthing {
 		}
 	}
 	
-	public void start() throws Exception {
+	public void start() throws IOException, TimeoutException, URISyntaxException, JSONException {
 		String apiKey;
 		URI baseUri;
 		String configContent = null;
@@ -150,7 +152,7 @@ public class Syncthing {
 		return hostDevice.testConnection(5000);
 	}
 
-	public String shareICPFolder(String host, String namespace, String projectName) throws Exception {
+	public String shareICPFolder(String host, String namespace, String projectName) throws IOException, JSONException {
 		final ICPDevice icpDevice = addICPDevice(host, namespace);
 		final boolean[] upToDate = new boolean[] {false};
 		SyncthingEventListener folderCompletionListener = new SyncthingEventListener() {
@@ -195,7 +197,7 @@ public class Syncthing {
 		return hostDevice.getLocalFolder(projectName);
 	}
 	
-	public String shareICPFolderNoWait(String host, String namespace, String projectName) throws Exception {
+	public String shareICPFolderNoWait(String host, String namespace, String projectName) throws IOException, JSONException {
 		ICPDevice icpDevice = addICPDevice(host, namespace);
 		icpDevice.addFolderEntry(projectName, hostDevice);
 		hostDevice.addFolder(projectName, icpDevice);
@@ -213,7 +215,14 @@ public class Syncthing {
 		return hostDevice.getSharedFolderCount() > 0;
 	}
 	
-	private ICPDevice addICPDevice(String host, String namespace) throws Exception {
+	public void removeICPDevice(String host, String namespace) throws IOException, JSONException {
+		ICPDevice device = getICPDevice(host, namespace);
+		if (device != null) {
+			hostDevice.removeDevice(device);
+		}
+	}
+	
+	private ICPDevice addICPDevice(String host, String namespace) throws IOException, JSONException {
 		ICPDevice icpDevice = getICPDevice(host, namespace);
 		if (icpDevice == null) {
 			icpDevice = ICPDevice.createICPDevice(host, namespace, syncthingDir + File.separator + TMP_DIR);

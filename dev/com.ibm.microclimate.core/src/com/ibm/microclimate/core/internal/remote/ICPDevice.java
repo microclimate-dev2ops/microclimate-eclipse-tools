@@ -32,10 +32,12 @@ public class ICPDevice extends AbstractDevice {
 	private static final String FOLDER_DIR = "/microclimate-workspace";
 	
 	private final ICPConnection icp;
+	private final String icpHost;
 	
-	private ICPDevice(ICPConnection icp, ConfigInfo configInfo, String host, int guiPort, int connectionPort) throws IOException {
+	private ICPDevice(ICPConnection icp, ConfigInfo configInfo, String icpHost, String host, int guiPort, int connectionPort) throws IOException {
 		super(configInfo, host, guiPort, connectionPort);
 		this.icp = icp;
+		this.icpHost = icpHost;
 	}
 
 	public void addFolderEntry(String name, AbstractDevice shareDevice) throws IOException, JSONException {
@@ -54,7 +56,7 @@ public class ICPDevice extends AbstractDevice {
 	}
 	
 	public boolean isThisDevice(String host, String namespace) {
-		return host.equals(host) && icp.isThisConnection(namespace);
+		return icpHost.equals(host) && icp.isThisConnection(namespace);
 	}
 	
 	private JSONObject getFolder(JSONObject config, String name) throws JSONException {
@@ -92,7 +94,7 @@ public class ICPDevice extends AbstractDevice {
 		return false;
 	}
 
-	public static ICPDevice createICPDevice(String hostIP, String namespace, String tmpPath) throws Exception {
+	public static ICPDevice createICPDevice(String host, String namespace, String tmpPath) throws IOException {
 		ICPConnection icp = null;
 		
 		try {
@@ -113,12 +115,12 @@ public class ICPDevice extends AbstractDevice {
 			icp.portForward(podName, String.valueOf(connectionPort), CONNECTION_PORT);
 			System.out.println("Connection port: " + connectionPort);
 			
-			return new ICPDevice(icp, info, LOCALHOST, guiPort, connectionPort);
+			return new ICPDevice(icp, info, host, LOCALHOST, guiPort, connectionPort);
 		} catch (Exception e) {
 			if (icp != null) {
 				icp.dispose();
 			}
-			throw e;
+			throw new IOException("Failed to create ICP device for host: " + host, e);
 		}
 	}
 
