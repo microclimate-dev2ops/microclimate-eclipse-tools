@@ -58,6 +58,7 @@ task importAnt {
     // build-mdt provides the generateOpenMDTUpdateSite target, which is the entry point
     // for the compilation and assembling of updatesites
     ant.importBuild('ant_build/build-mdt.xml')
+    println "Imported ant code"
 }
 
 def projDir = projectDir.getAbsolutePath()
@@ -174,20 +175,15 @@ task downloadEclipseSDK {
 
 task build {
     doLast {
+
     }
 }
 
-task gradleGenerateMDTUpdateSite {
-    doLast {
-    }
-}
-
-gradleGenerateMDTUpdateSite.dependsOn generateOpenMDTUpdateSite
-
+//build.dependsOn gradleCompile
+build.dependsOn importAnt
 build.dependsOn compile
 build.dependsOn generateOpenMDTUpdateSite
 
-compile.dependsOn importAnt
 compile.dependsOn downloadEclipseSDK
 compile.dependsOn downloadEclipseTargetPlatform
 compile.dependsOn getCoreDependencies
@@ -210,9 +206,9 @@ def getBuildLabelFromArtifact() {
 
         buildLabel = (fileName =~ "${filePrefix}(.*).zip")[0][1]
 
-    if (buildLabel.isEmpty()) {
-        buildLabel = ant.properties['buildLabel']
-        println "Unable to grab build label - ant buildLabel is used instead."
+        if (buildLabel.isEmpty()) {
+            buildLabel = ant.properties['buildLabel']
+            println "Unable to grab build label - ant buildLabel is used instead."
         }
     }
     return buildLabel
