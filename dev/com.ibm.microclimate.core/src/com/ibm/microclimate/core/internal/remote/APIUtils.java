@@ -35,8 +35,10 @@ public class APIUtils {
 	protected static final String POST_SHUTDOWN_REST_PATH = "/rest/system/shutdown";
 	protected static final String CONFIG_REST_PATH = "/rest/system/config";
 	protected static final String STATUS_REST_PATH = "/rest/system/status";
+	protected static final String SCAN_REST_PATH = "/rest/db/scan";
 	protected static final String EVENT_REST_PATH = "/rest/events";
 	
+	private static final String FOLDER_PARAM = "folder";
 	private static final String SINCE_PARAM = "since";
 	private static final String EVENTS_PARAM = "events";
 	private static final String TIMEOUT_PARAM = "timeout";
@@ -77,11 +79,19 @@ public class APIUtils {
 			HttpResult result = HttpUtil.get(uri, getRequestProperties(apiKey), connectTimeout);
 			checkResult(uri, result);
 		} catch (IOException e) {
-			MCLogger.logError("Exception while testing the connection for " + baseUri, e);
+			MCLogger.log("Ping failed for connection: " + baseUri + ", with error: " + e.getMessage());
 			return false;
 		}
 
 		return true;
+	}
+	
+	public static void rescan(URI baseUri, String apiKey, String folder) throws IOException {
+		URI uri = baseUri.resolve(SCAN_REST_PATH);
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put(FOLDER_PARAM, folder);
+		HttpResult result = HttpUtil.post(uri, getRequestProperties(apiKey), params);
+		checkResult(uri, result);
 	}
 	
 	public static JSONArray getEvents(URI baseUri, String apiKey, int sinceId, Set<String> types, int timeout) throws IOException, JSONException {
@@ -102,7 +112,10 @@ public class APIUtils {
 		params.put(TIMEOUT_PARAM, String.valueOf(timeout));
 		
 		HttpResult result = HttpUtil.get(uri, getRequestProperties(apiKey), params, timeout);
-		checkResult(uri, result, true);
+		checkResult(uri, result, false);
+		if (result.response == null || result.response.isEmpty()) {
+			return null;
+		}
 		return new JSONArray(result.response);
 	}
 	

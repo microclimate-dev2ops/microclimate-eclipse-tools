@@ -35,6 +35,7 @@ public class HostDevice extends AbstractDevice {
 	
 	private final String folderDir;
 	
+	// Keep track of the active folders.  Access to this object should be synchronized.
 	private final Map<String, SyncthingFolder> folders = new HashMap<String, SyncthingFolder>();
 	
 	public HostDevice(ConfigInfo configInfo, String host, int guiPort, int connectionPort, String folderDir) throws IOException {
@@ -47,7 +48,9 @@ public class HostDevice extends AbstractDevice {
 		this.folderDir = folderDir;
 	}
 	
-	public static String setupHostDevice(File configFile, String folderDir, File configBaseFile) throws Exception {
+	// Read in the information from the generated default config file and then use it to construct
+	// a configuration from the template.
+	public static String setupHostDevice(File configFile, String folderDir, File configBaseFile) throws IOException {
 		ConfigInfo info = getConfigInfo(configFile);
 		InputStream in = null;
 		FileWriter out = null;
@@ -87,25 +90,28 @@ public class HostDevice extends AbstractDevice {
 		return entry;
 	}
 	
+	// Get the path for the local copy of the project
+	public String getLocalFolder(String projectName) {
+		return folderDir + File.separator + projectName;
+	}
+	
 	public synchronized void addFolder(String projectName, AbstractDevice device) {
 		SyncthingFolder folder = new SyncthingFolder(projectName, device);
 		folders.put(projectName, folder);
 	}
 	
-	public synchronized SyncthingFolder removeFolder(String projectName) throws IOException, JSONException {
+	public synchronized SyncthingFolder getFolder(String projectName) {
+		return folders.get(projectName);
+	}
+	
+	public synchronized void removeFolder(String projectName) throws IOException, JSONException {
 		SyncthingFolder folder = folders.remove(projectName);
 		if (folder != null) {
 			removeFolder(projectName, folder.getShareDevice());
 		}
-		return folder;
 	}
 	
-	public String getLocalFolder(String projectName) {
-		return folderDir + File.separator + projectName;
-	}
-	
-	public int getSharedFolderCount() {
+	public synchronized int getSharedFolderCount() {
 		return folders.size();
 	}
-
 }
