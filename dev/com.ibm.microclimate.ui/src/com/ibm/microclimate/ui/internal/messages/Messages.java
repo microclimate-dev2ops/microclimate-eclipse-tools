@@ -30,6 +30,7 @@ public class Messages extends NLS {
 	public static String NewConnectionPage_ErrAConnectionAlreadyExists;
 	public static String NewConnectionPage_ErrCouldNotConnectToMC;
 	public static String NewConnectionPage_HostnameLabel;
+	public static String NewConnectionPage_NoPort;
 	public static String NewConnectionPage_NotValidPortNum;
 	public static String NewConnectionPage_OnlyLocalhostSupported;
 	public static String NewConnectionPage_PortLabel;

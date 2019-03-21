@@ -20,7 +20,8 @@ import java.util.List;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
-import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;;
+import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection.ConnectionType;;
 
 /**
  * Singleton class to keep track of the list of current Microclimate Connections,
@@ -88,6 +89,15 @@ public class MicroclimateConnectionManager {
 	 */
 	public synchronized static List<MicroclimateConnection> activeConnections() {
 		return Collections.unmodifiableList(instance().connections);
+	}
+	
+	public synchronized static MicroclimateConnection getLocalConnection() {
+		for (MicroclimateConnection connection : activeConnections()) {
+			if (connection.getType() == ConnectionType.LOCAL_CONNECTION) {
+				return connection;
+			}
+		}
+		return null;
 	}
 
 	public synchronized static MicroclimateConnection getActiveConnection(String baseUrl) {
