@@ -725,5 +725,5 @@ public abstract class MicroclimateConnection {
 		return null;
 	}
 	
-	public abstract IPath getLocalAppPath(MicroclimateApplication app);
+	public abstract IPath getLocalAppPath(MicroclimateApplication app) throws Exception ;
 }

@@ -62,6 +62,9 @@ public class Messages extends NLS {
 	
 	public static String RefreshResourceJobLabel;
 	public static String RefreshResourceError;
+	
+	public static String ICPSyncInitializationJobLabel;
+	public static String ICPSyncInitializationError;
 
 	static {
 		// initialize resource bundle

@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.json.JSONException;
 
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
@@ -16,12 +17,9 @@ public class ICPMicroclimateConnection extends MicroclimateConnection {
 	}
 
 	@Override
-	public IPath getLocalAppPath(MicroclimateApplication app) {
-		// TODO
-		// Need synchronization util that will set up sync
-		// for the remote path and return the local path
-		// Save in preferences project name and local path
-		return null;
+	public IPath getLocalAppPath(MicroclimateApplication app) throws Exception {
+		String localPath = ICPSyncManager.setupLocalProject(app);
+		return new Path(localPath);
 	}
 	
 }

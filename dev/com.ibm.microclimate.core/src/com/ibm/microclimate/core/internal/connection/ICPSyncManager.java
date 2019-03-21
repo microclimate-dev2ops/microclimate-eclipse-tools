@@ -12,7 +12,15 @@
 package com.ibm.microclimate.core.internal.connection;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +28,7 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.remote.Syncthing;
 
 public class ICPSyncManager {
@@ -31,7 +40,7 @@ public class ICPSyncManager {
 	private static final String PROJECTS_KEY = "projects";
 	
 	
-	public String setupLocalProject(MicroclimateApplication app) throws Exception {
+	public static String setupLocalProject(MicroclimateApplication app) throws Exception {
 		Syncthing syncthing = getSyncthing();
 		
 		// Set up synchronization for the application
@@ -42,13 +51,13 @@ public class ICPSyncManager {
 		return localFolder;
 	}
 	
-	public void removeLocalProject(MicroclimateApplication app) throws Exception {
+	public static void removeLocalProject(MicroclimateApplication app) throws Exception {
 		removeSyncedProject(app);
 		Syncthing syncthing = getSyncthing();
 		syncthing.stopSharingFolder(app.name);
 	}
 	
-	public void removeProjectsForConnection(MicroclimateConnection conn) throws Exception {
+	public static void removeProjectsForConnection(MicroclimateConnection conn) throws Exception {
 		JSONArray projects = removeConnection(conn);
 		if (projects == null || projects.length() == 0) {
 			return;
@@ -61,37 +70,63 @@ public class ICPSyncManager {
 		syncthing.removeICPDevice(conn.getHost(), conn.getSocketNamespace());
 	}
 	
-	public void initSynchronization() throws Exception {
-		Syncthing syncthing = getSyncthing();
-		
+	public static void initSynchronization() throws Exception {
 		// Read in the synced projects from the preferences and set up synchronization
-		JSONObject pref = getSyncedProjectsValue();
-		if (pref != null) {
-			JSONArray connections = pref.getJSONArray(CONNECTIONS_KEY);
-			for (int connIndex = 0; connIndex < connections.length(); connIndex++) {
-				JSONObject connection = connections.getJSONObject(connIndex);
-				String uri = connection.getString(URI_KEY);
-				MicroclimateConnection mcConnection = MicroclimateConnectionManager.getActiveConnection(uri);
-				if (mcConnection != null) {
-					JSONArray projects = connection.getJSONArray(PROJECTS_KEY);
-					for (int projIndex = 0; projIndex < projects.length(); projIndex++) {
-						MicroclimateApplication app = mcConnection.getAppByName(projects.getString(projIndex));
-						if (app != null) {
-							String host = app.mcConnection.getHost();
-							String namespace = app.mcConnection.getSocketNamespace();
-							syncthing.shareICPFolderNoWait(host, namespace, app.name);
-						} else {
-							MCLogger.logError("Could not find the " + projects.getString(projIndex) + " microclimate application for the connection: " + uri);
+		Job job = new Job(Messages.ICPSyncInitializationJobLabel) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				try {
+					JSONObject pref = getSyncedProjectsValue();
+					Map<MicroclimateConnection, List<MicroclimateApplication>> syncMap = new HashMap<MicroclimateConnection, List<MicroclimateApplication>>();
+					if (pref != null) {
+						JSONArray connections = pref.getJSONArray(CONNECTIONS_KEY);
+						for (int connIndex = 0; connIndex < connections.length(); connIndex++) {
+							JSONObject connection = connections.getJSONObject(connIndex);
+							String uri = connection.getString(URI_KEY);
+							MicroclimateConnection mcConnection = MicroclimateConnectionManager.getActiveConnection(uri);
+							if (mcConnection != null) {
+								JSONArray projects = connection.getJSONArray(PROJECTS_KEY);
+								for (int projIndex = 0; projIndex < projects.length(); projIndex++) {
+									MicroclimateApplication app = mcConnection.getAppByName(projects.getString(projIndex));
+									if (app != null) {
+										List<MicroclimateApplication> appList = syncMap.get(mcConnection);
+										if (appList == null) {
+											appList = new ArrayList<MicroclimateApplication>();
+											syncMap.put(mcConnection, appList);
+										}
+										appList.add(app);
+									} else {
+										MCLogger.logError("Could not find the " + projects.getString(projIndex) + " microclimate application for the connection: " + uri);
+									}
+								}
+							} else {
+								MCLogger.logError("Could not find the microclimate connection for URI: " + uri);
+							}
 						}
 					}
-				} else {
-					MCLogger.logError("Could not find the microclimate connection for URI: " + uri);
+					
+					// Only start up syncthing if there is something to be synchronized
+					if (!syncMap.isEmpty()) {
+						Syncthing syncthing = getSyncthing();
+						for (Map.Entry<MicroclimateConnection, List<MicroclimateApplication>> entry : syncMap.entrySet()) {
+							MicroclimateConnection conn = entry.getKey();
+							for (MicroclimateApplication app : entry.getValue()) {
+								syncthing.shareICPFolderNoWait(conn.getHost(), conn.getSocketNamespace(), app.name);
+							}
+						}
+					}
+					return Status.OK_STATUS;
+				} catch (Exception e) {
+					MCLogger.logError("An error occurred while trying to initialize ICP synchronization", e); //$NON-NLS-1$
+					return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, Messages.ICPSyncInitializationError, e);
 				}
 			}
-		}
+		};
+		job.setPriority(Job.LONG);
+		job.schedule();
 	}
 	
-	private Syncthing getSyncthing() throws Exception {
+	private static Syncthing getSyncthing() throws Exception {
 		Syncthing syncthing = MicroclimateCorePlugin.getInstance().getSyncthing();
 		if (!syncthing.isRunning()) {
 			syncthing.start();
@@ -99,7 +134,7 @@ public class ICPSyncManager {
 		return syncthing;
 	}
 	
-	private JSONObject getSyncedProjectsValue() throws JSONException {
+	private static JSONObject getSyncedProjectsValue() throws JSONException {
 		String strValue = MicroclimateCorePlugin.getDefault()
 				.getPreferenceStore()
 				.getString(SYNCED_PROJECTS_PREFSKEY);
@@ -109,7 +144,11 @@ public class ICPSyncManager {
 		return new JSONObject(strValue);
 	}
 	
-	private void addSyncedProject(MicroclimateApplication app) throws JSONException {
+	private static void setSyncedProjectsValue(JSONObject pref) {
+		MicroclimateCorePlugin.getDefault().getPreferenceStore().setValue(SYNCED_PROJECTS_PREFSKEY, pref.toString());
+	}
+	
+	private static void addSyncedProject(MicroclimateApplication app) throws JSONException {
 		URI uri = app.mcConnection.baseUrl;
 		String projectName = app.name;
 		
@@ -138,11 +177,10 @@ public class ICPSyncManager {
 			pref.append(CONNECTIONS_KEY, connection);
 		}
 		connection.append(PROJECTS_KEY, projectName);
-		
-		MicroclimateCorePlugin.getDefault().getPreferenceStore().setValue(SYNCED_PROJECTS_PREFSKEY, pref.toString());
+		setSyncedProjectsValue(pref);
 	}
 	
-	private void removeSyncedProject(MicroclimateApplication app) throws JSONException {
+	private static void removeSyncedProject(MicroclimateApplication app) throws JSONException {
 		URI uri = app.mcConnection.baseUrl;
 		String projectName = app.name;
 		
@@ -162,10 +200,11 @@ public class ICPSyncManager {
 					connection.put(PROJECTS_KEY, newProjects);
 				}
 			}
+			setSyncedProjectsValue(pref);
 		}
 	}
 	
-	private JSONArray removeConnection(MicroclimateConnection conn) throws JSONException {
+	private static JSONArray removeConnection(MicroclimateConnection conn) throws JSONException {
 		URI uri = conn.baseUrl;
 		JSONArray projects = null;
 		
@@ -182,6 +221,7 @@ public class ICPSyncManager {
 				}
 			}
 			pref.put(CONNECTIONS_KEY, newConnections);
+			setSyncedProjectsValue(pref);
 		}
 		
 		return projects;

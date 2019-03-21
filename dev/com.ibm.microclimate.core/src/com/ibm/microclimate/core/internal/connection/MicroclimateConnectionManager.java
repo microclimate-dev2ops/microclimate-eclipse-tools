@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -36,7 +36,7 @@ public class MicroclimateConnectionManager {
 	private List<MicroclimateConnection> connections = new ArrayList<>();
 	// this list tracks the URLs of connections that have never successfully connected
 	private List<String> brokenConnections = new ArrayList<>();
-
+	
 	private MicroclimateConnectionManager() {
 		instance = this;
 		// MCLogger.log("Init MicroclimateConnectionManager");
@@ -53,6 +53,13 @@ public class MicroclimateConnectionManager {
 //				    }
 //				}
 //			});
+		
+		try {
+			ICPSyncManager.initSynchronization();
+		} catch (Exception e) {
+			MCLogger.logError("An exception occurred while trying to initialize synchronization", e);
+		}
+		
 	}
 
 	private static MicroclimateConnectionManager instance() {
@@ -61,7 +68,7 @@ public class MicroclimateConnectionManager {
 		}
 		return instance;
 	}
-
+	
 	/**
 	 * Adds the given connection to the list of connections.
 	 */
