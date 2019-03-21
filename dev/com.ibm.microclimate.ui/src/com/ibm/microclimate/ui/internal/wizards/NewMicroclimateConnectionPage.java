@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,32 +11,22 @@
 
 package com.ibm.microclimate.ui.internal.wizards;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Shell;
 
-import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
-import com.ibm.microclimate.core.internal.connection.auth.Authenticator;
+import com.ibm.microclimate.ui.internal.SWTUtil;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
@@ -44,10 +34,12 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
  * validating that Microclimate is indeed reachable at the given address.
  */
 public class NewMicroclimateConnectionPage extends WizardPage {
-
-	private Text hostnameText, portText;
-
-	private MicroclimateConnection mcConnection;
+	
+	protected Composite outerComp = null;
+	protected ConnectionComposite localComp = null;
+	protected ConnectionComposite icpComp = null;
+	protected ConnectionComposite activeComp = null;
+	protected Point initialSize = null;
 
 	protected NewMicroclimateConnectionPage() {
 		super(Messages.NewConnectionPage_ShellTitle);
@@ -57,189 +49,141 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
-		Composite shell = new Composite(parent, SWT.NULL);
-		shell.setLayout(new GridLayout());
+		outerComp = new Composite(parent, SWT.NULL);
+		outerComp.setLayout(new GridLayout());
 
-		createHostnameAndPortFields(shell);
+		createConnectionTypes(outerComp);
 
-		setControl(shell);
+		setControl(outerComp);
 	}
+	
+	private void createConnectionTypes(Composite comp) {
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 3;
+        layout.marginWidth = 10;
+        layout.horizontalSpacing = 7;
+        layout.verticalSpacing = 0;
+        comp.setLayout(layout);
+        comp.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-	private void createHostnameAndPortFields(Composite shell) {
-		Composite hostPortGroup = new Composite(shell, SWT.NONE);
-		//gridData.verticalSpan = 2;
-		hostPortGroup.setLayout(new GridLayout(3, false));
-		hostPortGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+        Label label = new Label(comp, SWT.NONE);
+        label.setText("Connection type:");
+        label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 
-		GridData hostnamePortLabelData = new GridData(GridData.FILL, GridData.FILL, false, false);
-
-		Label hostnameLabel = new Label(hostPortGroup, SWT.NONE);
-		hostnameLabel.setText(Messages.NewConnectionPage_HostnameLabel);
-		hostnameLabel.setLayoutData(hostnamePortLabelData);
-
-		// Only localhost supported now so make read only and set to localhost
-		hostnameText = new Text(hostPortGroup, SWT.BORDER | SWT.READ_ONLY);
-		GridData hostnamePortTextData = new GridData(GridData.FILL, GridData.BEGINNING, true, false, 2, 1);
-		hostnameText.setLayoutData(hostnamePortTextData);
-		Color bg = hostnameText.getBackground();
-		Color fg = hostnameText.getForeground();
-        final Color gray = new Color(bg.getDevice(), (bg.getRed() + fg.getRed()) / 2, (bg.getGreen() + fg.getGreen()) / 2, (bg.getBlue() + fg.getBlue()) / 2);
-        hostnameText.addDisposeListener(new DisposeListener() {
+        // Add buttons for the connection types
+        Button localButton = new Button(comp, SWT.RADIO);
+        localButton.setText("Local");
+        GridData data = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
+        data.horizontalSpan = 2;
+        localButton.setLayoutData(data);
+        
+        Button icpButton = new Button(comp, SWT.RADIO);
+        icpButton.setText("ICP");
+        data = new GridData(SWT.FILL, SWT.BEGINNING, false, false);
+        data.horizontalIndent = label.computeSize(SWT.DEFAULT, SWT.DEFAULT).x + 7;
+        data.horizontalSpan = 3;
+        icpButton.setLayoutData(data);
+        
+        SelectionAdapter listener = new SelectionAdapter() {
             @Override
-            public void widgetDisposed(DisposeEvent event) {
-                gray.dispose();
+            public void widgetSelected(SelectionEvent e) {
+
+                Button button = (Button) e.getSource();
+                if (button.getSelection()) {
+                	if (activeComp != null) {
+                        GridData data = (GridData) activeComp.getLayoutData();
+                        if (!data.exclude) {
+                            data.exclude = true;
+                            activeComp.setVisible(!data.exclude);
+                            activeComp.setLayoutData(data);
+                        }
+                    }
+                    if (button == localButton) {
+                    	if (localComp == null) {
+                    		localComp = new LocalConnectionComposite(outerComp, NewMicroclimateConnectionPage.this);
+                    	}
+                    	activeComp = localComp;
+                    } else {
+                    	if (icpComp == null) {
+                    		icpComp = new ICPConnectionComposite(outerComp, NewMicroclimateConnectionPage.this);
+                    	}
+                    	activeComp = icpComp;
+                    }
+                    updateCompLayout();
+                    
+                }
+                outerComp.setFocus();
             }
-        });
-        hostnameText.setForeground(gray);
-		hostnameText.setText("localhost"); //$NON-NLS-1$
-		final String localhostOnly = Messages.NewConnectionPage_OnlyLocalhostSupported;
-		hostnameLabel.setToolTipText(localhostOnly);
-		hostnameText.setToolTipText(localhostOnly);
 
-		// Invalidate the wizard when the host or port are changed so that the user has to test the connection again.
-		ModifyListener modifyListener = new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent arg0) {
-				removePreviousMCConnection();
+        };
+        localButton.addSelectionListener(listener);
+        icpButton.addSelectionListener(listener);
 
-				setErrorMessage(null);
-				setMessage(Messages.NewConnectionPage_TestToProceed);
-				getWizard().getContainer().updateButtons();
-			}
-		};
-
-		hostnameText.addModifyListener(modifyListener);
-
-		Label portLabel = new Label(hostPortGroup, SWT.NONE);
-		portLabel.setText(Messages.NewConnectionPage_PortLabel);
-		portLabel.setLayoutData(hostnamePortLabelData);
-
-		portText = new Text(hostPortGroup, SWT.BORDER);
-		portText.setLayoutData(hostnamePortTextData);
-		portText.setText("9090"); //$NON-NLS-1$
-
-		portText.addModifyListener(modifyListener);
-
-		final Button testConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
-		testConnectionBtn.setText(Messages.NewConnectionPage_TestConnectionBtn);
-		testConnectionBtn.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				// Block the Test Connection button while we test it
-				testConnectionBtn.setEnabled(false);
-				testConnection();
-				testConnectionBtn.setEnabled(true);
-				testConnectionBtn.setFocus();
-			}
-		});
-		testConnectionBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-
-		// In the Local case, the user can only create one connection,
-		// so if they have one already, block the Add button.
-		if (MicroclimateConnectionManager.activeConnectionsCount() > 0) {
-			testConnectionBtn.setEnabled(false);
-			String existingConnectionUrl = MicroclimateConnectionManager.activeConnections().get(0).baseUrl.toString();
-			setErrorMessage(
-					NLS.bind(Messages.NewConnectionPage_ErrAConnectionAlreadyExists,
-					existingConnectionUrl));
-		} else {
-			testConnectionBtn.setFocus();
-		}
-
-		///// Temp ICP connection test stuff
-		final Text masterIPText = new Text(shell, SWT.BORDER);
-		masterIPText.setText("9.42.28.18");
-
-		final Button authBtn = new Button(shell, SWT.PUSH);
-		authBtn.setText("Authorize");
-		authBtn.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				try {
-					final String masterIP = masterIPText.getText();
-					Authenticator.instance().authenticate(masterIP);
-				} catch (Exception e) {
-					MCLogger.logError("Auth error", e);
-					MessageDialog.openError(shell.getShell(), "Auth error", e.getMessage());
-				}
-			}
-		});
+        localButton.setSelection(true);
+        localButton.notifyListeners(SWT.Selection, new Event());
 	}
+	
+    protected void setupComposite(ConnectionComposite comp, boolean isIndentationRequired) {
+        if (comp != null) {
+            GridData data = new GridData();
+            data.horizontalAlignment = SWT.FILL;
+            data.grabExcessHorizontalSpace = true;
+            data.verticalAlignment = SWT.FILL;
+            data.widthHint = 400;
+            data.grabExcessVerticalSpace = true;
+            data.horizontalSpan = 3;
+            data.verticalIndent = 7;
+            if (isIndentationRequired)
+                data.horizontalIndent = SWTUtil.convertWidthInCharsToPixels(outerComp, 4);
+            comp.setLayoutData(data);
+        }
+    }
+    
+    protected void updateCompLayout() {
+        // This must come after the 'activeComp' field is set since it ends up
+        // invoking the isComplete method that use the 'activeComp' field.
+        setupComposite(activeComp, true);
+        GridData data = (GridData) activeComp.getLayoutData();
+        data.exclude = false;
+        activeComp.setVisible(!data.exclude);
+        validate();
+        outerComp.redraw();
+        outerComp.layout(true, true);
 
-	void removePreviousMCConnection() {
-		if (mcConnection != null) {
-			mcConnection.close();
-		}
-		mcConnection = null;
-	}
+        //resize wizard vertically.
+        Shell shell = outerComp.getShell();
+        shell.layout(true, true);
 
-	void testConnection() {
-		removePreviousMCConnection();
+        if (initialSize == null) {
+            initialSize = shell.getSize();
+            initialSize.x = 800;
+        }
 
-		// Try to connect to Microclimate at the given hostname:port
-		String hostname = hostnameText.getText().trim();
-		String portStr = portText.getText().trim();
-
-		URI uri = null;
-		try {
-			int port = Integer.parseInt(portStr);
-
-			uri = MicroclimateConnection.buildUrl(hostname, port);
-		}
-		catch(NumberFormatException e) {
-			MCLogger.logError(e);
-			setErrorMessage(NLS.bind(Messages.NewConnectionPage_NotValidPortNum, portStr));
-		}
-		catch(URISyntaxException e) {
-			MCLogger.logError(e);
-			setErrorMessage(e.getMessage());
-		}
-
-		if (uri == null) {
-			return;
-		}
-
-		try {
-			MCLogger.log("Validating connection: " + uri); //$NON-NLS-1$
-
-			// Will throw an Exception if fails
-			mcConnection = MicroclimateObjectFactory.createMicroclimateConnection(uri);
-
-			if(mcConnection != null) {
-				setErrorMessage(null);
-				setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, mcConnection.baseUrl));
-			}
-		}
-		catch(Exception e) {
-			String msg = e.getMessage();
-			if (msg == null) {
-				// The exceptions we expect to get here should have good messages for the user.
-				// Show a generic message if none is provided.
-				MCLogger.logError("Unexpected exception", e); //$NON-NLS-1$
-
-				msg = NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnectToMC, uri);
-			}
-			setErrorMessage(msg);
-		}
-
-		getWizard().getContainer().updateButtons();
-	}
-
-	/**
-	 * Test canFinish before calling this to make sure it will never return null.
-	 */
-	MicroclimateConnection getMCConnection() {
-		return mcConnection;
-	}
+        final Point newSize = shell.computeSize(initialSize.x, SWT.DEFAULT, true);
+        shell.setSize(newSize);
+    }
 
 	@Override
 	public boolean canFlipToNextPage() {
-		return mcConnection != null;
+		return false;
 	}
+	
+    protected void validate() {
+        if (activeComp != null) {
+        	activeComp.validate();
+        }
+    }
 
-	void performFinish() {
-		if (mcConnection != null) {
-			MicroclimateConnectionManager.add(mcConnection);
+	public void performFinish() {
+		if (activeComp != null && activeComp.mcConnection != null) {
+			MicroclimateConnectionManager.add(activeComp.mcConnection);
 		}
+	}
+	
+	public MicroclimateConnection getMCConnection() {
+		if (activeComp != null) {
+			return activeComp.mcConnection;
+		}
+		return null;
 	}
 }

@@ -32,4 +32,9 @@ public class LocalMicroclimateConnection extends MicroclimateConnection {
 		return MCUtil.appendPathWithoutDupe(getWorkspacePath(), app.pathInWorkspace);
 	}
 
+	@Override
+	public ConnectionType getType() {
+		return ConnectionType.LOCAL_CONNECTION;
+	}
+
 }

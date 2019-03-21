@@ -57,6 +57,11 @@ public abstract class MicroclimateConnection {
 	private String versionStr;
 	private String connectionErrorMsg = null;
 	private String socketNamespace = null;
+	
+	enum ConnectionType {
+		LOCAL_CONNECTION,
+		ICP_CONNECTION
+	};
 
 	private MicroclimateSocket mcSocket;
 	
@@ -725,5 +730,7 @@ public abstract class MicroclimateConnection {
 		return null;
 	}
 	
-	public abstract IPath getLocalAppPath(MicroclimateApplication app) throws Exception ;
+	public abstract IPath getLocalAppPath(MicroclimateApplication app) throws Exception;
+	
+	public abstract ConnectionType getType();
 }
