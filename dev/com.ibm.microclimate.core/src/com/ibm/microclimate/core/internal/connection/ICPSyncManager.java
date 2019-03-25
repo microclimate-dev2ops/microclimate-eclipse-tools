@@ -70,6 +70,11 @@ public class ICPSyncManager {
 		syncthing.removeICPDevice(conn.getHost(), conn.getSocketNamespace());
 	}
 	
+	public static void syncProject(MicroclimateApplication app) throws Exception {
+		Syncthing syncthing = getSyncthing();
+		syncthing.scanFolder(app.name);
+	}
+	
 	public static void initSynchronization() throws Exception {
 		// Read in the synced projects from the preferences and set up synchronization
 		Job job = new Job(Messages.ICPSyncInitializationJobLabel) {
@@ -124,6 +129,26 @@ public class ICPSyncManager {
 		};
 		job.setPriority(Job.LONG);
 		job.schedule();
+	}
+	
+	public static boolean isProjectSynced(MicroclimateApplication app) throws JSONException {
+		JSONObject pref = getSyncedProjectsValue();
+		if (pref == null) {
+			return false;
+		}
+		JSONArray connections = pref.getJSONArray(CONNECTIONS_KEY);
+		for (int connIndex = 0; connIndex < connections.length(); connIndex++) {
+			JSONObject connection = connections.getJSONObject(connIndex);
+			if (app.mcConnection.baseUrl.equals(connection.get(URI_KEY))) {
+				JSONArray projects = connection.getJSONArray(PROJECTS_KEY);
+				for (int projIndex = 0; projIndex < projects.length(); projIndex++) {
+					if (app.name.equals(projects.getString(projIndex))) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 	
 	private static Syncthing getSyncthing() throws Exception {
