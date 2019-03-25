@@ -58,7 +58,7 @@ public abstract class MicroclimateConnection {
 	private String connectionErrorMsg = null;
 	private String socketNamespace = null;
 	
-	enum ConnectionType {
+	public enum ConnectionType {
 		LOCAL_CONNECTION,
 		ICP_CONNECTION
 	};
