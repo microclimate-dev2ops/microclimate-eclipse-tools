@@ -36,7 +36,7 @@ import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
-import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.LocalMicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
 import com.ibm.microclimate.core.internal.constants.AppState;
@@ -57,7 +57,7 @@ public abstract class BaseTest extends TestCase {
 	
 	protected static final String MARKER_TYPE = "com.ibm.microclimate.core.validationMarker";
 	
-	protected static MicroclimateConnection connection;
+	protected static LocalMicroclimateConnection connection;
 	protected static IProject project;
 	
 	protected static String projectName;
@@ -72,7 +72,7 @@ public abstract class BaseTest extends TestCase {
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);
     	
         // Create a microclimate connection
-        connection = MicroclimateObjectFactory.createMicroclimateConnection(new URI(MICROCLIMATE_URI));
+        connection = MicroclimateObjectFactory.createLocalConnection(new URI(MICROCLIMATE_URI));
         MicroclimateConnectionManager.add(connection);
         
         // Create a new microprofile project
@@ -117,7 +117,7 @@ public abstract class BaseTest extends TestCase {
     	MicroclimateApplication app = connection.getAppByName(projectName);
     	URL url = app.getBaseUrl();
     	url = new URL(url.toExternalForm() + relativeURL);
-    	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
+    	HttpUtil.HttpResult result = HttpUtil.get(url.toURI(), connection.getAuthToken());
     	assertTrue("The response code should be 200: " + result.responseCode, result.responseCode == 200);
     	assertTrue("The response should contain the expected text: " + expectedText, result.response != null && result.response.contains(expectedText));   	
     }

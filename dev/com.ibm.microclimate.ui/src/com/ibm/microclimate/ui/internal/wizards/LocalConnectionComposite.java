@@ -36,6 +36,7 @@ import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.internal.messages.Messages;
+import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class LocalConnectionComposite extends ConnectionComposite {
 	
@@ -169,7 +170,7 @@ public class LocalConnectionComposite extends ConnectionComposite {
 			MCLogger.log("Validating connection: " + uri); //$NON-NLS-1$
 
 			// Will throw an Exception if fails
-			mcConnection = MicroclimateObjectFactory.createMicroclimateConnection(uri);
+			mcConnection = MicroclimateObjectFactory.createLocalConnection(uri);
 
 			if(mcConnection != null) {
 				wizardPage.setErrorMessage(null);
@@ -189,5 +190,27 @@ public class LocalConnectionComposite extends ConnectionComposite {
 		}
 
 		wizardPage.getWizard().getContainer().updateButtons();
+	}
+
+	@Override
+	protected boolean canFinish() {
+		return mcConnection != null;
+	}
+
+	@Override
+	protected void performFinish() {
+		if (mcConnection != null) {
+			MicroclimateConnectionManager.add(mcConnection);
+			ViewHelper.openMicroclimateExplorerView();
+			ViewHelper.refreshMicroclimateExplorerView(null);
+			ViewHelper.expandConnection(mcConnection);
+		}
+	}
+	
+	@Override
+	protected void performCancel() {
+		if (mcConnection != null) {
+			mcConnection.close();
+		}
 	}
 }

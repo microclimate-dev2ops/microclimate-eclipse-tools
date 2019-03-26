@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package com.ibm.microclimate.core.internal.console;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.HttpUtil.HttpResult;
@@ -38,13 +39,14 @@ public class BuildLogMonitor implements Runnable {
 			String buildLogPath = MCConstants.APIPATH_PROJECT_LIST + "/" + app.projectID + "/" + MCConstants.KEY_BUILD_LOG;	//$NON-NLS-1$
 			URI uri = app.mcConnection.baseUrl.resolve(buildLogPath);
 			try {
-				HttpResult result = HttpUtil.head(uri);
+				String authToken = app.mcConnection.getAuthToken();
+				HttpResult result = HttpUtil.head(uri, authToken);
 				if (result.isGoodResponse) {
 					String timestampStr = result.getHeader(MCConstants.KEY_BUILD_LOG_LAST_MODIFIED);
 					double timestamp = Double.parseDouble(timestampStr);
 					if (console.hasChanged(timestamp)) {
 						// Now get the contents
-						result = HttpUtil.get(uri);
+						result = HttpUtil.get(uri, authToken);
 						if (result.isGoodResponse ) {
 							timestampStr = result.getHeader(MCConstants.KEY_BUILD_LOG_LAST_MODIFIED);
 							timestamp = Double.parseDouble(timestampStr);

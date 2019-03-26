@@ -66,7 +66,7 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 		// If a debugger is already attached then the devtools url field will not be included in the result
 		try {
 			URI uri = new URI("http", null, host, debugPort, DEBUG_INFO, null, null); //$NON-NLS-1$
-			HttpResult result = HttpUtil.get(uri);
+			HttpResult result = HttpUtil.get(uri, app.mcConnection.getAuthToken());
 			if (result.isGoodResponse) {
 				String response = result.response;
 				JSONArray array = new JSONArray(response);
@@ -99,7 +99,7 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 		
 		for (int i = 0; i <= debugTimeout; i++) {
 			try {
-				result = HttpUtil.get(uri);
+				result = HttpUtil.get(uri, app.mcConnection.getAuthToken());
 				if (result.isGoodResponse) {
 					String response = result.response;
 					JSONArray array = new JSONArray(response);

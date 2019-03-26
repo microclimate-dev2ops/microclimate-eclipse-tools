@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2019 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v20.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+
 package com.ibm.microclimate.core.internal.connection.auth;
 
 import java.net.URI;
@@ -8,9 +19,8 @@ import java.util.Date;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 import com.ibm.microclimate.core.internal.MCLogger;
@@ -145,13 +155,22 @@ public class Authenticator {
 
 		saveToken(masterNodeIP, token);
 	}
+	
+	public String getToken(String masterNodeIP) throws StorageException {
+		ISecurePreferences secureStore = SecurePreferencesFactory.getDefault();
+		String token = secureStore.get(TOKEN_PREFIX + masterNodeIP, "");
+		if (token == null || token.isEmpty()) {
+			return null;
+		}
+		return token;
+	}
 
 	private void saveToken(String masterNodeIP, AccessToken token) throws StorageException {
 		// https://help.eclipse.org/photon/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2Fsecure_storage_dev.htm
 
 		Date now = new Date(Calendar.getInstance().getTimeInMillis());
 		Date expiry = new Date(now.getTime() + token.getLifetime() * 1000);
-		MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Authorization Success", "Access token will expire at " + sdf.format(expiry));
+//		MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Authorization Success", "Access token will expire at " + sdf.format(expiry));
 
 		ISecurePreferences secureStore = SecurePreferencesFactory.getDefault();
 		secureStore.put(TOKEN_PREFIX + masterNodeIP, token.getValue(), true);

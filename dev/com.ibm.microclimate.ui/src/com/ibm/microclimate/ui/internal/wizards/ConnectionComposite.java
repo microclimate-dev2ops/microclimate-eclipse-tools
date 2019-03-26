@@ -40,5 +40,13 @@ public abstract class ConnectionComposite extends Composite {
 	}
 	
 	protected abstract void validate();
+	
+	protected abstract boolean canFinish();
+	
+	protected abstract void performFinish();
+	
+	protected void performCancel() {
+		// Override if something needs to be done
+	}
 
 }

@@ -205,7 +205,7 @@ public class MicroclimateConnectionManager {
 			try {
 				// Assume all connections are active. If they are broken they will be handled in the catch below.
 				URI uri = new URI(line);
-				MicroclimateConnection connection = MicroclimateObjectFactory.createMicroclimateConnection(uri);
+				MicroclimateConnection connection = MicroclimateObjectFactory.createLocalConnection(uri);
 				add(connection);
 			}
 			catch (MicroclimateConnectionException mce) {

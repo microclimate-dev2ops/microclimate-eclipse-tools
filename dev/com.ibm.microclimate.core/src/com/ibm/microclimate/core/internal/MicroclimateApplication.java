@@ -286,7 +286,7 @@ public class MicroclimateApplication {
 	public String toString() {
 		return String.format("%s@%s id=%s name=%s type=%s loc=%s", //$NON-NLS-1$
 				MicroclimateApplication.class.getSimpleName(), baseUrl.toString(),
-				projectID, name, projectType, MCUtil.appendPathWithoutDupe(mcConnection.getWorkspacePath(), pathInWorkspace));
+				projectID, name, projectType, pathInWorkspace);
 	}
 }
 

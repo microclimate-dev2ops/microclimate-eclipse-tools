@@ -26,7 +26,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,6 +41,8 @@ import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
+import io.socket.client.Socket;
+
 /**
  * Represents a connection to a Microclimate instance
  */
@@ -53,10 +54,10 @@ public abstract class MicroclimateConnection {
 	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
 	public final URI baseUrl;
-	private IPath localWorkspacePath;
-	private String versionStr;
-	private String connectionErrorMsg = null;
-	private String socketNamespace = null;
+	protected String versionStr;
+	protected String connectionErrorMsg = null;
+	protected String socketNamespace = null;
+	protected URI socketURI = null;
 	
 	public enum ConnectionType {
 		LOCAL_CONNECTION,
@@ -67,7 +68,7 @@ public abstract class MicroclimateConnection {
 	
 	private volatile boolean isConnected = true;
 
-	private Map<String, MicroclimateApplication> appMap = new LinkedHashMap<String, MicroclimateApplication>();
+	protected Map<String, MicroclimateApplication> appMap = new LinkedHashMap<String, MicroclimateApplication>();
 
 	public static URI buildUrl(String host, int port) throws URISyntaxException {
 		return new URI("http", null, host, port, null, null, null); //$NON-NLS-1$
@@ -82,9 +83,15 @@ public abstract class MicroclimateConnection {
 		if (MicroclimateConnectionManager.getActiveConnection(uri.toString()) != null) {
 			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_AlreadyExists, baseUrl));
 		}
-		
-		JSONObject env = getEnvData(this.baseUrl);
-
+	}
+	
+	public void initialize() throws IOException, URISyntaxException, JSONException {
+		JSONObject env = getEnvData();
+        initialize(env);
+		refreshApps(null);
+	}
+	
+	protected void initialize(JSONObject env) throws IOException, URISyntaxException, JSONException {
 		this.versionStr = getMCVersion(env);
 
 		if (UNKNOWN_VERSION.equals(versionStr)) {
@@ -96,25 +103,14 @@ public abstract class MicroclimateConnection {
 		}
 
 		MCLogger.log("Microclimate version is: " + versionStr);			// $NON-NLS-1$
-
-		this.localWorkspacePath = getWorkspacePath(env);
-		if (localWorkspacePath == null) {
-			// Can't recover from this
-			// This should never happen since we have already determined it is a supported version of microclimate.
-			onInitFail(Messages.MicroclimateConnection_ErrConnection_WorkspaceErr);
-		}
 		
 		this.socketNamespace = getSocketNamespace(env);
 		
 		mcSocket = new MicroclimateSocket(this);
 		if(!mcSocket.blockUntilFirstConnection()) {
 			close();
-			throw new MicroclimateConnectionException(mcSocket.socketUri);
+			throw new MicroclimateConnectionException(socketURI);
 		}
-
-		refreshApps(null);
-
-		MCLogger.log("Created " + this); //$NON-NLS-1$
 	}
 	
 	public String getHost() {
@@ -129,7 +125,7 @@ public abstract class MicroclimateConnection {
 		return mcSocket;
 	}
 
-	private void onInitFail(String msg) throws ConnectException {
+	protected void onInitFail(String msg) throws ConnectException {
 		MCLogger.log("Initializing MicroclimateConnection failed: " + msg); //$NON-NLS-1$
 		close();
 		throw new ConnectException(msg);
@@ -148,12 +144,12 @@ public abstract class MicroclimateConnection {
 		}
 	}
 
-	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
+	private JSONObject getEnvData() throws JSONException, IOException {
 		final URI envUrl = baseUrl.resolve(MCConstants.APIPATH_ENV);
 
 		String envResponse = null;
 		try {
-			envResponse = HttpUtil.get(envUrl).response;
+			envResponse = HttpUtil.get(envUrl, getAuthToken()).response;
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Environment endpoint", e); //$NON-NLS-1$
 			throw e;
@@ -196,7 +192,14 @@ public abstract class MicroclimateConnection {
 
 		// The version will have a format like '1809', which corresponds to v18.09
 		try {
-			int version = Integer.parseInt(versionStr);
+			int version = 0;
+			if (versionStr.indexOf('.') >= 0) {
+				float f = Float.parseFloat(versionStr);
+				f = f * 100;
+				version = (int)f;
+			} else {
+				version = Integer.parseInt(versionStr);
+			}
 			return version >= MCConstants.REQUIRED_MC_VERSION;
 		}
 		catch(NumberFormatException e) {
@@ -248,25 +251,6 @@ public abstract class MicroclimateConnection {
 		return this.connectionErrorMsg;
 	}
 
-	private static Path getWorkspacePath(JSONObject env) throws JSONException {
-		// Try the internal system property first
-		String path = System.getProperty(MICROCLIMATE_WORKSPACE_PROPERTY, null);
-		if (path != null && !path.isEmpty()) {
-			return new Path(path);
-		}
-
-		if (!env.has(MCConstants.KEY_ENV_WORKSPACE_LOC)) {
-			MCLogger.logError("Missing workspace location from env data"); //$NON-NLS-1$
-			return null;
-		}
-		String workspaceLoc = env.getString(MCConstants.KEY_ENV_WORKSPACE_LOC);
-		if (MCUtil.isWindows() && workspaceLoc.startsWith("/")) { //$NON-NLS-1$
-			String device = workspaceLoc.substring(1, 2);
-			workspaceLoc = device + ":" + workspaceLoc.substring(2); //$NON-NLS-1$
-		}
-		return new Path(workspaceLoc);
-	}
-	
 	private static String getSocketNamespace(JSONObject env) throws JSONException {
 		if (env.has(MCConstants.KEY_ENV_MC_SOCKET_NAMESPACE)) {
 			Object nsObj = env.get(MCConstants.KEY_ENV_MC_SOCKET_NAMESPACE);
@@ -290,7 +274,7 @@ public abstract class MicroclimateConnection {
 
 		String projectsResponse = null;
 		try {
-			projectsResponse = HttpUtil.get(projectsURL).response;
+			projectsResponse = HttpUtil.get(projectsURL, getAuthToken()).response;
 		} catch (IOException e) {
 			MCLogger.logError("Error contacting Projects endpoint", e);  //$NON-NLS-1$
 			return;
@@ -363,7 +347,7 @@ public abstract class MicroclimateConnection {
 		restartProjectPayload.put(MCConstants.KEY_START_MODE, launchMode);
 
 		// This initiates the restart
-		HttpResult result = HttpUtil.post(url, restartProjectPayload);
+		HttpResult result = HttpUtil.post(url, getAuthToken(), restartProjectPayload);
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
 					result.responseCode, result.error);
@@ -384,7 +368,7 @@ public abstract class MicroclimateConnection {
 		URI url = baseUrl.resolve(restartEndpoint);
 
 		// This initiates the restart
-		HttpResult result = HttpUtil.put(url);
+		HttpResult result = HttpUtil.put(url, getAuthToken());
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
 					result.responseCode, result.error);
@@ -401,7 +385,7 @@ public abstract class MicroclimateConnection {
 	public JSONObject requestProjectStatus(MicroclimateApplication app) throws IOException, JSONException {
 		final URI statusUrl = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST);
 
-		HttpResult result = HttpUtil.get(statusUrl);
+		HttpResult result = HttpUtil.get(statusUrl, getAuthToken());
 
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
@@ -443,7 +427,7 @@ public abstract class MicroclimateConnection {
 		buildPayload.put(MCConstants.KEY_ACTION, action);
 
 		// This initiates the build
-		HttpUtil.post(url, buildPayload);
+		HttpUtil.post(url, getAuthToken(), buildPayload);
 	}
 	
 	public void requestValidate(MicroclimateApplication app) throws JSONException, IOException {
@@ -468,7 +452,7 @@ public abstract class MicroclimateConnection {
 		}
 		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.type);
 		
-		HttpResult result = HttpUtil.post(url, buildPayload);
+		HttpResult result = HttpUtil.post(url, getAuthToken(), buildPayload);
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
 					result.responseCode, result.error);
@@ -499,7 +483,7 @@ public abstract class MicroclimateConnection {
 		buildPayload.put(MCConstants.KEY_PROJECT_TYPE, app.projectType.type);
 		buildPayload.put(MCConstants.KEY_AUTO_GENERATE, true);
 		
-		HttpResult result = HttpUtil.post(url, buildPayload);
+		HttpResult result = HttpUtil.post(url, getAuthToken(), buildPayload);
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
 					result.responseCode, result.error);
@@ -513,7 +497,7 @@ public abstract class MicroclimateConnection {
 	public JSONObject requestProjectCapabilities(MicroclimateApplication app) throws IOException, JSONException {
 		final URI statusUrl = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST + "/" + app.projectID + "/" + MCConstants.APIPATH_CAPABILITIES);
 
-		HttpResult result = HttpUtil.get(statusUrl);
+		HttpResult result = HttpUtil.get(statusUrl, getAuthToken());
 
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
@@ -547,49 +531,14 @@ public abstract class MicroclimateConnection {
 	/**
 	 * Called by the MicroclimateSocket when the socket.io connection is working.
 	 */
+	
 	public synchronized void clearConnectionError() {
 		MCLogger.log("MCConnection to " + baseUrl + " restored"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		// Reset any cached information in case it has changed
 		try {
-			JSONObject envData = getEnvData(baseUrl);
-			String version = getMCVersion(envData);
-			if (UNKNOWN_VERSION.equals(versionStr)) {
-				MCLogger.logError("Failed to get the Microclimate version after reconnect");
-				this.connectionErrorMsg = NLS.bind(Messages.MicroclimateConnection_ErrConnection_VersionUnknown, MCConstants.REQUIRED_MC_VERSION);
-				MCUtil.updateConnection(this);
+			JSONObject envData = getEnvData();
+			if (!clearConnectionError(envData)) {
 				return;
-			}
-			if (!isSupportedVersion(version)) {
-				MCLogger.logError("The detected version of Microclimate after reconnect is not supported: " + version);
-				this.connectionErrorMsg = NLS.bind(Messages.MicroclimateConnection_ErrConnection_OldVersion, versionStr, MCConstants.REQUIRED_MC_VERSION);
-				MCUtil.updateConnection(this);
-				return;
-			}
-			this.versionStr = version;
-			IPath path = getWorkspacePath(envData);
-			if (path == null) {
-				// This should not happen since the version was ok
-				MCLogger.logError("Failed to get the local workspace path after reconnect");
-				this.connectionErrorMsg = Messages.MicroclimateConnection_ErrConnection_WorkspaceErr;
-				MCUtil.updateConnection(this);
-				return;
-			}
-			this.localWorkspacePath = path;
-			
-			String socketNS = getSocketNamespace(envData);
-			if ((socketNS != null && !socketNS.equals(this.socketNamespace)) || (this.socketNamespace != null && !this.socketNamespace.equals(socketNS))) {
-				// The socket namespace has changed so need to recreate the socket
-				this.socketNamespace = socketNS;
-				mcSocket.close();
-				mcSocket = new MicroclimateSocket(this);
-				if(!mcSocket.blockUntilFirstConnection()) {
-					// Still not connected
-					MCLogger.logError("Failed to create a new socket with updated URI: " + mcSocket.socketUri);
-					// Clear the message so that it just shows the basic disconnected message
-					this.connectionErrorMsg = null;
-					return;
-				}
 			}
 		} catch (Exception e) {
 			MCLogger.logError("An exception occurred while trying to update the connection information", e);
@@ -603,11 +552,45 @@ public abstract class MicroclimateConnection {
 		refreshApps(null);
 		MCUtil.updateConnection(this);
 	}
+	
+	public synchronized boolean clearConnectionError(JSONObject envData) throws IOException, JSONException, URISyntaxException {
+		String version = getMCVersion(envData);
+		if (UNKNOWN_VERSION.equals(versionStr)) {
+			MCLogger.logError("Failed to get the Microclimate version after reconnect");
+			this.connectionErrorMsg = NLS.bind(Messages.MicroclimateConnection_ErrConnection_VersionUnknown, MCConstants.REQUIRED_MC_VERSION);
+			MCUtil.updateConnection(this);
+			return false;
+		}
+		if (!isSupportedVersion(version)) {
+			MCLogger.logError("The detected version of Microclimate after reconnect is not supported: " + version);
+			this.connectionErrorMsg = NLS.bind(Messages.MicroclimateConnection_ErrConnection_OldVersion, versionStr, MCConstants.REQUIRED_MC_VERSION);
+			MCUtil.updateConnection(this);
+			return false;
+		}
+		this.versionStr = version;
+		
+		String socketNS = getSocketNamespace(envData);
+		if ((socketNS != null && !socketNS.equals(this.socketNamespace)) || (this.socketNamespace != null && !this.socketNamespace.equals(socketNS))) {
+			// The socket namespace has changed so need to recreate the socket
+			this.socketNamespace = socketNS;
+			mcSocket.close();
+			mcSocket = new MicroclimateSocket(this);
+			if(!mcSocket.blockUntilFirstConnection()) {
+				// Still not connected
+				MCLogger.logError("Failed to create a new socket with updated URI: " + socketURI);
+				// Clear the message so that it just shows the basic disconnected message
+				this.connectionErrorMsg = null;
+				return false;
+			}
+		}
+		
+		return true;
+	}
 
 	@Override
 	public String toString() {
-		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d", //$NON-NLS-1$
-				MicroclimateConnection.class.getSimpleName(), baseUrl, localWorkspacePath, appMap.size());
+		return String.format("%s @ baseUrl=%s numApps=%d", //$NON-NLS-1$
+				MicroclimateConnection.class.getSimpleName(), baseUrl, appMap.size());
 	}
 
 	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
@@ -643,7 +626,7 @@ public abstract class MicroclimateConnection {
 		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "java");
 		createProjectPayload.put(MCConstants.KEY_FRAMEWORK, "microprofile");
 
-		HttpUtil.post(url, createProjectPayload);
+		HttpUtil.post(url, getAuthToken(), createProjectPayload);
 	}
 	
 	public void requestSpringProjectCreate(String name)
@@ -658,7 +641,7 @@ public abstract class MicroclimateConnection {
 		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "java");
 		createProjectPayload.put(MCConstants.KEY_FRAMEWORK, "spring");
 
-		HttpUtil.post(url, createProjectPayload);
+		HttpUtil.post(url, getAuthToken(), createProjectPayload);
 	}
 	
 	public void requestNodeProjectCreate(String name)
@@ -672,7 +655,7 @@ public abstract class MicroclimateConnection {
 		createProjectPayload.put(MCConstants.KEY_NAME, name);
 		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "nodejs");
 
-		HttpUtil.post(url, createProjectPayload);
+		HttpUtil.post(url, getAuthToken(), createProjectPayload);
 	}
 
 	public void requestProjectDelete(String projectId)
@@ -682,11 +665,7 @@ public abstract class MicroclimateConnection {
 
         URI url = baseUrl.resolve(createEndpoint);
 
-		HttpUtil.delete(url);
-	}
-
-	public IPath getWorkspacePath() {
-		return localWorkspacePath;
+		HttpUtil.delete(url, getAuthToken());
 	}
 	
 	public URI getNewProjectURI() {
@@ -730,7 +709,17 @@ public abstract class MicroclimateConnection {
 		return null;
 	}
 	
+	public String getAuthToken() throws IOException {
+		return null;
+	}
+	
 	public abstract IPath getLocalAppPath(MicroclimateApplication app) throws Exception;
 	
 	public abstract ConnectionType getType();
+	
+	public abstract Socket getSocket() throws IOException;
+	
+	public URI getSocketURI() {
+		return socketURI;
+	}
 }

@@ -74,7 +74,7 @@ public class MicroclimateReconnectJob {
 
 					MCLogger.log("Trying to reconnect to Microclimate at " + url); //$NON-NLS-1$
 
-					MicroclimateConnection newConnection = MicroclimateObjectFactory.createMicroclimateConnection(url);
+					MicroclimateConnection newConnection = MicroclimateObjectFactory.createLocalConnection(url);
 					if (newConnection != null) {
 						// connection re-established!
 						MCLogger.log("Successfully re-connected to Microclimate at " + url); //$NON-NLS-1$

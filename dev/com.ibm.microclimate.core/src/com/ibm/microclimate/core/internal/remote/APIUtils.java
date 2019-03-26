@@ -48,7 +48,7 @@ public class APIUtils {
 	
 	public static String getDeviceId(URI baseUri, String apiKey) throws IOException, JSONException {
 		final URI uri = baseUri.resolve(STATUS_REST_PATH);
-		HttpResult result = HttpUtil.get(uri, getRequestProperties(apiKey), DEFAULT_TIMEOUT);
+		HttpResult result = HttpUtil.get(uri, null, getRequestProperties(apiKey), null, DEFAULT_TIMEOUT);
 		checkResult(uri, result, true);
 		JSONObject status = new JSONObject(result.response);
 		return status.getString(STATUS_ID_KEY);
@@ -56,27 +56,27 @@ public class APIUtils {
 	
 	public static JSONObject getConfig(URI baseUri, String apiKey) throws IOException, JSONException {
 		final URI uri = baseUri.resolve(CONFIG_REST_PATH);
-		HttpResult result = HttpUtil.get(uri, getRequestProperties(apiKey), DEFAULT_TIMEOUT);
+		HttpResult result = HttpUtil.get(uri, null, getRequestProperties(apiKey), null, DEFAULT_TIMEOUT);
 		checkResult(uri, result, true);
 		return new JSONObject(result.response);
 	}
 	
 	public static void putConfig(URI baseUri, String apiKey, JSONObject config) throws IOException {
 		final URI uri = baseUri.resolve(CONFIG_REST_PATH);
-		HttpResult result = HttpUtil.post(uri, getRequestProperties(apiKey), config);
+		HttpResult result = HttpUtil.post(uri, null, getRequestProperties(apiKey), config);
 		checkResult(uri, result);
 	}
 	
 	public static void shutdown(URI baseUri, String apiKey) throws IOException {
 		final URI uri = baseUri.resolve(POST_SHUTDOWN_REST_PATH);
-		HttpResult result = HttpUtil.post(uri, getRequestProperties(apiKey), new JSONObject());
+		HttpResult result = HttpUtil.post(uri, null, getRequestProperties(apiKey), new JSONObject());
 		checkResult(uri, result);
 	}
 	
 	public static boolean ping(URI baseUri, String apiKey, int connectTimeout) {
 		final URI uri = baseUri.resolve(GET_PING_REST_PATH);
 		try {
-			HttpResult result = HttpUtil.get(uri, getRequestProperties(apiKey), connectTimeout);
+			HttpResult result = HttpUtil.get(uri, null, getRequestProperties(apiKey), null, connectTimeout);
 			checkResult(uri, result);
 		} catch (IOException e) {
 			MCLogger.log("Ping failed for connection: " + baseUri + ", with error: " + e.getMessage());
@@ -90,7 +90,7 @@ public class APIUtils {
 		URI uri = baseUri.resolve(SCAN_REST_PATH);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put(FOLDER_PARAM, folder);
-		HttpResult result = HttpUtil.post(uri, getRequestProperties(apiKey), params);
+		HttpResult result = HttpUtil.post(uri, null, getRequestProperties(apiKey), params);
 		checkResult(uri, result);
 	}
 	
@@ -111,7 +111,7 @@ public class APIUtils {
 		}
 		params.put(TIMEOUT_PARAM, String.valueOf(timeout));
 		
-		HttpResult result = HttpUtil.get(uri, getRequestProperties(apiKey), params, timeout);
+		HttpResult result = HttpUtil.get(uri, null, getRequestProperties(apiKey), params, timeout);
 		checkResult(uri, result, false);
 		if (result.response == null || result.response.isEmpty()) {
 			return null;

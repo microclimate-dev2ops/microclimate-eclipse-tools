@@ -19,8 +19,15 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.json.JSONObject;
 
@@ -28,6 +35,12 @@ import org.json.JSONObject;
  * Static utilities to allow easy HTTP communication, and make diagnosing and handling errors a bit easier.
  */
 public class HttpUtil {
+	
+	private static final String AUTH_PROP = "authorization";
+	private static final String BEARER_PREFIX = "Bearer ";
+	
+	private static SSLSocketFactory socketFactory = null;
+	private static X509TrustManager trustManager = null;
 
 	private HttpUtil() {}
 
@@ -83,23 +96,23 @@ public class HttpUtil {
 		}
 	}
 	
-	public static HttpResult get(URI uri) throws IOException {
-		return get(uri, null, 5000);
+	public static HttpResult get(URI uri, String authToken) throws IOException {
+		return get(uri, authToken, 5000);
 	}
 
-	public static HttpResult get(URI uri, Map<String, String> requestProperties, int timeout) throws IOException {
-		return get(uri, requestProperties, null, timeout);
+	public static HttpResult get(URI uri, String authToken, int timeout) throws IOException {
+		return get(uri, authToken, null, null, timeout);
 	}
 	
-	public static HttpResult get(URI baseUri, Map<String, String> requestProperties, Map<String, Object> params, int timeout) throws IOException {
+	public static HttpResult get(URI baseUri, String authToken, Map<String, String> requestProperties, Map<String, Object> params, int timeout) throws IOException {
 		HttpURLConnection connection = null;
 
 		try {
 			URI uri = addParams(baseUri, params);
-			connection = (HttpURLConnection) uri.toURL().openConnection();
+			connection = getConnection(uri, authToken);
 			connection.setRequestMethod("GET");
-			connection.setReadTimeout(timeout);
 			addRequestProperties(connection, requestProperties);
+			connection.setReadTimeout(timeout);
 			
 			return new HttpResult(connection);
 		} finally {
@@ -109,21 +122,20 @@ public class HttpUtil {
 		}
 	}
 	
-	public static HttpResult post(URI uri, JSONObject payload) throws IOException {
-		return post(uri, null, payload);
+	public static HttpResult post(URI uri, String authToken, JSONObject payload) throws IOException {
+		return post(uri, authToken, null, payload);
 	}
 
-	public static HttpResult post(URI uri, Map<String, String> requestProperties, JSONObject payload) throws IOException {
+	public static HttpResult post(URI uri, String authToken, Map<String, String> requestProperties, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
 
 		MCLogger.log("POST " + payload.toString() + " TO " + uri);
 		try {
-			connection = (HttpURLConnection) uri.toURL().openConnection();
-
+			connection = getConnection(uri, authToken);
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setDoOutput(true);
 			addRequestProperties(connection, requestProperties);
+			connection.setDoOutput(true);
 			
 			DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
 			payloadStream.write(payload.toString().getBytes());
@@ -136,12 +148,12 @@ public class HttpUtil {
 		}
 	}
 	
-	public static HttpResult post(URI uri, Map<String, String> requestProperties, Map<String, Object> params) throws IOException {
+	public static HttpResult post(URI uri, String authToken, Map<String, String> requestProperties, Map<String, Object> params) throws IOException {
         String paramStr = getParamString(params);
 		byte[] postData = paramStr.getBytes(Charset.forName("UTF-8"));
         HttpURLConnection connection = null;
         try {
-        	connection = (HttpURLConnection) uri.toURL().openConnection();
+        	connection = getConnection(uri, authToken);
         	connection.setRequestMethod("POST");
         	connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         	connection.setRequestProperty("Content-Length", String.valueOf(postData.length));
@@ -158,13 +170,12 @@ public class HttpUtil {
 		}
 	}
 	
-	public static HttpResult put(URI uri) throws IOException {
+	public static HttpResult put(URI uri, String authToken) throws IOException {
 		HttpURLConnection connection = null;
 
 		MCLogger.log("PUT " + uri);
 		try {
-			connection = (HttpURLConnection) uri.toURL().openConnection();
-
+			connection = getConnection(uri, authToken);
 			connection.setRequestMethod("PUT");
 
 			return new HttpResult(connection);
@@ -175,13 +186,12 @@ public class HttpUtil {
 		}
 	}
 	
-	public static HttpResult head(URI uri) throws IOException {
+	public static HttpResult head(URI uri, String authToken) throws IOException {
 		HttpURLConnection connection = null;
 
 		MCLogger.log("HEAD " + uri);
 		try {
-			connection = (HttpURLConnection) uri.toURL().openConnection();
-
+			connection = getConnection(uri, authToken);
 			connection.setRequestMethod("HEAD");
 
 			return new HttpResult(connection);
@@ -192,13 +202,12 @@ public class HttpUtil {
 		}
 	}
 	
-	public static HttpResult delete(URI uri) throws IOException {
+	public static HttpResult delete(URI uri, String authToken) throws IOException {
 		HttpURLConnection connection = null;
 
 		MCLogger.log("DELETE " + uri);
 		try {
-			connection = (HttpURLConnection) uri.toURL().openConnection();
-
+			connection = getConnection(uri, authToken);
 			connection.setRequestMethod("DELETE");
 
 			return new HttpResult(connection);
@@ -207,6 +216,62 @@ public class HttpUtil {
 				connection.disconnect();
 			}
 		}
+	}
+	
+	private static HttpURLConnection getConnection(URI uri, String authToken) throws IOException {
+		HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
+		if (connection instanceof HttpsURLConnection && authToken != null) {
+			HttpsURLConnection httpsConnection = (HttpsURLConnection)connection;
+			httpsConnection.addRequestProperty(AUTH_PROP, BEARER_PREFIX + authToken);
+			SSLSocketFactory factory = getSocketFactory();
+			if (factory != null) {
+				httpsConnection.setSSLSocketFactory(factory);
+			}
+		}
+		return connection;
+	}
+
+	public static SSLSocketFactory getSocketFactory() throws IOException {
+		if (socketFactory == null) {
+			synchronized(HttpUtil.class) {
+				if (socketFactory == null) {
+			        TrustManager[] trustAllCerts = new TrustManager[] { getTrustManager() };
+			        try {
+						SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+						sslContext.init(null, trustAllCerts, new SecureRandom());
+						socketFactory = sslContext.getSocketFactory();
+					} catch (Exception e) {
+						throw new IOException("An error occurred while creating the SSL socket factory", e);
+					} 
+				}
+			}
+		}
+		
+		return socketFactory;
+	}
+	
+	public static X509TrustManager getTrustManager() {
+		if (trustManager == null) {
+			synchronized(HttpUtil.class) {
+				if (trustManager == null) {
+					trustManager =  new X509TrustManager() {
+			            @Override
+			            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+			            	return new java.security.cert.X509Certificate[0];
+			            }
+			            @Override
+			            public void checkClientTrusted(
+			                java.security.cert.X509Certificate[] certs, String authType) {
+			            }
+			            @Override
+			            public void checkServerTrusted(
+			                java.security.cert.X509Certificate[] certs, String authType) {
+			            }
+			        };
+				}
+			}
+		}
+		return trustManager;
 	}
 	
 	private static void addRequestProperties(HttpURLConnection connection, Map<String, String> requestProperties) {
@@ -249,6 +314,5 @@ public class HttpUtil {
         }
         return postData.toString();
     }
-
 
 }
