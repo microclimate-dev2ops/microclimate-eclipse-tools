@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.URI;
 
+import com.ibm.microclimate.core.internal.connection.ICPMicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.LocalMicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
@@ -26,8 +27,16 @@ import com.ibm.microclimate.core.internal.constants.ProjectType;
  */
 public class MicroclimateObjectFactory {
 	
-	public static MicroclimateConnection createMicroclimateConnection(URI uri) throws Exception {
-		return new LocalMicroclimateConnection(uri);
+	public static LocalMicroclimateConnection createLocalConnection(URI uri) throws Exception {
+		LocalMicroclimateConnection connection = new LocalMicroclimateConnection(uri);
+		connection.initialize();
+		return connection;
+	}
+	
+	public static ICPMicroclimateConnection createICPConnection(URI ingressURI, String masterIP) throws Exception {
+		ICPMicroclimateConnection connection = new ICPMicroclimateConnection(ingressURI, masterIP);
+		connection.initialize();
+		return connection;
 	}
 	
 	public static MicroclimateApplication createMicroclimateApplication(MicroclimateConnection mcConnection,

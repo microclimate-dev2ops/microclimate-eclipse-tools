@@ -173,17 +173,23 @@ public class NewMicroclimateConnectionPage extends WizardPage {
         	activeComp.validate();
         }
     }
+    
+    public boolean canFinish() {
+    	if (activeComp != null) {
+    		return activeComp.canFinish();
+    	}
+    	return false;
+    }
 
 	public void performFinish() {
-		if (activeComp != null && activeComp.mcConnection != null) {
-			MicroclimateConnectionManager.add(activeComp.mcConnection);
+		if (activeComp != null) {
+			activeComp.performFinish();
 		}
 	}
 	
-	public MicroclimateConnection getMCConnection() {
+	public void performCancel() {
 		if (activeComp != null) {
-			return activeComp.mcConnection;
+			activeComp.performCancel();
 		}
-		return null;
 	}
 }

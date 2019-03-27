@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -46,15 +46,12 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 
 	@Override
 	public boolean canFinish() {
-		return newConnectionPage.getMCConnection() != null;
+		return newConnectionPage.canFinish();
 	}
 
 	@Override
 	public boolean performCancel() {
-		MicroclimateConnection connection = newConnectionPage.getMCConnection();
-		if (connection != null) {
-			connection.close();
-		}
+		newConnectionPage.performCancel();
 		return true;
 	}
 
@@ -65,11 +62,6 @@ public class NewMicroclimateConnectionWizard extends Wizard implements INewWizar
 		}
 
 		newConnectionPage.performFinish();
-
-		ViewHelper.openMicroclimateExplorerView();
-		ViewHelper.refreshMicroclimateExplorerView(null);
-		ViewHelper.expandConnection(newConnectionPage.getMCConnection());
-
 		return true;
 	}
 }

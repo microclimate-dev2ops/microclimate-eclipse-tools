@@ -12,7 +12,6 @@
 package com.ibm.microclimate.core.internal.connection;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,7 +30,6 @@ import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
-import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
@@ -46,8 +44,6 @@ public class MicroclimateSocket {
 	private final MicroclimateConnection mcConnection;
 
 	public final Socket socket;
-
-	public final URI socketUri;
 
 	private boolean hasLostConnection = false;
 
@@ -69,21 +65,15 @@ public class MicroclimateSocket {
 			EVENT_CONTAINER_LOGS = "container-logs",				//$NON-NLS-1$
 			EVENT_PROJECT_VALIDATED = "projectValidated";			//$NON-NLS-1$
 
-	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
+	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException, IOException {
 		this.mcConnection = mcConnection;
-
-		URI uri = mcConnection.baseUrl;
-		if (mcConnection.getSocketNamespace() != null) {
-			uri = uri.resolve(mcConnection.getSocketNamespace());
-		}
-		socketUri = uri;
-
-		socket = IO.socket(socketUri);
+		
+		socket = mcConnection.getSocket();
 
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				MCLogger.log("SocketIO connect success @ " + socketUri); //$NON-NLS-1$
+				MCLogger.log("SocketIO connect success @ " + mcConnection.getSocketURI()); //$NON-NLS-1$
 
 				if (!hasConnected) {
 					hasConnected = true;
@@ -101,7 +91,7 @@ public class MicroclimateSocket {
 					Exception e = (Exception) arg0[0];
 					if (previousException == null || !e.getMessage().equals(previousException.getMessage())) {
 						previousException = e;
-						MCLogger.logError("SocketIO Connect Error @ " + socketUri, e); //$NON-NLS-1$
+						MCLogger.logError("SocketIO Connect Error @ " + mcConnection.getSocketURI(), e); //$NON-NLS-1$
 					}
 				}
 				mcConnection.onConnectionError();
@@ -113,7 +103,7 @@ public class MicroclimateSocket {
 			public void call(Object... arg0) {
 				if (arg0[0] instanceof Exception) {
 					Exception e = (Exception) arg0[0];
-					MCLogger.logError("SocketIO Error @ " + socketUri, e); //$NON-NLS-1$
+					MCLogger.logError("SocketIO Error @ " + mcConnection.getSocketURI(), e); //$NON-NLS-1$
 				}
 			}
 		})
@@ -233,7 +223,7 @@ public class MicroclimateSocket {
 
 		socket.connect();
 
-		MCLogger.log("Created MicroclimateSocket connected to " + socketUri); //$NON-NLS-1$
+		MCLogger.log("Created MicroclimateSocket connected to " + mcConnection.getSocketURI()); //$NON-NLS-1$
 	}
 
 	public void close() {
