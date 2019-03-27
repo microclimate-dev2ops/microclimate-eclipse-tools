@@ -33,8 +33,8 @@ public class MicroclimateObjectFactory {
 		return connection;
 	}
 	
-	public static ICPMicroclimateConnection createICPConnection(URI ingressURI, String masterIP) throws Exception {
-		ICPMicroclimateConnection connection = new ICPMicroclimateConnection(ingressURI, masterIP);
+	public static ICPMicroclimateConnection createICPConnection(URI ingressURI, String masterIP, String namespace) throws Exception {
+		ICPMicroclimateConnection connection = new ICPMicroclimateConnection(ingressURI, masterIP, namespace);
 		connection.initialize();
 		return connection;
 	}

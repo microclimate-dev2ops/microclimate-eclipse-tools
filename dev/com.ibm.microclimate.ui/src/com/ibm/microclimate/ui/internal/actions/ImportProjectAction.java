@@ -14,6 +14,10 @@ package com.ibm.microclimate.ui.internal.actions;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -25,6 +29,7 @@ import org.eclipse.ui.internal.wizards.datatransfer.SmartImportJob;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
@@ -78,14 +83,20 @@ public class ImportProjectAction implements IObjectActionDelegate {
 	 * Import a Microclimate project into Eclipse using Smart Import.
 	 */
 	public static void importProject(MicroclimateApplication app) {
-		try {
-			IPath path = app.getLocalPath();
-			SmartImportJob importJob = new SmartImportJob(path.toFile(), null, true, false);
-			importJob.schedule();
-		} catch (Exception e) {
-			MCLogger.logError("Error importing project: " + app.name, e); //$NON-NLS-1$
-			MCUtil.openDialog(true, NLS.bind(Messages.ImportProjectError, app.name), e.getMessage());
-			return;
-		}
+		Job job = new Job(NLS.bind(Messages.ImportProjectJobLabel, app.name)) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				try {
+					IPath path = app.getLocalPath();
+					SmartImportJob importJob = new SmartImportJob(path.toFile(), null, true, false);
+					importJob.schedule();
+					return Status.OK_STATUS;
+				} catch (Exception e) {
+					MCLogger.logError("Error importing project: " + app.name, e); //$NON-NLS-1$
+					return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID, NLS.bind(Messages.ImportProjectError, app.name), e);
+				}
+			}
+		};
+		job.schedule();
 	}
 }

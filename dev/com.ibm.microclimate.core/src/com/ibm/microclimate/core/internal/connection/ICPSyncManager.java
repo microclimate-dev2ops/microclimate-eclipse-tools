@@ -40,13 +40,11 @@ public class ICPSyncManager {
 	private static final String PROJECTS_KEY = "projects";
 	
 	
-	public static String setupLocalProject(MicroclimateApplication app) throws Exception {
+	public static String setupLocalProject(ICPMicroclimateConnection conn, MicroclimateApplication app) throws Exception {
 		Syncthing syncthing = getSyncthing();
 		
 		// Set up synchronization for the application
-		String host = app.mcConnection.getHost();
-		String namespace = app.mcConnection.getSocketNamespace();
-		String localFolder = syncthing.shareICPFolder(host, namespace, app.name);
+		String localFolder = syncthing.shareICPFolder(conn.getMasterIP(), conn.getNamespace(), app.name);
 		addSyncedProject(app);
 		return localFolder;
 	}
@@ -139,7 +137,7 @@ public class ICPSyncManager {
 		JSONArray connections = pref.getJSONArray(CONNECTIONS_KEY);
 		for (int connIndex = 0; connIndex < connections.length(); connIndex++) {
 			JSONObject connection = connections.getJSONObject(connIndex);
-			if (app.mcConnection.baseUrl.equals(connection.get(URI_KEY))) {
+			if (app.mcConnection.baseUrl.toString().equals(connection.get(URI_KEY))) {
 				JSONArray projects = connection.getJSONArray(PROJECTS_KEY);
 				for (int projIndex = 0; projIndex < projects.length(); projIndex++) {
 					if (app.name.equals(projects.getString(projIndex))) {
@@ -174,7 +172,7 @@ public class ICPSyncManager {
 	}
 	
 	private static void addSyncedProject(MicroclimateApplication app) throws JSONException {
-		URI uri = app.mcConnection.baseUrl;
+		String uri = app.mcConnection.baseUrl.toString();
 		String projectName = app.name;
 		
 		JSONObject pref = getSyncedProjectsValue();
@@ -206,7 +204,7 @@ public class ICPSyncManager {
 	}
 	
 	private static void removeSyncedProject(MicroclimateApplication app) throws JSONException {
-		URI uri = app.mcConnection.baseUrl;
+		String uri = app.mcConnection.baseUrl.toString();
 		String projectName = app.name;
 		
 		JSONObject pref = getSyncedProjectsValue();
@@ -230,7 +228,7 @@ public class ICPSyncManager {
 	}
 	
 	private static JSONArray removeConnection(MicroclimateConnection conn) throws JSONException {
-		URI uri = conn.baseUrl;
+		String uri = conn.baseUrl.toString();
 		JSONArray projects = null;
 		
 		JSONObject pref = getSyncedProjectsValue();
