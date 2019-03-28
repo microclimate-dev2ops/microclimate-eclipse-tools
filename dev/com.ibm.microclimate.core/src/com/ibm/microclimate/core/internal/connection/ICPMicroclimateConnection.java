@@ -32,12 +32,45 @@ import okhttp3.OkHttpClient;
 public class ICPMicroclimateConnection extends MicroclimateConnection {
 	
 	private final String masterIP;
+	private final String namespace;
 	
-	public ICPMicroclimateConnection(URI uri, String masterIP) throws IOException, URISyntaxException, JSONException {
+	public ICPMicroclimateConnection(URI uri, String masterIP, String namespace) throws IOException, URISyntaxException, JSONException {
 		super(uri);
 		this.masterIP = masterIP;
+		this.namespace = namespace;
 	}
 	
+	public String getMasterIP() {
+		return masterIP;
+	}
+	
+	public String getNamespace() {
+		return namespace;
+	}
+	
+	@Override
+	public MicroclimateApplication removeApp(String projectID) {
+		MicroclimateApplication app = super.removeApp(projectID);
+		if (app != null) {
+			try {
+				ICPSyncManager.removeLocalProject(app);
+			} catch (Exception e) {
+				MCLogger.logError("An error occurred trying to stop synchronization for application: " + app, e);
+			}
+		}
+		return app;
+	}
+
+	@Override
+	public void close() {
+		super.close();
+		try {
+			ICPSyncManager.removeProjectsForConnection(this);
+		} catch (Exception e) {
+			MCLogger.logError("An error occurred while removing projects for connection: " + baseUrl, e);
+		}
+	}
+
 	@Override
 	public String getAuthToken() throws IOException {
 		try {
@@ -51,7 +84,7 @@ public class ICPMicroclimateConnection extends MicroclimateConnection {
 
 	@Override
 	public IPath getLocalAppPath(MicroclimateApplication app) throws Exception {
-		String localPath = ICPSyncManager.setupLocalProject(app);
+		String localPath = ICPSyncManager.setupLocalProject(this, app);
 		return new Path(localPath);
 	}
 	

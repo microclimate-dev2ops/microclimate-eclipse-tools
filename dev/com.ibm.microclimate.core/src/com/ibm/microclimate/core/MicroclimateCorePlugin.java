@@ -24,6 +24,7 @@ import com.ibm.microclimate.core.internal.IDebugLauncher;
 import com.ibm.microclimate.core.internal.IUpdateHandler;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCResourceChangeListener;
 import com.ibm.microclimate.core.internal.PlatformUtil;
 import com.ibm.microclimate.core.internal.remote.SyncUtils;
 import com.ibm.microclimate.core.internal.remote.Syncthing;
@@ -79,7 +80,7 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 		getPreferenceStore().setDefault(DEBUG_CONNECT_TIMEOUT_PREFSKEY,
 				MCEclipseApplication.DEFAULT_DEBUG_CONNECT_TIMEOUT);
 		
-//		startSyncthing();
+		MCResourceChangeListener.start();
 	}
 
 	/*
@@ -88,6 +89,7 @@ public class MicroclimateCorePlugin extends AbstractUIPlugin {
 	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		MCResourceChangeListener.stop();
 		stopSyncthing();
 		plugin = null;
 		super.stop(context);

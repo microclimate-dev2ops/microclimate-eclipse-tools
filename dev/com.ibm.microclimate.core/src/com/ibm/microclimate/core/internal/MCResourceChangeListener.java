@@ -107,21 +107,13 @@ public class MCResourceChangeListener implements IResourceChangeListener {
         	
 			for (MicroclimateApplication app : toBeRemovedApps) {
 				MCLogger.log("Application " + app.name + " removed. Stop any synchronization.");
-				Job job = new Job(NLS.bind(Messages.ICPStopSyncJob, app.name)) {
-
-					@Override
-					protected IStatus run(IProgressMonitor arg0) {
-						// Call method to remove - does nothing if not synced
-						try {
-							ICPSyncManager.removeLocalProject(app);
-							return Status.OK_STATUS;
-						} catch (Exception e) {
-							MCLogger.logError("Failed to stop synchronization for microclimate ICP project: " + app.name, e);
-							return new Status(IStatus.ERROR, MicroclimateCorePlugin.PLUGIN_ID, NLS.bind(Messages.ICPStopSyncFailed, app.name));
-						}
-					}
-				};
-				job.schedule();
+				// Don't handle removes in a job as the synchronization needs to be stopped before the project is removed
+				try {
+					// Call method to remove - does nothing if not synced
+					ICPSyncManager.removeLocalProject(app);
+				} catch (Exception e) {
+					MCLogger.logError("Failed to stop synchronization for microclimate ICP project: " + app.name, e);
+				}
 			}
 			
 			for (MicroclimateApplication app : changedApps) {
@@ -143,7 +135,7 @@ public class MCResourceChangeListener implements IResourceChangeListener {
 							}
 						case LOCAL_CONNECTION:
 							try {
-								app.mcConnection.requestProjectBuild(app, MCConstants.VALUE_ACTION_BUILD);
+//								app.mcConnection.requestProjectBuild(app, MCConstants.VALUE_ACTION_BUILD);
 								return Status.OK_STATUS;
 							} catch (Exception e) {
 								MCLogger.logError("Failed to start a build for microclimate project: " + app.name, e);

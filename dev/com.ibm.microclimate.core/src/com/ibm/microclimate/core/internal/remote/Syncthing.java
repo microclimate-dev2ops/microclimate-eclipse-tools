@@ -134,21 +134,9 @@ public class Syncthing {
 		Thread thread = new Thread(eventMonitor);
 		thread.setDaemon(true);
 		thread.start();
-		
-//		try {
-//			String folderName = "node20a";
-//			String host = "xxx.xxx.xxx.xxx";
-//			String namespace = "mcf";
-//			shareICPFolder(host, namespace, folderName);
-//			scanFolder(folderName);
-//			stopSharingFolder(folderName);
-//			scanFolder(folderName);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
 	}
 	
-	// Stop Syncthing and stop the event monitor
+	// Stop Syncthing and the event monitor
 	public void stop() throws IOException {
 		if (eventMonitor != null) {
 			eventMonitor.stopMonitor();

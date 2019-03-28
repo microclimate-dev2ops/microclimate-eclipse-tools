@@ -38,7 +38,7 @@ import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class ICPConnectionComposite extends ConnectionComposite {
 	
-	private Text masterIPText, ingressURLText;
+	private Text masterIPText, ingressURLText, namespaceText;
 	
 	public ICPConnectionComposite(Composite parent, WizardPage wizardPage) {
 		super(parent, wizardPage);
@@ -70,6 +70,14 @@ public class ICPConnectionComposite extends ConnectionComposite {
 		ingressURLText = new Text(composite, SWT.BORDER);
 		ingressURLText.setText("https://microclimate.9.42.41.81.nip.io");
 		ingressURLText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		
+		Label namespaceLabel = new Label(composite, SWT.NONE);
+		namespaceLabel.setText("Namespace:");
+		namespaceLabel.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
+		
+		namespaceText = new Text(composite, SWT.BORDER);
+		namespaceText.setText("mcg");
+		namespaceText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 	}
 
 	@Override
@@ -87,6 +95,7 @@ public class ICPConnectionComposite extends ConnectionComposite {
 	protected void performFinish() {
 		final String masterIP = masterIPText.getText();
 		final String ingressURL = ingressURLText.getText();
+		final String namespace = namespaceText.getText();
 		Job job = new Job("Connect to host: " + masterIP) {
 			@Override
 			protected IStatus run(IProgressMonitor arg0) {
@@ -133,7 +142,7 @@ public class ICPConnectionComposite extends ConnectionComposite {
 
 				// Will throw an Exception if fails
 				try {
-					final MicroclimateConnection connection = MicroclimateObjectFactory.createICPConnection(uri, masterIP);
+					final MicroclimateConnection connection = MicroclimateObjectFactory.createICPConnection(uri, masterIP, namespace);
 					MicroclimateConnectionManager.add(connection);
 					Display.getDefault().syncExec(new Runnable() {
 		                @Override
