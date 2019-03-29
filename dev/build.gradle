@@ -42,7 +42,7 @@ dependencies {
     // corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
 }
 
-defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite', 'deployDHE'
+defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite'
 
 task importAnt {
     ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader
@@ -58,6 +58,7 @@ task importAnt {
     // build-mdt provides the generateOpenMDTUpdateSite target, which is the entry point
     // for the compilation and assembling of updatesites
     ant.importBuild('ant_build/build-mdt.xml')
+    println "Imported ant code"
 }
 
 def projDir = projectDir.getAbsolutePath()
@@ -187,10 +188,8 @@ gradleGenerateMDTUpdateSite.dependsOn generateOpenMDTUpdateSite
 build.dependsOn compile
 build.dependsOn generateOpenMDTUpdateSite
 
-compile.dependsOn importAnt
 compile.dependsOn downloadEclipseSDK
 compile.dependsOn downloadEclipseTargetPlatform
-compile.dependsOn getCoreDependencies
 
 //// build version from the artifacts to avoid version mismatch
 import static groovy.io.FileType.FILES
@@ -210,9 +209,9 @@ def getBuildLabelFromArtifact() {
 
         buildLabel = (fileName =~ "${filePrefix}(.*).zip")[0][1]
 
-    if (buildLabel.isEmpty()) {
-        buildLabel = ant.properties['buildLabel']
-        println "Unable to grab build label - ant buildLabel is used instead."
+        if (buildLabel.isEmpty()) {
+            buildLabel = ant.properties['buildLabel']
+            println "Unable to grab build label - ant buildLabel is used instead."
         }
     }
     return buildLabel
@@ -426,6 +425,10 @@ task cleanBuilds(type: Delete) {
         println 'Delete ' + artifactsDir
         file(artifactsDir).deleteDir()
 
+        def buildLabelFile = project.properties['build.label.file']
+        println 'Delete ' + buildLabelFile
+        file(buildLabelFile).delete()
+
         println 'Delete ' + toolsImageFolder
         file(toolsImageFolder).deleteDir()
     }
@@ -438,7 +441,6 @@ task cleanBuilds(type: Delete) {
 // Delete all prereq files, downloaded artifacts and build output
 task clean(type: Delete) {
     doLast {
-
     }
 
     onlyIf {
