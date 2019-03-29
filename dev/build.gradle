@@ -23,6 +23,7 @@ configurations {
     antcp
     antScp
     corelibs
+    kubeclientlibs
 }
 dependencies {
     antcp 'org.apache.ivy:ivy:2.4.0'
@@ -40,9 +41,11 @@ dependencies {
     corelibs "io.socket:socket.io-client:1.0.0"
 
     corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
+
+    kubeclientlibs "io.fabric8:kubernetes-client:4.1.3"
 }
 
-defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite', 'deployDHE'
+defaultTasks 'clean', 'getCoreDependencies', 'getKubeclientDependencies', 'compile', 'generateOpenMDTUpdateSite', 'deployDHE'
 
 task importAnt {
     ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader
@@ -89,6 +92,22 @@ task getCoreDependencies(type: Copy) {
 
     from configurations.corelibs
     into corelibFolder
+}
+
+def kubeclientlibFolder = file(projDir + project.properties['microclimate.kubeclient.prereqlib.folder'])
+
+// Download dependent plugins from maven repository for 'com.ibm.microclimate.kubeclient.util'
+task getKubeclientDependencies(type: Copy) {
+
+    if (!kubeclientlibFolder.exists()) {
+        kubeclientlibFolder.mkdir()
+    }
+    println("Copying core dependencies into ${kubeclientlibFolder}")
+
+    eachFile { println "Copying ${it.file.name}" }
+
+    from configurations.kubeclientlibs
+    into kubeclientlibFolder
 }
 
 // Download an Eclipse TargetPlatform

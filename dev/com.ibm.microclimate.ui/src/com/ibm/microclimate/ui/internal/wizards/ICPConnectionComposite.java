@@ -33,12 +33,15 @@ import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.connection.auth.Authenticator;
+import com.ibm.microclimate.kubeclient.util.ICPUtil;
+import com.ibm.microclimate.kubeclient.util.ICPUtil.ICPInfo;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class ICPConnectionComposite extends ConnectionComposite {
 	
 	private Text masterIPText, ingressURLText, namespaceText;
+	private ICPInfo icpInfo;
 	
 	public ICPConnectionComposite(Composite parent, WizardPage wizardPage) {
 		super(parent, wizardPage);
@@ -59,36 +62,56 @@ public class ICPConnectionComposite extends ConnectionComposite {
 		masterIPLabel.setText("Master IP:");
 		masterIPLabel.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
 		
-		masterIPText = new Text(composite, SWT.BORDER);
-		masterIPText.setText("9.42.80.228");
+		masterIPText = new Text(composite, SWT.READ_ONLY);
 		masterIPText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 
 		Label ingressURLLabel = new Label(composite, SWT.NONE);
 		ingressURLLabel.setText("Ingress URL:");
 		ingressURLLabel.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
 		
-		ingressURLText = new Text(composite, SWT.BORDER);
-		ingressURLText.setText("https://microclimate.9.42.41.81.nip.io");
+		ingressURLText = new Text(composite, SWT.READ_ONLY);
 		ingressURLText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 		
 		Label namespaceLabel = new Label(composite, SWT.NONE);
 		namespaceLabel.setText("Namespace:");
 		namespaceLabel.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false));
 		
-		namespaceText = new Text(composite, SWT.BORDER);
-		namespaceText.setText("mcg");
+		namespaceText = new Text(composite, SWT.READ_ONLY);
 		namespaceText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		
+		initialize();
+	}
+	
+	protected void initialize() {
+		icpInfo = null;
+		try {
+			icpInfo = ICPUtil.getICPInfo();
+		} catch (URISyntaxException e) {
+			MCLogger.logError("An error occurred trying to retrieve the kubernetes configuration", e);
+		}
+		
+		if (icpInfo != null) {
+			masterIPText.setText(icpInfo.masterIP);
+			ingressURLText.setText(icpInfo.ingressURL.toString());
+			namespaceText.setText(icpInfo.namespace);
+		}
+		
+		validate();
 	}
 
 	@Override
 	protected void validate() {
-		wizardPage.setMessage(null);
+		if (icpInfo == null) {
+			wizardPage.setMessage("Cluster information could not be retrieved. Check that you are logged in to your cluster");
+		} else {
+			wizardPage.setMessage(null);
+		}
 		wizardPage.getWizard().getContainer().updateButtons();
 	}
 
 	@Override
 	protected boolean canFinish() {
-		return true;
+		return icpInfo != null;
 	}
 
 	@Override
