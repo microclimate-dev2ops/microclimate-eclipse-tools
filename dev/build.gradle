@@ -178,11 +178,6 @@ task build {
     }
 }
 
-task gradleCompile {
-    doLast {
-    }
-}
-
 task gradleGenerateMDTUpdateSite {
     doLast {
     }
@@ -195,8 +190,6 @@ build.dependsOn generateOpenMDTUpdateSite
 
 compile.dependsOn downloadEclipseSDK
 compile.dependsOn downloadEclipseTargetPlatform
-
-gradleCompile.dependsOn compile
 
 //// build version from the artifacts to avoid version mismatch
 import static groovy.io.FileType.FILES
