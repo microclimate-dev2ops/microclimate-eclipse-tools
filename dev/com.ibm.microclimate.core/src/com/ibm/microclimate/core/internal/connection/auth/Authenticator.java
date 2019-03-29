@@ -19,6 +19,10 @@ import java.util.Date;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
@@ -74,6 +78,11 @@ public class Authenticator {
 	 */
 	public void authenticate(String masterNodeIP) throws Exception {
 		MCLogger.log("Authenticating against " + masterNodeIP);
+		
+		if (getToken(masterNodeIP) != null) {
+			// Token is still valid
+			return;
+		}
 
 		final String oidcServerUrl = String.format("https://%s:8443/oidc/endpoint/OP", masterNodeIP);
 		// This is obtained from oidcServerUrl + /.well-known/openid-configuration
@@ -103,10 +112,21 @@ public class Authenticator {
 		IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 
 		// The internal browser was acting up for me. You can try it again if you like, since it would be nicer.
-//		IWebBrowser browser = browserSupport.createBrowser(
-//				IWorkbenchBrowserSupport.LOCATION_BAR | IWorkbenchBrowserSupport.NAVIGATION_BAR,
-//				"mdt-auth", "Log in to ICP", "Log in to ICP");
-//        browser.openURL(authReqUri.toURL());
+//		Display.getDefault().syncExec(new Runnable() {
+//            @Override
+//            public void run() {
+//				try {
+//					IWebBrowser browser = browserSupport.createBrowser(
+//							IWorkbenchBrowserSupport.LOCATION_BAR | IWorkbenchBrowserSupport.NAVIGATION_BAR,
+//							"mdt-auth", "Log in to ICP", "Log in to ICP");
+//					browser.openURL(authReqUri.toURL());
+//				} catch (Exception e) {
+//					MCLogger.logError("Authorization failed for: " + masterNodeIP, e);
+//					Shell shell = Display.getDefault().getActiveShell();
+//					MessageDialog.openError(shell, "Authorization Failed", "An exception occurred trying to authorize to " + masterNodeIP + ": " + e.getMessage());
+//				}
+//            }
+//		});
 
 		browserSupport.getExternalBrowser().openURL(authReqUri.toURL());
 		// after user logs in, the browser calls-back to Eclipse, which will be handled by handleAuthorizationCallback below
@@ -162,6 +182,10 @@ public class Authenticator {
 		if (token == null || token.isEmpty()) {
 			return null;
 		}
+		long time = secureStore.getLong(EXPIRY_PREFIX + masterNodeIP, -1);
+		if (time < System.currentTimeMillis()) {
+			return null;
+		}
 		return token;
 	}
 
@@ -170,7 +194,7 @@ public class Authenticator {
 
 		Date now = new Date(Calendar.getInstance().getTimeInMillis());
 		Date expiry = new Date(now.getTime() + token.getLifetime() * 1000);
-//		MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Authorization Success", "Access token will expire at " + sdf.format(expiry));
+		MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Authorization Success", "Access token will expire at " + sdf.format(expiry));
 
 		ISecurePreferences secureStore = SecurePreferencesFactory.getDefault();
 		secureStore.put(TOKEN_PREFIX + masterNodeIP, token.getValue(), true);
