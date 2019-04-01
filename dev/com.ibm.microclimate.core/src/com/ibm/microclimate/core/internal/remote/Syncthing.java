@@ -209,6 +209,7 @@ public class Syncthing {
 		if (device != null) {
 			device.removeDevice(hostDevice);
 			hostDevice.removeDevice(device);
+			device.dispose();
 		}
 	}
 	

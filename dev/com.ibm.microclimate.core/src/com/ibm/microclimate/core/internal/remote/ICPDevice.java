@@ -17,12 +17,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.PlatformUtil;
+import com.ibm.microclimate.kubeclient.util.ICPUtil;
+import com.ibm.microclimate.kubeclient.util.ICPUtil.ICPPortForward;
 
 public class ICPDevice extends AbstractDevice {
 	
-	private static final String GUI_PORT = "8384";
-	private static final String CONNECTION_PORT = "22000";
+	private static final int GUI_PORT = 8384;
+	private static final int CONNECTION_PORT = 22000;
 	private static final String CONFIG_DIR = "/root/.config/syncthing";
 	private static final String CONFIG_FILE = "config.xml";
 	
@@ -33,11 +36,15 @@ public class ICPDevice extends AbstractDevice {
 	
 	private final ICPConnection icp;
 	private final String icpHost;
-	
-	private ICPDevice(ICPConnection icp, ConfigInfo configInfo, String icpHost, String host, int guiPort, int connectionPort) throws IOException {
-		super(configInfo, host, guiPort, connectionPort);
+	private final ICPPortForward guiPortForward;
+	private final ICPPortForward connPortForward;
+
+	private ICPDevice(ICPConnection icp, ConfigInfo configInfo, String icpHost, String host, ICPPortForward guiPortForward, ICPPortForward connPortForward) throws IOException {
+		super(configInfo, host, guiPortForward.getLocalPort(), connPortForward.getLocalPort());
 		this.icp = icp;
 		this.icpHost = icpHost;
+		this.guiPortForward = guiPortForward;
+		this.connPortForward = connPortForward;
 	}
 
 	// Start synchronization for the given folder and device.
@@ -115,16 +122,14 @@ public class ICPDevice extends AbstractDevice {
 			// Copy over the syncthing config file and get the config info
 			String content = icp.getFileFromContainer(podName, BEACON_CONTAINER, CONFIG_DIR, CONFIG_FILE, tmpPath);
 			ConfigInfo info = new ConfigInfo(content);
-			
+
 			// Forward the gui and connection ports
-			int guiPort = PlatformUtil.findFreePort();
-			icp.portForward(podName, String.valueOf(guiPort), GUI_PORT);
-			System.out.println("GUI port: " + guiPort);
-			int connectionPort = PlatformUtil.findFreePort();
-			icp.portForward(podName, String.valueOf(connectionPort), CONNECTION_PORT);
-			System.out.println("Connection port: " + connectionPort);
+			ICPPortForward guiPortForward = ICPUtil.forwardPort(GUI_PORT);
+			System.out.println("GUI port: " + guiPortForward.getLocalPort());
+			ICPPortForward connPortForward = ICPUtil.forwardPort(CONNECTION_PORT);
+			System.out.println("Connection port: " + connPortForward.getLocalPort());
 			
-			return new ICPDevice(icp, info, host, LOCALHOST, guiPort, connectionPort);
+			return new ICPDevice(icp, info, host, LOCALHOST, guiPortForward, connPortForward);
 		} catch (Exception e) {
 			if (icp != null) {
 				icp.dispose();
@@ -138,5 +143,17 @@ public class ICPDevice extends AbstractDevice {
 		if (icp != null) {
 			icp.dispose();
 		}
+	    disposePortForward(guiPortForward);
+	    disposePortForward(connPortForward);
+	}
+	
+	private void disposePortForward(ICPPortForward portForward) {
+		if (portForward != null) {
+	    	try {
+				portForward.close();
+			} catch (IOException e) {
+				MCLogger.logError("Stopping port forwarding was unsuccessful for port: " + portForward.getLocalPort());
+			}
+	    }
 	}
 }
