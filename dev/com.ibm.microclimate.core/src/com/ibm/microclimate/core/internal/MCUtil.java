@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -75,12 +75,12 @@ public class MCUtil {
 	/**
 	 * Append finish to start, removing the last segment of start if it is equal to the first segment of finish.
 	 */
-	public static IPath appendPathWithoutDupe(IPath start, String finish) {
+	public static String appendPathWithoutDupe(IPath start, String finish) {
 		IPath finishPath = new Path(finish);
 		if (start.lastSegment().equals(finishPath.segment(0))) {
 			start = start.removeLastSegments(1);
 		}
-		return start.append(finishPath);
+		return start.append(finishPath).toOSString();
 	}
 
 	/**

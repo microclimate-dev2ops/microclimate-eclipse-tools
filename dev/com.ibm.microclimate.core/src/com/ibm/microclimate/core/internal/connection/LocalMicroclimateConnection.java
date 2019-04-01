@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,7 +69,7 @@ public class LocalMicroclimateConnection extends MicroclimateConnection {
 	}
 
 	@Override
-	public IPath getLocalAppPath(MicroclimateApplication app) {
+	public String getLocalAppPath(MicroclimateApplication app, IProgressMonitor monitor) {
 		return MCUtil.appendPathWithoutDupe(localWorkspacePath, app.pathInWorkspace);
 	}
 

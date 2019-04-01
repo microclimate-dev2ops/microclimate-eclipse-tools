@@ -15,6 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
@@ -86,8 +87,8 @@ public class MicroclimateApplication {
 		}
 	}
 	
-	public IPath getLocalPath() throws Exception {
-		return mcConnection.getLocalAppPath(this);
+	public String getLocalPath(IProgressMonitor monitor) throws Exception {
+		return mcConnection.getLocalAppPath(this, monitor);
 	}
 	
 	public synchronized void setAppStatus(String appStatus) {

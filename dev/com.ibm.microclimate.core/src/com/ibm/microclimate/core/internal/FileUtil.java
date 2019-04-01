@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.StringTokenizer;
 
 public class FileUtil {
 	
@@ -56,5 +57,54 @@ public class FileUtil {
     		}
     	}
     }
+    
+    /**
+     * Removes the given directory.
+     * If recursive is true, any files and subdirectories within
+     * the directory will also be deleted; otherwise the
+     * operation will fail if the directory is not empty.
+     */
+    public static void deleteDirectory(String dir, boolean recursive) throws IOException {
+        if (dir == null || dir.length() <= 0) {
+            return;
+        }
+
+        // Safety feature. Prevent to remove directory from the root
+        // of the drive, i.e. directory with less than 2 file separator.
+        if ((new StringTokenizer(dir.replace(File.separatorChar, '/'), "/")).countTokens() < 2) {
+            return;
+        }
+
+        File fp = new File(dir);
+        if (!fp.exists() || !fp.isDirectory())
+            throw new IOException("Directory does not exist: " + fp.toString());
+
+        if (recursive) {
+            // Remove the contents of the given directory before delete.
+            String[] fileList = fp.list();
+            if (fileList != null) {
+                String curBasePath = dir + File.separator;
+                for (int i = 0; i < fileList.length; i++) {
+                    // Remove each file one at a time.
+                    File curFp = new File(curBasePath + fileList[i]);
+                    if (curFp.exists()) {
+                        if (curFp.isDirectory()) {
+                            // Remove the directory and sub directories;
+                            deleteDirectory(dir + File.separator + fileList[i], recursive);
+                        } else {
+                            if (!curFp.delete())
+                                MCLogger.log("Could not delete " + curFp.getName());
+                        }
+                    }
+                }
+            }
+        }
+        boolean isSuccess = fp.delete();
+
+        if (!isSuccess) {
+            throw new IOException("Directory cannot be removed.");
+        }
+    }
+
 
 }

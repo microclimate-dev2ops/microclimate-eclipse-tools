@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.json.JSONException;
@@ -83,9 +84,8 @@ public class ICPMicroclimateConnection extends MicroclimateConnection {
 	}
 
 	@Override
-	public IPath getLocalAppPath(MicroclimateApplication app) throws Exception {
-		String localPath = ICPSyncManager.setupLocalProject(this, app);
-		return new Path(localPath);
+	public String getLocalAppPath(MicroclimateApplication app, IProgressMonitor monitor) throws Exception {
+		return ICPSyncManager.setupLocalProject(this, app, monitor);
 	}
 	
 	@Override
