@@ -26,6 +26,7 @@ Export-Package: com.ibm.microclimate.core,
  io.socket.client,
  io.socket.emitter,
  org.json
+Import-Package: com.ibm.microclimate.kubeclient.util
 Bundle-ClassPath: .,
  lib/engine.io-client-1.0.0.jar,
  lib/json-20090211.jar,

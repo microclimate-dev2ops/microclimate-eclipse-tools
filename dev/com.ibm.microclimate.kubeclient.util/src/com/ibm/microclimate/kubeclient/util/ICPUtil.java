@@ -11,6 +11,7 @@
 
 package com.ibm.microclimate.kubeclient.util;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -20,6 +21,7 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.LocalPortForward;
 
 public class ICPUtil extends KubeclientUtil {
 	
@@ -31,22 +33,26 @@ public class ICPUtil extends KubeclientUtil {
 	public static ICPInfo getICPInfo() throws URISyntaxException {
 		KubernetesClient client = getDefaultClient();
 		
-		Config config = client.getConfiguration();
-		String masterURL = config.getMasterUrl();
-		URI uri = new URI(masterURL);
-		String masterIP = getHostname(uri);
-		String username = config.getUsername();
-		
-		IngressList ingressList = client.extensions().ingresses().inAnyNamespace().list();
-		for (Ingress ingress : ingressList.getItems()) {
-			if (INGRESS_NAME.equals(ingress.getMetadata().getName())) {
-				URI ingressURL = new URI("https://" + ingress.getSpec().getRules().get(0).getHost());
-				String namespace = ingress.getMetadata().getNamespace();
-				return new ICPInfo(masterIP, ingressURL, namespace, username);
-			}
-		}
+		try {
+			Config config = client.getConfiguration();
+			String masterURL = config.getMasterUrl();
+			URI uri = new URI(masterURL);
+			String masterIP = getHostname(uri);
+			String username = config.getUsername();
 			
-		return null;
+			IngressList ingressList = client.extensions().ingresses().inAnyNamespace().list();
+			for (Ingress ingress : ingressList.getItems()) {
+				if (INGRESS_NAME.equals(ingress.getMetadata().getName())) {
+					URI ingressURL = new URI("https://" + ingress.getSpec().getRules().get(0).getHost());
+					String namespace = ingress.getMetadata().getNamespace();
+					return new ICPInfo(masterIP, ingressURL, namespace, username);
+				}
+			}
+				
+			return null;
+		} finally {
+			client.close();
+		}
 	}
 	
 	public static Pod getEditorPod(KubernetesClient client) {
@@ -57,6 +63,10 @@ public class ICPUtil extends KubeclientUtil {
 			}
 		}
 		return null;
+	}
+	
+	public static ICPPortForward forwardPort(int port) throws IOException {
+		return new ICPPortForward(port);
 	}
 	
 	private static String getHostname(URI uri) {
@@ -79,6 +89,34 @@ public class ICPUtil extends KubeclientUtil {
 			this.ingressURL = ingressURL;
 			this.namespace = namespace;
 			this.username = username;
+		}
+	}
+	
+	public static class ICPPortForward {
+		private final KubernetesClient client;
+		private final LocalPortForward portForward;
+		
+		public ICPPortForward(int port) throws IOException {
+			client = getDefaultClient();
+			try {
+				Pod editorPod = getEditorPod(client);
+				portForward = client.pods().withName(editorPod.getMetadata().getName()).portForward(port);
+				if (portForward == null) {
+					throw new IOException("Forwarding of the " + port + " port was unsuccessful for the pod: "
+							+ editorPod.getMetadata().getName());
+				} 
+			} finally {
+				client.close();
+			}
+		}
+		
+		public int getLocalPort() {
+			return portForward.getLocalPort();
+		}
+		
+		public void close() throws IOException {
+			portForward.close();
+			client.close();
 		}
 	}
 }
