@@ -159,45 +159,21 @@ public class Syncthing {
 		}
 		return hostDevice.testConnection(5000);
 	}
+	
+	public void addEventListener(SyncthingEventListener listener, String... eventTypes) {
+		eventMonitor.addListener(listener, eventTypes);
+	}
+	
+	public void removeEventListener(SyncthingEventListener listener, String... eventTypes) {
+		eventMonitor.removeListener(listener, eventTypes);
+	}
 
-	// Shares an ICP folder with the host.  Waits for the folder sharing to be 100% complete before returning.
+	// Shares an ICP folder with the host.
 	public String shareICPFolder(String host, String namespace, String projectName) throws IOException, JSONException {
 		final ICPDevice icpDevice = addICPDevice(host, namespace);
-		final boolean[] upToDate = new boolean[] {false};
-		SyncthingEventListener folderCompletionListener = new SyncthingEventListener() {
-			@Override
-			public void eventNotify(SyncthingEvent event) {
-				if (icpDevice.getDeviceId().equals(event.data.get(SyncthingEventMonitor.DEVICE_KEY))
-						&& projectName.equals(event.data.get(SyncthingEventMonitor.FOLDER_KEY))) {
-					Object completion = event.data.get(SyncthingEventMonitor.COMPLETION_KEY);
-					if (completion != null && completion instanceof Integer && ((Integer)completion).intValue() == 100) {
-						upToDate[0] = true;
-					}
-				}
-			}
-		};
-		eventMonitor.addListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
 		
-		try {
-			icpDevice.addFolderEntry(projectName, hostDevice);
-			
-			// Wait for the folder to be updated before returning
-			for (int i = 0; i < 120 && !upToDate[0]; i++) {
-				try {
-					Thread.sleep(1000);
-				} catch (Exception e) {
-					// Ignore
-				}
-			}
-		} finally {
-			eventMonitor.removeListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
-		}
-		
-		if (!upToDate[0]) {
-			String msg = "The synchronization did not complete in the expected time for folder: " + projectName;
-			MCLogger.logError(msg);
-			throw new IOException(msg);
-		}
+		// Add the folder to the ICP device
+		icpDevice.addFolderEntry(projectName, hostDevice);
 		
 		// Keep track of the folder in the host device (state, errors);
 		hostDevice.addFolder(projectName, icpDevice);
@@ -205,27 +181,21 @@ public class Syncthing {
 		// Return the local path for the folder
 		return hostDevice.getLocalFolder(projectName);
 	}
-	
-	// Shares an ICP folder with the host.  Does not wait for completion.
-	public String shareICPFolderNoWait(String host, String namespace, String projectName) throws IOException, JSONException {
-		ICPDevice icpDevice = addICPDevice(host, namespace);
-		icpDevice.addFolderEntry(projectName, hostDevice);
-		hostDevice.addFolder(projectName, icpDevice);
-		return hostDevice.getLocalFolder(projectName);
-	}
-	
+
 	// Start folder scan
 	public void scanFolder(String projectName) throws IOException {
 		hostDevice.scanFolder(projectName);
 	}
 	
 	// Stop sharing the given folder
-	public void stopSharingFolder(String projectName) throws IOException, JSONException {
+	public String stopSharingFolder(String projectName) throws IOException, JSONException {
 		SyncthingFolder folder = hostDevice.getFolder(projectName);
 		if (folder != null) {
 			folder.getShareDevice().removeFolder(projectName, hostDevice);
 			hostDevice.removeFolder(projectName);
+			return hostDevice.getLocalFolder(projectName);
 		}
+		return null;
 	}
 	
 	// Checks if there are currently any shared folders

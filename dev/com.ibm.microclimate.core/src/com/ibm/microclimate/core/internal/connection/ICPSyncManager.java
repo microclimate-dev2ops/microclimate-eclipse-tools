@@ -11,7 +11,6 @@
 
 package com.ibm.microclimate.core.internal.connection;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +25,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
+import com.ibm.microclimate.core.internal.FileUtil;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.messages.Messages;
 import com.ibm.microclimate.core.internal.remote.Syncthing;
+import com.ibm.microclimate.core.internal.remote.SyncthingEvent;
+import com.ibm.microclimate.core.internal.remote.SyncthingEventListener;
+import com.ibm.microclimate.core.internal.remote.SyncthingEventMonitor;
 
 public class ICPSyncManager {
 	
@@ -40,13 +43,47 @@ public class ICPSyncManager {
 	private static final String PROJECTS_KEY = "projects";
 	
 	
-	public static String setupLocalProject(ICPMicroclimateConnection conn, MicroclimateApplication app) throws Exception {
+	public static String setupLocalProject(ICPMicroclimateConnection conn, MicroclimateApplication app, IProgressMonitor monitor) throws Exception {
 		Syncthing syncthing = getSyncthing();
 		
-		// Set up synchronization for the application
-		String localFolder = syncthing.shareICPFolder(conn.getMasterIP(), conn.getNamespace(), app.name);
-		addSyncedProject(app);
-		return localFolder;
+		// Get notified when the folder setup is complete
+		boolean[] upToDate = new boolean[1];
+		SyncthingEventListener folderCompletionListener = new SyncthingEventListener() {
+			@Override
+			public void eventNotify(SyncthingEvent event) {
+				if (app.name.equals(event.data.get(SyncthingEventMonitor.FOLDER_KEY))) {
+					Object completion = event.data.get(SyncthingEventMonitor.COMPLETION_KEY);
+					if (completion != null && completion instanceof Integer && ((Integer)completion).intValue() == 100) {
+						upToDate[0] = true;
+					}
+				}
+			}
+		};
+		syncthing.addEventListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
+		
+		try {
+			// Set up synchronization for the application
+			String localFolder = syncthing.shareICPFolder(conn.getMasterIP(), conn.getNamespace(), app.name);
+			while (!upToDate[0] && !monitor.isCanceled()) {
+				// Wait for the project to be up to date, checking the progress monitor to see if canceled
+				try {
+					Thread.sleep(500);
+				} catch (Exception e) {
+					// Ignore
+				}
+			}
+			if (monitor.isCanceled()) {
+				String location = syncthing.stopSharingFolder(app.name);
+				if (location != null) {
+					FileUtil.deleteDirectory(location, true);
+				}
+				return null;
+			}
+			addSyncedProject(app);
+			return localFolder;
+		} finally {
+			syncthing.removeEventListener(folderCompletionListener, SyncthingEventMonitor.FOLDER_COMPLETION_TYPE);
+		}
 	}
 	
 	public static void removeLocalProject(MicroclimateApplication app) throws Exception {
@@ -114,7 +151,7 @@ public class ICPSyncManager {
 						for (Map.Entry<MicroclimateConnection, List<MicroclimateApplication>> entry : syncMap.entrySet()) {
 							MicroclimateConnection conn = entry.getKey();
 							for (MicroclimateApplication app : entry.getValue()) {
-								syncthing.shareICPFolderNoWait(conn.getHost(), conn.getSocketNamespace(), app.name);
+								syncthing.shareICPFolder(conn.getHost(), conn.getSocketNamespace(), app.name);
 							}
 						}
 					}

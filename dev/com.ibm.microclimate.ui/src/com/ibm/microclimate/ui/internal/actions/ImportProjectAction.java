@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
  *******************************************************************************/
 
 package com.ibm.microclimate.ui.internal.actions;
+
+import java.io.File;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -87,8 +89,21 @@ public class ImportProjectAction implements IObjectActionDelegate {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					IPath path = app.getLocalPath();
-					SmartImportJob importJob = new SmartImportJob(path.toFile(), null, true, false);
+					monitor.beginTask(NLS.bind(Messages.ImportProjectSetUpTask, app.name), IProgressMonitor.UNKNOWN);
+					String path = app.getLocalPath(monitor);
+					if (monitor.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					if (path == null) {
+						MCLogger.logError("Local path is null for project: " + app.name);
+						return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID, NLS.bind(Messages.ImportProjectError, app.name));
+					}
+					File file = new File(path);
+					if (!file.exists()) {
+						MCLogger.logError("The local path for the " + app.name + " project does not exist: " + path);
+						return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID, NLS.bind(Messages.ImportProjectError, app.name));
+					}
+					SmartImportJob importJob = new SmartImportJob(file, null, true, false);
 					importJob.schedule();
 					return Status.OK_STATUS;
 				} catch (Exception e) {

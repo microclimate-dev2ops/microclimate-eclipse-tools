@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -713,7 +714,7 @@ public abstract class MicroclimateConnection {
 		return null;
 	}
 	
-	public abstract IPath getLocalAppPath(MicroclimateApplication app) throws Exception;
+	public abstract String getLocalAppPath(MicroclimateApplication app, IProgressMonitor monitor) throws Exception;
 	
 	public abstract ConnectionType getType();
 	
