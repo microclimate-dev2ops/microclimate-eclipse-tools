@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -22,55 +22,73 @@ import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateSocket;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
-public class SocketConsole extends IOConsole {
+public class OldSocketConsole extends IOConsole {
 
-	public final MicroclimateApplication app;
-	public final ProjectLogInfo logInfo;
+	public final String projectID;
 	private final MicroclimateSocket socket;
 
 	private IOConsoleOutputStream outputStream;
+	private int previousLength = 0;
 	private boolean isInitialized = false;
 
-	public SocketConsole(String consoleName, ProjectLogInfo logInfo, MicroclimateApplication app) {
-		super(consoleName, MicroclimateConsoleFactory.MC_CONSOLE_TYPE,
+	public OldSocketConsole(String name, MicroclimateApplication app) {
+		super(name, MicroclimateConsoleFactory.MC_CONSOLE_TYPE,
 				MicroclimateCorePlugin.getIcon(MicroclimateCorePlugin.DEFAULT_ICON_PATH),
 				true);
 
-		this.app = app;
-		this.logInfo = logInfo;
+		this.projectID = app.projectID;
 		this.outputStream = newOutputStream();
 		this.socket = app.mcConnection.getMCSocket();
-		socket.registerSocketConsole(this);
+		socket.registerOldSocketConsole(this);
 
 		try {
 			this.outputStream.write(Messages.LogFileInitialMsg);
-			app.mcConnection.requestEnableLogStream(app, logInfo);
 		} catch (IOException e) {
-			MCLogger.logError("Error opening console output stream for: " + this.getName(), e);
+			MCLogger.logError("Error writing initial message to " + this.getName(), e);
 		}
 	}
 
-	public void update(String contents, boolean reset) throws IOException {
-		if (!isInitialized || reset) {
+	public void update(String contents) throws IOException {
+		if (!isInitialized) {
+			// Clear the INITIAL_MSG
 			clearConsole();
 			isInitialized = true;
 		}
 
-		MCLogger.log("Appending contents to log: " + this.getName());		// $NON-NLS-1$
-		outputStream.write(contents);
+		String newContents = "";
+		int diff = contents.length() - previousLength;
+		if (diff == 0) {
+			// nothing to do
+			return;
+		}
+		else if (diff < 0) {
+			// The app log was cleared
+			// eg if the dockerfile was changed and the container had to be rebuilt
+			MCLogger.log("Console was cleared");
+			clearConsole();
+			// write the whole new console
+			newContents = contents;
+		}
+		else {
+			// write only the new characters to the console
+			newContents = contents.substring(previousLength, previousLength + diff);
+		}
+
+		MCLogger.log(newContents.length() + " new characters to write to " + this.getName());		// $NON-NLS-1$
+		outputStream.write(newContents);
+		previousLength = contents.length();
 	}
 
 	@Override
 	protected void dispose() {
 		MCLogger.log("Dispose console " + getName()); //$NON-NLS-1$
 
-		socket.deregisterSocketConsole(this);
+		socket.deregisterOldSocketConsole(this);
 
 		try {
-			app.mcConnection.requestDisableLogStream(app, logInfo);
 			outputStream.close();
 		} catch (IOException e) {
-			MCLogger.logError("Error closing console output stream for: " + this.getName(), e); //$NON-NLS-1$
+			MCLogger.logError("Error closing console output stream", e); //$NON-NLS-1$
 		}
 
 		super.dispose();

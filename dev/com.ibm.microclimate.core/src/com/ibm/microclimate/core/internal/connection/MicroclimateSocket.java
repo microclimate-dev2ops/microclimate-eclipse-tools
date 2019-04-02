@@ -25,6 +25,7 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.console.OldSocketConsole;
 import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
@@ -53,6 +54,8 @@ public class MicroclimateSocket {
 
 	private volatile boolean hasConnected = false;
 
+	private Set<OldSocketConsole> oldSocketConsoles = new HashSet<>();
+	
 	private Set<SocketConsole> socketConsoles = new HashSet<>();
 
 	// Track the previous Exception so we don't spam the logs with the same connection failure message
@@ -67,7 +70,8 @@ public class MicroclimateSocket {
 			EVENT_PROJECT_CLOSED = "projectClosed", 				//$NON-NLS-1$
 			EVENT_PROJECT_DELETION = "projectDeletion", 			//$NON-NLS-1$
 			EVENT_CONTAINER_LOGS = "container-logs",				//$NON-NLS-1$
-			EVENT_PROJECT_VALIDATED = "projectValidated";			//$NON-NLS-1$
+			EVENT_PROJECT_VALIDATED = "projectValidated",			//$NON-NLS-1$
+			EVENT_LOG_UPDATE = "log-update";						//$NON-NLS-1$
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 		this.mcConnection = mcConnection;
@@ -206,8 +210,21 @@ public class MicroclimateSocket {
 			@Override
 			public void call(Object... arg0) {
 				// can't print this whole thing because the logs strings flood the output
-				// MCLogger.log(EVENT_CONTAINER_LOGS + ": " + arg0[0].toString()); //$NON-NLS-1$
 				MCLogger.log(EVENT_CONTAINER_LOGS);
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onContainerLogs(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
+			}
+		})
+		.on(EVENT_LOG_UPDATE, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				// can't print this whole thing because the logs strings flood the output
+				MCLogger.log(EVENT_LOG_UPDATE);
 
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
@@ -404,8 +421,17 @@ public class MicroclimateSocket {
 		app.dispose();
 	}
 
-	public void registerSocketConsole(SocketConsole console) {
+	public void registerOldSocketConsole(OldSocketConsole console) {
 		MCLogger.log("Register socketConsole for projectID " + console.projectID); //$NON-NLS-1$
+		this.oldSocketConsoles.add(console);
+	}
+
+	public void deregisterOldSocketConsole(OldSocketConsole console) {
+		this.oldSocketConsoles.remove(console);
+	}
+	
+	public void registerSocketConsole(SocketConsole console) {
+		MCLogger.log("Register socketConsole for project: " + console.app.name); //$NON-NLS-1$
 		this.socketConsoles.add(console);
 	}
 
@@ -413,15 +439,35 @@ public class MicroclimateSocket {
 		this.socketConsoles.remove(console);
 	}
 
-	private void onLogUpdate(JSONObject event) throws JSONException {
+	private void onContainerLogs(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		String logContents = event.getString(MCConstants.KEY_LOGS);
 		MCLogger.log("Update logs for project " + projectID); //$NON-NLS-1$
 
-		for (SocketConsole console : this.socketConsoles) {
+		for (OldSocketConsole console : this.oldSocketConsoles) {
 			if (console.projectID.equals(projectID)) {
 				try {
 					console.update(logContents);
+				}
+				catch(IOException e) {
+					MCLogger.logError("Error updating console " + console.getName(), e);	// $NON-NLS-1$
+				}
+			}
+		}
+	}
+	
+	private void onLogUpdate(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		String type = event.getString(MCConstants.KEY_LOG_TYPE);
+		String logName = event.getString(MCConstants.KEY_LOG_NAME);
+		MCLogger.log("Update the " + logName + " log for project: " + projectID); //$NON-NLS-1$ //$NON-NLS-2$
+
+		for (SocketConsole console : this.socketConsoles) {
+			if (console.app.projectID.equals(projectID) && console.logInfo.isThisLogInfo(type, logName)) {
+				try {
+					String logContents = event.getString(MCConstants.KEY_LOGS);
+					boolean reset = event.getBoolean(MCConstants.KEY_LOG_RESET);
+					console.update(logContents, reset);
 				}
 				catch(IOException e) {
 					MCLogger.logError("Error updating console " + console.getName(), e);	// $NON-NLS-1$

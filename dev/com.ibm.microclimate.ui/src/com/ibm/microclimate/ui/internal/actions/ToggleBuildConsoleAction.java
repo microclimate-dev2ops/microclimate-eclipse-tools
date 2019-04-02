@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ package com.ibm.microclimate.ui.internal.actions;
 import org.eclipse.ui.console.IConsole;
 
 import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
  * Action for toggling the display of a console showing the build logs
@@ -21,8 +22,12 @@ import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
  */
 public class ToggleBuildConsoleAction extends ToggleConsoleAction {
 	
+	public ToggleBuildConsoleAction() {
+		super(Messages.ShowBuildConsoleAction);
+    }
+	
 	@Override 
-	protected boolean supportsConsole() {
+	public boolean consoleSupported() {
 		return app.hasBuildLog();
 	}
 

@@ -102,6 +102,15 @@
 					</or>
 				</enablement>
 			</actionProvider>
+			<actionProvider
+				id="com.ibm.microclimate.ui.logFileActionProvider"
+				class="com.ibm.microclimate.ui.internal.actions.LogFileActionProvider">
+				<enablement>
+					<or>
+						<instanceof value="com.ibm.microclimate.core.internal.MicroclimateApplication" />
+					</or>
+				</enablement>
+			</actionProvider>
 		</navigatorContent>
 	</extension>
 
@@ -136,22 +145,6 @@
 				icon="%OPEN_BROWSER_ICON_PATH"
 				label="%ACTION_OPEN_APP"
 				class="com.ibm.microclimate.ui.internal.actions.OpenAppAction"/>
-			<action
-				id="com.ibm.microclimate.ui.toggleBuildConsole"
-				enablesFor="1"
-				menubarPath="group.show"
-				label="%ACTION_SHOW_BUILD_CONSOLE"
-				style="toggle"
-				state="false"
-				class="com.ibm.microclimate.ui.internal.actions.ToggleBuildConsoleAction"/>
-			<action
-				id="com.ibm.microclimate.ui.toggleAppConsole"
-				enablesFor="1"
-				menubarPath="group.show"
-				label="%ACTION_SHOW_APP_CONSOLE"
-				style="toggle"
-				state="false"
-				class="com.ibm.microclimate.ui.internal.actions.ToggleAppConsoleAction"/>
 			<action
 				id="com.ibm.microclimate.ui.importApplication"
 				enablesFor="1"

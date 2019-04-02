@@ -38,6 +38,7 @@ import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateApplicationFactory;
+import com.ibm.microclimate.core.internal.console.ProjectLogInfo;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.messages.Messages;
@@ -437,6 +438,69 @@ public class MicroclimateConnection {
 		HttpUtil.post(url, buildPayload);
 	}
 	
+	public List<ProjectLogInfo> requestProjectLogs(MicroclimateApplication app) throws JSONException, IOException {
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
+				+ app.projectID + "/"								//$NON-NLS-1$
+				+ MCConstants.APIPATH_LOGS;
+		
+		URI uri = baseUrl.resolve(endpoint);
+		HttpResult result = HttpUtil.get(uri);
+		checkResult(result, uri, true);
+        
+		List<ProjectLogInfo> logList = new ArrayList<ProjectLogInfo>();
+		JSONObject logs = new JSONObject(result.response);
+		JSONArray buildLogs = logs.getJSONArray(MCConstants.KEY_LOG_BUILD);
+		logList.addAll(getLogs(buildLogs, MCConstants.KEY_LOG_BUILD));
+		JSONArray appLogs = logs.getJSONArray(MCConstants.KEY_LOG_APP);
+		logList.addAll(getLogs(appLogs, MCConstants.KEY_LOG_APP));
+		return logList;
+	}
+	
+	private List<ProjectLogInfo> getLogs(JSONArray logs, String type) throws JSONException {
+		List<ProjectLogInfo> logList = new ArrayList<ProjectLogInfo>();
+		if (logs != null) {
+			for (int i = 0; i < logs.length(); i++) {
+				JSONObject log = logs.getJSONObject(i);
+				if (log.has(MCConstants.KEY_LOG_NAME)) {
+					String logName = log.getString(MCConstants.KEY_LOG_NAME);
+					String workspacePath = null;
+					if (log.has(MCConstants.KEY_LOG_WORKSPACE_PATH)) {
+						workspacePath = log.getString(MCConstants.KEY_LOG_WORKSPACE_PATH);
+					}
+					ProjectLogInfo logInfo = new ProjectLogInfo(type, logName, workspacePath);
+					logList.add(logInfo);
+				} else {
+					MCLogger.log("An item in the log list does not have the key: " + MCConstants.KEY_LOG_NAME);
+				}
+			}
+		}
+		return logList;
+	}
+	
+	public void requestEnableLogStream(MicroclimateApplication app, ProjectLogInfo logInfo) throws IOException {
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
+				+ app.projectID + "/" 								//$NON-NLS-1$
+				+ MCConstants.APIPATH_LOGS + "/"					//$NON-NLS-1$
+				+ logInfo.type + "/"								//$NON-NLS-1$
+				+ logInfo.logName;
+		
+		URI uri = baseUrl.resolve(endpoint);
+		HttpResult result = HttpUtil.post(uri);
+        checkResult(result, uri, false);
+	}
+	
+	public void requestDisableLogStream(MicroclimateApplication app, ProjectLogInfo logInfo) throws IOException {
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
+				+ app.projectID + "/" 								//$NON-NLS-1$
+				+ MCConstants.APIPATH_LOGS + "/"					//$NON-NLS-1$
+				+ logInfo.type + "/"								//$NON-NLS-1$
+				+ logInfo.logName;
+		
+		URI uri = baseUrl.resolve(endpoint);
+		HttpResult result = HttpUtil.delete(uri);
+        checkResult(result, uri, false);
+	}
+	
 	public void requestValidate(MicroclimateApplication app) throws JSONException, IOException {
 		boolean projectIdInPath = checkVersion(1901, "2019_M1_E");
 		
@@ -517,6 +581,17 @@ public class MicroclimateConnection {
 
 		JSONObject capabilities = new JSONObject(result.response);
 		return capabilities;
+	}
+	
+	private void checkResult(HttpResult result, URI uri, boolean checkContent) throws IOException {
+		if (!result.isGoodResponse) {
+			final String msg = String.format("Received bad response code %d for uri %s with error message %s", //$NON-NLS-1$
+					result.responseCode, uri, result.error);
+			throw new IOException(msg);
+		} else if (checkContent && result.response == null) {
+			// I don't think this will ever happen.
+			throw new IOException("Server returned good response code, but the content of the result is null for uri: " + uri); //$NON-NLS-1$
+		}
 	}
 	
 	public boolean isConnected() {

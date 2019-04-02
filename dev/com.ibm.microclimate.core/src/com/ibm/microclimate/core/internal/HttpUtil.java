@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -96,7 +96,7 @@ public class HttpUtil {
 			}
 		}
 	}
-
+	
 	public static HttpResult post(URI uri, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
 
@@ -105,12 +105,30 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setDoOutput(true);
+			
+			if (payload != null) {
+				connection.setRequestProperty("Content-Type", "application/json");
+				connection.setDoOutput(true);
+	
+				DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
+				payloadStream.write(payload.toString().getBytes());
+			}
 
-			DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
-			payloadStream.write(payload.toString().getBytes());
+			return new HttpResult(connection);
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
+	
+	public static HttpResult post(URI uri) throws IOException {
+		HttpURLConnection connection = null;
 
+		MCLogger.log("Empty POST TO " + uri);
+		try {
+			connection = (HttpURLConnection) uri.toURL().openConnection();
+			connection.setRequestMethod("POST");
 			return new HttpResult(connection);
 		} finally {
 			if (connection != null) {
