@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,7 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
 	
 	private ValidateAction validateAction;
 	private AttachDebuggerAction attachDebuggerAction;
+	private OpenAppMonitorAction openAppMonitorAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
@@ -31,6 +32,7 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
         ISelectionProvider selProvider = aSite.getStructuredViewer();
         validateAction = new ValidateAction(selProvider);
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
+        openAppMonitorAction = new OpenAppMonitorAction(selProvider);
     }
     
     @Override
@@ -40,6 +42,9 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
     	}
     	if (attachDebuggerAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, attachDebuggerAction);
+    	}
+    	if (openAppMonitorAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openAppMonitorAction);
     	}
     }
 

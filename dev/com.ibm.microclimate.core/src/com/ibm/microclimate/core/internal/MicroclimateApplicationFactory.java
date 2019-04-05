@@ -226,5 +226,17 @@ public class MicroclimateApplicationFactory {
 			MCLogger.logError("An error occurred while updating the log information for project: " + mcApp.name, e);
 		}
 		
+		// Check for metrics support
+		boolean metricsAvailable = true;
+		try {
+			JSONObject obj = mcApp.mcConnection.requestProjectMetricsStatus(mcApp);
+			if (obj != null && obj.has(MCConstants.KEY_METRICS_AVAILABLE)) {
+				metricsAvailable = obj.getBoolean(MCConstants.KEY_METRICS_AVAILABLE);
+			}
+		} catch (Exception e) {
+			MCLogger.logError("An error occurred checking if metrics are available: " + mcApp.name, e);
+		}
+		mcApp.setMetricsAvailable(metricsAvailable);
+		
 	}
 }

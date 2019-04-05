@@ -119,13 +119,6 @@
 			id="com.ibm.microclimate.ui.appObjectActions"
 			objectClass="com.ibm.microclimate.core.internal.MicroclimateApplication">
 			<action
-				id="com.ibm.microclimate.ui.openAppMonitor"
-				enablesFor="1"
-				menubarPath="group.open"
-				icon="%OPEN_BROWSER_ICON_PATH"
-				label="%ACTION_OPEN_APP_MONITOR"
-				class="com.ibm.microclimate.ui.internal.actions.OpenAppMonitorAction"/>
-			<action
 				id="com.ibm.microclimate.ui.containerShell"
 				enablesFor="1"
 				menubarPath="group.open"
