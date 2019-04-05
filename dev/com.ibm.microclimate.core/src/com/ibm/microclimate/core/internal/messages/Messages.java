@@ -37,6 +37,9 @@ public class Messages extends NLS {
 
 	public static String BuildConsoleName;
 	public static String AppConsoleName;
+	public static String LogFileConsoleName;
+	public static String LogFileConsoleNameWithLocation;
+	public static String LogFileInitialMsg;
 
 	public static String FileNotFoundTitle;
 	public static String FileNotFoundMsg;

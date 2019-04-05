@@ -13,7 +13,9 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -43,6 +45,8 @@ import org.eclipse.ui.console.IConsoleManager;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.console.ProjectLogInfo;
+import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.core.internal.constants.ProjectCapabilities;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.launch.MicroclimateLaunchConfigDelegate;
@@ -65,9 +69,12 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	// in seconds
 	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 3;
 	
-	// Consoles, null if not showing
+	// Old style consoles, null if not showing
 	private IConsole appConsole = null;
 	private IConsole buildConsole = null;
+	
+	// New consoles
+	private Set<SocketConsole> activeConsoles = new HashSet<SocketConsole>();
 	
 	// Debug launch, null if not debugging
 	private ILaunch launch = null;
@@ -100,6 +107,25 @@ public class MCEclipseApplication extends MicroclimateApplication {
 	
 	public synchronized IConsole getBuildConsole() {
 		return buildConsole;
+	}
+	
+	public synchronized void addConsole(SocketConsole console) {
+		activeConsoles.add(console);
+	}
+	
+	public synchronized SocketConsole getConsole(ProjectLogInfo logInfo) {
+		for (SocketConsole console : activeConsoles) {
+			if (console.logInfo.isThisLogInfo(logInfo)) {
+				return console;
+			}
+		}
+		return null;
+	}
+	
+	public synchronized void removeConsole(SocketConsole console) {
+		if (console != null) {
+			activeConsoles.remove(console);
+		}
 	}
 	
 	public synchronized void setLaunch(ILaunch launch) {
@@ -234,16 +260,17 @@ public class MCEclipseApplication extends MicroclimateApplication {
 		clearDebugger();
 		
 		// Clean up the consoles
-		List<IConsole> consoles = new ArrayList<IConsole>();
+		List<IConsole> consoleList = new ArrayList<IConsole>();
 		if (appConsole != null) {
-			consoles.add(appConsole);
+			consoleList.add(appConsole);
 		}
 		if (buildConsole != null) {
-			consoles.add(buildConsole);
+			consoleList.add(buildConsole);
 		}
-		if (!consoles.isEmpty()) {
+		consoleList.addAll(activeConsoles);
+		if (!consoleList.isEmpty()) {
 			IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
-			consoleManager.removeConsoles(consoles.toArray(new IConsole[consoles.size()]));
+			consoleManager.removeConsoles(consoleList.toArray(new IConsole[consoleList.size()]));
 		}
 		super.dispose();
 	}

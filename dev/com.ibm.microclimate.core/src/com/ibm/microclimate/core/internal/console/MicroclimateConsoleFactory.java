@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 
 package com.ibm.microclimate.core.internal.console;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
@@ -18,6 +19,7 @@ import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.IOConsole;
 
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
@@ -27,7 +29,7 @@ public class MicroclimateConsoleFactory {
 	
 	public static IOConsole createApplicationConsole(MicroclimateApplication app) {
 		String appLogName = NLS.bind(Messages.AppConsoleName, app.name);
-		IOConsole appConsole = new SocketConsole(appLogName, app);
+		IOConsole appConsole = new OldSocketConsole(appLogName, app);
 		onNewConsole(appConsole);
 		return appConsole;
 	}
@@ -43,6 +45,19 @@ public class MicroclimateConsoleFactory {
 			MCLogger.logError("No buildLogPath is set for app " + app.name); 		// $NON-NLS-1$
 		}
 		return null;
+	}
+	
+	public static SocketConsole createLogFileConsole(MicroclimateApplication app, ProjectLogInfo logInfo) {
+		String consoleName;
+		if (logInfo.workspaceLogPath != null && !logInfo.workspaceLogPath.isEmpty()) {
+			IPath fullPath = MCUtil.appendPathWithoutDupe(app.mcConnection.getWorkspacePath(), logInfo.workspaceLogPath).append(logInfo.logName);
+			consoleName = NLS.bind(Messages.LogFileConsoleNameWithLocation, new String[] {app.name, logInfo.logName, fullPath.toOSString()});
+		} else {
+			consoleName = NLS.bind(Messages.LogFileConsoleName, app.name, logInfo.logName);
+		}
+		SocketConsole console = new SocketConsole(consoleName, logInfo, app);
+		onNewConsole(console);
+		return console;
 	}
 
 	private static void onNewConsole(IOConsole console) {

@@ -35,6 +35,7 @@ public class MCConstants {
 			APIPATH_CLOSE = "close",
 			APIPATH_OPEN = "open",
 			APIPATH_CAPABILITIES = "capabilities",
+			APIPATH_LOGS = "logs",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -51,6 +52,10 @@ public class MCConstants {
 			KEY_LOG_BUILD = "build",
 			KEY_LOG_APP = "app",
 			KEY_LOG_FILE = "file",
+			KEY_LOG_TYPE = "logType",
+			KEY_LOG_NAME = "logName",
+			KEY_LOG_WORKSPACE_PATH = "workspaceLogPath",
+			KEY_LOG_RESET = "reset",
 
 			KEY_OPEN_STATE = "state",
 			// VALUE_STATE_OPEN = "open",

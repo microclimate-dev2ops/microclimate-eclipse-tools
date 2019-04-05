@@ -13,11 +13,13 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.console.ProjectLogInfo;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
@@ -46,6 +48,7 @@ public class MicroclimateApplication {
 	private String containerId;
 	private ProjectCapabilities projectCapabilities;
 	private String action;
+	private List<ProjectLogInfo> logInfos;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -130,6 +133,10 @@ public class MicroclimateApplication {
 		this.action = action;
 	}
 	
+	public synchronized void setLogInfos(List<ProjectLogInfo> logInfos) {
+		this.logInfos = logInfos;
+	}
+	
 	/**
 	 * Can return null if this project hasn't started yet (ie httpPort == -1)
 	 */
@@ -192,6 +199,10 @@ public class MicroclimateApplication {
 	
 	public boolean isAvailable() {
 		return isEnabled() && !isImporting();
+	}
+	
+	public List<ProjectLogInfo> getLogInfos() {
+		return logInfos;
 	}
 
 	public boolean hasBuildLog() {

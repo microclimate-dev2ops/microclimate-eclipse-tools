@@ -65,6 +65,13 @@ public class Messages extends NLS {
 	public static String DisableAutoBuildLabel;
 	public static String ErrorOnEnableDisableAutoBuildDialogTitle;
 	
+	public static String ShowAppConsoleAction;
+	public static String ShowBuildConsoleAction;
+	public static String ShowLogFilesMenu;
+	public static String ShowAllLogFilesAction;
+	public static String HideAllLogFilesAction;
+	public static String ErrorOnShowLogFileDialogTitle;
+	
 	public static String ActionNewConnection;
 	
 	public static String ValidateLabel;

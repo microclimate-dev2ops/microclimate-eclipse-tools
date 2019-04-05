@@ -12,6 +12,7 @@
 package com.ibm.microclimate.core.internal;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.json.JSONArray;
@@ -19,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.console.ProjectLogInfo;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.constants.StartMode;
@@ -215,5 +217,14 @@ public class MicroclimateApplicationFactory {
 		} catch(JSONException e) {
 			MCLogger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
 		}
+		
+		try {
+			// Set the log information
+			List<ProjectLogInfo> logInfos = mcApp.mcConnection.requestProjectLogs(mcApp);
+			mcApp.setLogInfos(logInfos);
+		} catch (Exception e) {
+			MCLogger.logError("An error occurred while updating the log information for project: " + mcApp.name, e);
+		}
+		
 	}
 }
