@@ -71,7 +71,8 @@ public class MicroclimateSocket {
 			EVENT_PROJECT_DELETION = "projectDeletion", 			//$NON-NLS-1$
 			EVENT_CONTAINER_LOGS = "container-logs",				//$NON-NLS-1$
 			EVENT_PROJECT_VALIDATED = "projectValidated",			//$NON-NLS-1$
-			EVENT_LOG_UPDATE = "log-update";						//$NON-NLS-1$
+			EVENT_LOG_UPDATE = "log-update",						//$NON-NLS-1$
+			EVENT_PROJECT_SETTINGS_CHANGED = "projectSettingsChanged";	//$NON-NLS-1$
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
 		this.mcConnection = mcConnection;
@@ -149,6 +150,19 @@ public class MicroclimateSocket {
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectChanged(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
+			}
+		})
+		.on(EVENT_PROJECT_SETTINGS_CHANGED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				MCLogger.log(EVENT_PROJECT_SETTINGS_CHANGED + ": " + arg0[0].toString()); //$NON-NLS-1$
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onProjectSettingsChanged(event);
 				} catch (JSONException e) {
 					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -315,6 +329,24 @@ public class MicroclimateSocket {
 			boolean autoBuild = event.getBoolean(MCConstants.KEY_AUTO_BUILD);
 			app.setAutoBuild(autoBuild);
 		}
+	}
+	
+	private void onProjectSettingsChanged(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			MCLogger.logError("No application found matching the project id for the project settings changed event: " + projectID); //$NON-NLS-1$
+			return;
+		}
+		
+		app.setEnabled(true);
+		
+		// Update context root
+		if (event.has(MCConstants.KEY_CONTEXT_ROOT)) {
+			app.setContextRoot(event.getString(MCConstants.KEY_CONTEXT_ROOT));
+		}
+		
+		// TODO: need to update ports?
 	}
 
 	private void onProjectStatusChanged(JSONObject event) throws JSONException {
