@@ -34,11 +34,10 @@ public class MicroclimateApplication {
 
 	public final MicroclimateConnection mcConnection;
 	public final String projectID, name, host;
-	public final String contextRoot;	// can be null
 	public final IPath fullLocalPath;
 	public final ProjectType projectType;
 
-	
+	private String contextRoot;	// can be null
 	private StartMode startMode;
 	private AppState appState;
 	private BuildStatus buildStatus;
@@ -59,21 +58,18 @@ public class MicroclimateApplication {
 	private int httpPort = -1, debugPort = -1;
 
 	MicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot)
+			String id, String name, ProjectType projectType, String pathInWorkspace)
 					throws MalformedURLException {
 
 		this.mcConnection = mcConnection;
 		this.projectID = id;
 		this.name = name;
 		this.projectType = projectType;
-		this.contextRoot = contextRoot;
 		this.host = mcConnection.baseUrl.getHost();
 
 		// The mcConnection.localWorkspacePath will end in /microclimate-workspace
 		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
 		this.fullLocalPath = MCUtil.appendPathWithoutDupe(mcConnection.getWorkspacePath(), pathInWorkspace);
-
-		setBaseUrl();
 
 		this.startMode = StartMode.RUN;
 		this.appState = AppState.UNKNOWN;
@@ -89,7 +85,7 @@ public class MicroclimateApplication {
 
 		baseUrl = new URL("http", host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
 
-		if (contextRoot != null) {
+		if (contextRoot != null && !contextRoot.isEmpty()) {
 			baseUrl = new URL(baseUrl, contextRoot);
 		}
 	}
@@ -111,6 +107,15 @@ public class MicroclimateApplication {
 			if (hasChanged && newStatus.isComplete()) {
 				buildComplete();
 			}
+		}
+	}
+	
+	public synchronized void setContextRoot(String contextRoot) {
+		this.contextRoot = contextRoot;
+		try {
+			setBaseUrl();
+		} catch (MalformedURLException e) {
+			MCLogger.logError("An error occurred updating the base url with the new context root: " + contextRoot, e);
 		}
 	}
 	
@@ -168,7 +173,7 @@ public class MicroclimateApplication {
 	public synchronized int getDebugPort() {
 		return debugPort;
 	}
-	
+
 	public synchronized StartMode getStartMode() {
 		return startMode;
 	}

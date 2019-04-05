@@ -114,12 +114,7 @@ public class MicroclimateApplicationFactory {
 
 			String loc = appJso.getString(MCConstants.KEY_LOC_DISK);
 			
-			String contextRoot = null;
-			if(appJso.has(MCConstants.KEY_CONTEXTROOT)) {
-				contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
-			}
-
-			MicroclimateApplication mcApp = MicroclimateObjectFactory.createMicroclimateApplication(mcConnection, id, name, type, loc, contextRoot);
+			MicroclimateApplication mcApp = MicroclimateObjectFactory.createMicroclimateApplication(mcConnection, id, name, type, loc);
 			
 			updateApp(mcApp, appJso);
 			return mcApp;
@@ -204,6 +199,18 @@ public class MicroclimateApplicationFactory {
 			} catch (Exception e) {
 				MCLogger.logError("Failed to get the ports for application: " + mcApp.name, e); //$NON-NLS-1$
 			}
+			
+			// Set the context root
+			String contextRoot = null;
+			if (appJso.has(MCConstants.KEY_CONTEXTROOT)) {
+				contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
+			} else if (appJso.has(MCConstants.KEY_CUSTOM)) {
+				JSONObject custom = appJso.getJSONObject(MCConstants.KEY_CUSTOM);
+				if (custom.has(MCConstants.KEY_CONTEXTROOT)) {
+					contextRoot = custom.getString(MCConstants.KEY_CONTEXTROOT);
+				}
+			}
+			mcApp.setContextRoot(contextRoot);
 			
 			// Set the start mode
 			StartMode startMode = StartMode.get(appJso);

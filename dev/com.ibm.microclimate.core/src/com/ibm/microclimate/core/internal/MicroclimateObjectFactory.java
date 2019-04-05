@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -30,8 +30,8 @@ public class MicroclimateObjectFactory {
 	}
 	
 	public static MicroclimateApplication createMicroclimateApplication(MicroclimateConnection mcConnection,
-			String id, String name, ProjectType projectType, String pathInWorkspace, String contextRoot) throws Exception {
-		return new MCEclipseApplication(mcConnection, id, name, projectType, pathInWorkspace, contextRoot);
+			String id, String name, ProjectType projectType, String pathInWorkspace) throws Exception {
+		return new MCEclipseApplication(mcConnection, id, name, projectType, pathInWorkspace);
 	}
 
 }
