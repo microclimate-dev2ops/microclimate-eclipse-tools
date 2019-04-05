@@ -49,6 +49,7 @@ public class MicroclimateApplication {
 	private ProjectCapabilities projectCapabilities;
 	private String action;
 	private List<ProjectLogInfo> logInfos;
+	private boolean metricsAvailable = false;
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -137,6 +138,10 @@ public class MicroclimateApplication {
 		this.logInfos = logInfos;
 	}
 	
+	public synchronized void setMetricsAvailable(boolean value) {
+		metricsAvailable = value;
+	}
+	
 	/**
 	 * Can return null if this project hasn't started yet (ie httpPort == -1)
 	 */
@@ -207,6 +212,10 @@ public class MicroclimateApplication {
 
 	public boolean hasBuildLog() {
 		return (!projectType.isType(ProjectType.TYPE_NODEJS));
+	}
+	
+	public synchronized boolean getMetricsAvailable() {
+		return metricsAvailable;
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

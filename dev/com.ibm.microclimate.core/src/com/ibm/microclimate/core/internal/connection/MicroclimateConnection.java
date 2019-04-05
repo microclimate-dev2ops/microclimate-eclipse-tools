@@ -417,6 +417,20 @@ public class MicroclimateConnection {
 		MCLogger.log("Didn't find status info for project " + app.name); //$NON-NLS-1$
 		return null;
 	}
+	
+	public JSONObject requestProjectMetricsStatus(MicroclimateApplication app) throws IOException, JSONException {
+		if (!app.mcConnection.checkVersion(1905, "2019_M5_E")) {
+			return null;
+		}
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
+				+ app.projectID + "/" 								//$NON-NLS-1$
+				+ MCConstants.APIPATH_METRICS_STATUS;
+
+		URI uri = baseUrl.resolve(endpoint);
+		HttpResult result = HttpUtil.get(uri);
+		checkResult(result, uri, true);
+		return new JSONObject(result.response);
+	}
 
 	/**
 	 * Request a build on an application
@@ -439,6 +453,11 @@ public class MicroclimateConnection {
 	}
 	
 	public List<ProjectLogInfo> requestProjectLogs(MicroclimateApplication app) throws JSONException, IOException {
+		List<ProjectLogInfo> logList = new ArrayList<ProjectLogInfo>();
+		if (!app.mcConnection.checkVersion(1905, "2019_M5_E")) {
+			return logList;
+		}
+		
 		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
 				+ app.projectID + "/"								//$NON-NLS-1$
 				+ MCConstants.APIPATH_LOGS;
@@ -447,7 +466,6 @@ public class MicroclimateConnection {
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
         
-		List<ProjectLogInfo> logList = new ArrayList<ProjectLogInfo>();
 		JSONObject logs = new JSONObject(result.response);
 		JSONArray buildLogs = logs.getJSONArray(MCConstants.KEY_LOG_BUILD);
 		logList.addAll(getLogs(buildLogs, MCConstants.KEY_LOG_BUILD));

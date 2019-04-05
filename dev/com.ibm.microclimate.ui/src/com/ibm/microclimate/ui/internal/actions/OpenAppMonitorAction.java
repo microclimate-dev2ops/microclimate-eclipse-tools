@@ -15,12 +15,13 @@ import java.net.URL;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
@@ -34,31 +35,31 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
 /**
  * Action to open the application monitor in a browser.
  */
-public class OpenAppMonitorAction implements IObjectActionDelegate {
+public class OpenAppMonitorAction extends SelectionProviderAction {
 
     protected MicroclimateApplication app;
+    
+	public OpenAppMonitorAction(ISelectionProvider selectionProvider) {
+        super(selectionProvider, Messages.ActionOpenAppMonitor);
+        selectionChanged(getStructuredSelection());
+    }
+
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof MicroclimateApplication) {
             	app = (MicroclimateApplication)obj;
-            	action.setEnabled(app.isAvailable() && app.getAppState() == AppState.STARTED);
+            	setEnabled(app.isAvailable() && app.getAppState() == AppState.STARTED);
             	return;
             }
         }
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	MCLogger.logError("OpenAppMonitorAction ran but no Microclimate application was selected");
@@ -92,9 +93,8 @@ public class OpenAppMonitorAction implements IObjectActionDelegate {
 			MCLogger.logError("Error opening the app monitor in browser", e); //$NON-NLS-1$
 		}
     }
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
-	}
+    
+    public boolean showAction() {
+    	return app != null && app.getMetricsAvailable();
+    }
 }

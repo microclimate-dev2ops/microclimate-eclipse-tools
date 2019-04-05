@@ -36,6 +36,7 @@ public class MCConstants {
 			APIPATH_OPEN = "open",
 			APIPATH_CAPABILITIES = "capabilities",
 			APIPATH_LOGS = "logs",
+			APIPATH_METRICS_STATUS = "metrics/status",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -106,6 +107,7 @@ public class MCConstants {
 			KEY_CAPABILIITES = "capabilities",
 			KEY_START_MODES = "startModes",
 			KEY_CONTROL_COMMANDS = "controlCommands",
+			KEY_METRICS_AVAILABLE = "metricsAvailable",
 			
 			KEY_AUTO_GENERATE = "autoGenerate",
 

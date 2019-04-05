@@ -74,6 +74,8 @@ public class Messages extends NLS {
 	
 	public static String ActionNewConnection;
 	
+	public static String ActionOpenAppMonitor;
+
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;
 	public static String LaunchDebugSessionLabel;
