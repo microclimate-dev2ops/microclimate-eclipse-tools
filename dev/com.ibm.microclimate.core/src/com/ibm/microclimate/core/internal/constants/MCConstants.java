@@ -37,6 +37,11 @@ public class MCConstants {
 			APIPATH_CAPABILITIES = "capabilities",
 			APIPATH_LOGS = "logs",
 			APIPATH_METRICS_STATUS = "metrics/status",
+			
+			// V2 API endpoints
+			APIPATH_BASEV2 = "api/v2",
+			APIPATH_PROJECT_TYPES = "project-types",
+			APIPATH_PROJECTS = "projects",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -79,6 +84,7 @@ public class MCConstants {
 
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",
+			KEY_EXTENSION = "extension",
 
 			KEY_START_MODE = "startMode",
 			KEY_ACTION = "action",

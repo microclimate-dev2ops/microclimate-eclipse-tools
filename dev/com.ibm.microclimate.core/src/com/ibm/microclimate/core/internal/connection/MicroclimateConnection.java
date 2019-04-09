@@ -39,6 +39,7 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.MicroclimateApplicationFactory;
 import com.ibm.microclimate.core.internal.console.ProjectLogInfo;
+import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.core.internal.messages.Messages;
@@ -601,6 +602,41 @@ public class MicroclimateConnection {
 		return capabilities;
 	}
 	
+	public List<ProjectTemplateInfo> requestProjectTemplates() throws IOException, JSONException {
+		List<ProjectTemplateInfo> templates = new ArrayList<ProjectTemplateInfo>();
+		final URI uri = baseUrl.resolve(MCConstants.APIPATH_BASEV2 + "/" + MCConstants.APIPATH_PROJECT_TYPES);
+		HttpResult result = HttpUtil.get(uri);
+		checkResult(result, uri, true);
+		
+		JSONArray templateArray = new JSONArray(result.response);
+		for (int i = 0; i < templateArray.length(); i++) {
+			templates.add(new ProjectTemplateInfo(templateArray.getJSONObject(i)));
+		}
+		
+		return templates;
+	}
+	
+	public void requestProjectCreate(ProjectTemplateInfo templateInfo, String name)
+			throws JSONException, IOException {
+		
+		// Special case node.js projects which don't have a template
+		if (ProjectType.LANGUAGE_NODEJS.equals(templateInfo.getLanguage())) {
+			requestNodeProjectCreate(name);
+			return;
+		}
+
+		String endpoint = MCConstants.APIPATH_BASEV2 + "/" + MCConstants.APIPATH_PROJECTS;
+
+		URI uri = baseUrl.resolve(endpoint);
+
+		JSONObject createProjectPayload = new JSONObject();
+		createProjectPayload.put(MCConstants.KEY_NAME, name);
+		createProjectPayload.put(MCConstants.KEY_EXTENSION, templateInfo.getExtension());
+
+		HttpResult result = HttpUtil.post(uri, createProjectPayload);
+		checkResult(result, uri, false);
+	}
+	
 	private void checkResult(HttpResult result, URI uri, boolean checkContent) throws IOException {
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response code %d for uri %s with error message %s", //$NON-NLS-1$
@@ -762,11 +798,12 @@ public class MicroclimateConnection {
 	public void requestProjectDelete(String projectId)
 			throws JSONException, IOException {
 
-		String createEndpoint = MCConstants.APIPATH_PROJECT_LIST + "/" + projectId;
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/" + projectId;
 
-        URI url = baseUrl.resolve(createEndpoint);
+		URI uri = baseUrl.resolve(endpoint);
 
-		HttpUtil.delete(url);
+		HttpResult result = HttpUtil.delete(uri);
+		checkResult(result, uri, false);
 	}
 
 	public IPath getWorkspacePath() {

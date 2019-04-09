@@ -25,6 +25,7 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
 	private ValidateAction validateAction;
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
+	private DeleteProjectAction deleteProjectAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
@@ -33,6 +34,7 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
         validateAction = new ValidateAction(selProvider);
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
+        deleteProjectAction = new DeleteProjectAction(selProvider);
     }
     
     @Override
@@ -46,6 +48,8 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
     	if (openAppMonitorAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openAppMonitorAction);
     	}
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, deleteProjectAction);
+    	
     }
 
 }
