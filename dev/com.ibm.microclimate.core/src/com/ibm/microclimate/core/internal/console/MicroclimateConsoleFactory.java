@@ -49,12 +49,7 @@ public class MicroclimateConsoleFactory {
 	
 	public static SocketConsole createLogFileConsole(MicroclimateApplication app, ProjectLogInfo logInfo) {
 		String consoleName;
-		if (logInfo.workspaceLogPath != null && !logInfo.workspaceLogPath.isEmpty()) {
-			IPath fullPath = MCUtil.appendPathWithoutDupe(app.mcConnection.getWorkspacePath(), logInfo.workspaceLogPath).append(logInfo.logName);
-			consoleName = NLS.bind(Messages.LogFileConsoleNameWithLocation, new String[] {app.name, logInfo.logName, fullPath.toOSString()});
-		} else {
-			consoleName = NLS.bind(Messages.LogFileConsoleName, app.name, logInfo.logName);
-		}
+		consoleName = NLS.bind(Messages.LogFileConsoleName, app.name, logInfo.logName);
 		SocketConsole console = new SocketConsole(consoleName, logInfo, app);
 		onNewConsole(console);
 		return console;
