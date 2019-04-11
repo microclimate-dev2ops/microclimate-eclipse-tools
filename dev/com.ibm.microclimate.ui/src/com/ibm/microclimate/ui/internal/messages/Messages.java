@@ -79,6 +79,11 @@ public class Messages extends NLS {
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;
 	public static String LaunchDebugSessionLabel;
+	public static String DeleteProjectLabel;
+	public static String DeleteProjectTitle;
+	public static String DeleteProjectMessage;
+	public static String DeleteProjectErrorTitle;
+	public static String DeleteProjectErrorMsg;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
 	
@@ -118,6 +123,27 @@ public class Messages extends NLS {
 	public static String BrowserSelectionManageButtonText;
 	public static String BrowserSelectionListLabel;
 	public static String BrowserSelectionNoBrowserSelected;
+	
+	public static String OpenUIAction_Label;
+	public static String OpenUINewProjectAction_Label;
+	public static String OpenUIImportProjectAction_Label;
+	
+	public static String NewProjectAction_Label;
+	public static String NewProjectWizard_ShellTitle;
+	public static String NewProjectPage_ShellTitle;
+	public static String NewProjectPage_WizardDescription;
+	public static String NewProjectPage_WizardTitle;
+	public static String NewProjectPage_ProjectTypeGroup;
+	public static String NewProjectPage_FilterMessage;
+	public static String NewProjectPage_TypeColumn;
+	public static String NewProjectPage_LanguageColumn;
+	public static String NewProjectPage_DescriptionLabel;
+	public static String NewProjectPage_DescriptionNone;
+	public static String NewProjectPage_ProjectNameLabel;
+	public static String NewProjectPage_ProjectExistsError;
+	public static String NewProjectPage_InvalidProjectName;
+	public static String NewProjectPage_ProjectCreateErrorTitle;
+	public static String NewProjectPage_ProjectCreateErrorMsg;
 	
 	static {
 		// initialize resource bundle

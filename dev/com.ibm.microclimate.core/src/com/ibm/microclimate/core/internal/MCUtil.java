@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -45,6 +45,17 @@ public class MCUtil {
 				MessageDialog.open(kind, Display.getDefault().getActiveShell(), title, msg, 0);
 			}
 		});
+	}
+	
+	public static boolean openConfirmDialog(String title, String msg) {
+		final boolean[] result = new boolean[1];
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				result[0] = MessageDialog.open(MessageDialog.CONFIRM, Display.getDefault().getActiveShell(), title, msg, 0);
+			}
+		});
+		return result[0];
 	}
 
 

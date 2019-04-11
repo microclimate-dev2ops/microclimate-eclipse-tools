@@ -94,6 +94,15 @@
 				</enablement>
 			</actionProvider>
 			<actionProvider
+				id="com.ibm.microclimate.ui.microclimateConnectionActionProvider"
+				class="com.ibm.microclimate.ui.internal.actions.MicroclimateConnectionActionProvider">
+				<enablement>
+					<or>
+						<instanceof value="com.ibm.microclimate.core.internal.connection.MicroclimateConnection" />
+					</or>
+				</enablement>
+			</actionProvider>
+			<actionProvider
 				id="com.ibm.microclimate.ui.microclimateApplicationActionProvider"
 				class="com.ibm.microclimate.ui.internal.actions.MicroclimateApplicationActionProvider">
 				<enablement>
@@ -196,27 +205,6 @@
 				menubarPath="group.additions"
 				label="%ACTION_CONNECTION_REMOVE_CONNECTION"
 				class="com.ibm.microclimate.ui.internal.actions.RemoveConnectionAction"/>
-			<action
-				id="com.ibm.microclimate.ui.importProject"
-				enablesFor="1"
-				menubarPath="group.new"
-				icon="%DEFAULT_ICON_PATH"
-				label="%ACTION_CONNECTION_IMPORT_PROJECT"
-				class="com.ibm.microclimate.ui.internal.actions.OpenMicroclimateUIAction"/>
-			<action
-				id="com.ibm.microclimate.ui.createNewProject"
-				enablesFor="1"
-				menubarPath="group.new"
-				icon="%DEFAULT_ICON_PATH"
-				label="%ACTION_CONNECTION_CREATE_NEW_PROJECT"
-				class="com.ibm.microclimate.ui.internal.actions.OpenMicroclimateUIAction"/>
-			<action
-				id="com.ibm.microclimate.ui.openMicroclimateUI"
-				enablesFor="1"
-				menubarPath="group.new"
-				icon="%DEFAULT_ICON_PATH"
-				label="%ACTION_CONNECTION_OPEN_MICROCLIMATE_UI"
-				class="com.ibm.microclimate.ui.internal.actions.OpenMicroclimateUIAction"/>
 		</objectContribution>
 	</extension>
 
