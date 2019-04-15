@@ -122,13 +122,20 @@ public abstract class BaseTest extends TestCase {
     	URL url = app.getBaseUrl();
     	url = new URL(url.toExternalForm() + relativeURL);
     	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
+    	for (int i = 0; i < 15 && !result.isGoodResponse; i++) {
+    		Thread.sleep(1000);
+    		result = HttpUtil.get(url.toURI());
+    	}
     	assertTrue("The response code should be 200: " + result.responseCode, result.responseCode == 200);
     	assertTrue("The response should contain the expected text: " + expectedText, result.response != null && result.response.contains(expectedText));   	
     }
     
     protected void checkMode(StartMode mode) throws Exception {
     	MicroclimateApplication app = connection.getAppByName(projectName);
-    	assertTrue("App should be in mode: " + mode, app.getStartMode() == mode);
+    	for (int i = 0; i < 5 && app.getStartMode() != mode; i++) {
+    		Thread.sleep(1000);
+    	}
+    	assertTrue("App is in " + app.getStartMode() + " when it should be in " + mode + " mode.", app.getStartMode() == mode);
     	ILaunch launch = ((MCEclipseApplication)app).getLaunch();
     	if (StartMode.DEBUG_MODES.contains(mode)) {
     		assertNotNull("There should be a launch for the app", launch);
@@ -145,7 +152,7 @@ public abstract class BaseTest extends TestCase {
     	connection.requestProjectRestart(app, mode.startMode);
     	// For Java builds the states can go by quickly so don't do an assert on this
     	MicroclimateUtil.waitForAppState(app, AppState.STOPPED, 30, 1);
-    	assertTrue("App should be in started state", MicroclimateUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	assertTrue("App should be in started state instead of: " + app.getAppState(), MicroclimateUtil.waitForAppState(app, AppState.STARTED, 120, 1));
     	checkMode(mode);
     }
     
