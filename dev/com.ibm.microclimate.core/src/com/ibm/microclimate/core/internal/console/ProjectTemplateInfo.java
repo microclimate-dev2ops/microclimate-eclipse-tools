@@ -59,4 +59,9 @@ public class ProjectTemplateInfo {
 		return value;
 	}
 
+	@Override
+	public String toString() {
+		return projectInfo.toString();
+	}
+
 }
