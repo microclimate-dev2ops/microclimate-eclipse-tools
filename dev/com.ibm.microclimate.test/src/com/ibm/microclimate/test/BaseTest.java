@@ -11,9 +11,11 @@
 
 package com.ibm.microclimate.test;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IMarker;
@@ -31,6 +33,7 @@ import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.TextConsole;
 import org.eclipse.ui.ide.IDE;
+import org.json.JSONException;
 
 import com.ibm.microclimate.core.internal.HttpUtil;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
@@ -39,6 +42,7 @@ import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
+import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
@@ -76,7 +80,7 @@ public abstract class BaseTest extends TestCase {
         MicroclimateConnectionManager.add(connection);
         
         // Create a new microprofile project
-        connection.requestProjectCreate(projectType, projectName);
+        createProject(projectType, projectName);
         
         // Wait for the project to be created
         assertTrue("The application " + projectName + " should be created", MicroclimateUtil.waitForProject(connection, projectName, 300, 5));
@@ -237,6 +241,35 @@ public abstract class BaseTest extends TestCase {
 			}
 		}
 		return null;
+	}
+	
+	protected void createProject(ProjectType type, String name) throws IOException, JSONException {
+		if (connection.checkVersion(1905, "2019_M5_E")) {
+			ProjectTemplateInfo templateInfo = null;
+			List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
+			for (ProjectTemplateInfo template : templates) {
+				if (type.language.equals(template.getLanguage())) {
+					if (type.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+						String extension = template.getExtension();
+						if (type.isType(ProjectType.TYPE_LIBERTY) && extension.toLowerCase().contains("microprofile")) {
+							templateInfo = template;
+							break;
+						}
+						if (type.isType(ProjectType.TYPE_SPRING) && extension.toLowerCase().contains("spring")) {
+							templateInfo = template;
+							break;
+						}
+					} else {
+						templateInfo = template;
+						break;
+					}
+				}
+			}
+			assertNotNull("No template found that matches the project type: " + projectType, templateInfo);
+			connection.requestProjectCreate(templateInfo, name);
+		} else {
+			connection.requestProjectCreate(projectType, projectName);
+		}
 	}
 
 }
