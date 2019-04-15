@@ -57,14 +57,15 @@ public class HttpUtil {
 			if (!isGoodResponse) {
 				MCLogger.logError("Received bad response code " + responseCode + " from "
 						+ connection.getURL() + " - Error:\n" + error);
-			}
-
-			InputStream is = connection.getInputStream();
-			if (is != null) {
-				response = MCUtil.readAllFromStream(is);
-			}
-			else {
 				response = null;
+			} else {
+				InputStream is = connection.getInputStream();
+				if (is != null) {
+					response = MCUtil.readAllFromStream(is);
+				}
+				else {
+					response = null;
+				}
 			}
 		}
 		
