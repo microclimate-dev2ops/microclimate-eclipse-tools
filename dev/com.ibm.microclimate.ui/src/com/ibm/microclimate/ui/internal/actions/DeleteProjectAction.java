@@ -47,7 +47,7 @@ public class DeleteProjectAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MCEclipseApplication) {
 				app = (MCEclipseApplication) obj;
-				setEnabled(app.isAvailable());
+				setEnabled(true);
 				return;
 			}
 		}
