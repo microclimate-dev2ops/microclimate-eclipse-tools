@@ -281,15 +281,8 @@ public class MicroclimateConnection {
 
 		final URI projectsURL = baseUrl.resolve(MCConstants.APIPATH_PROJECT_LIST);
 
-		String projectsResponse = null;
 		try {
-			projectsResponse = HttpUtil.get(projectsURL).response;
-		} catch (IOException e) {
-			MCLogger.logError("Error contacting Projects endpoint", e);  //$NON-NLS-1$
-			return;
-		}
-
-		try {
+			String projectsResponse = HttpUtil.get(projectsURL).response;
 			MicroclimateApplicationFactory.getAppsFromProjectsJson(this, projectsResponse, projectID);
 			MCLogger.log("App list update success"); //$NON-NLS-1$
 		}
