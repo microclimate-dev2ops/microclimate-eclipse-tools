@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,15 +11,21 @@
 
 package com.ibm.microclimate.ui.internal.actions;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.ui.internal.messages.Messages;
 import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 /**
@@ -52,13 +58,27 @@ public class RefreshAction implements IObjectActionDelegate {
     @Override
     public void run(IAction action) {
         if (microclimateObject instanceof MicroclimateConnection) {
-        	MicroclimateConnection connection = (MicroclimateConnection) microclimateObject;
-        	connection.refreshApps(null);
-        	ViewHelper.refreshMicroclimateExplorerView(connection);
+        	final MicroclimateConnection connection = (MicroclimateConnection) microclimateObject;
+        	Job job = new Job(NLS.bind(Messages.RefreshConnectionJobLabel, connection.baseUrl.toString())) {
+    			@Override
+    			protected IStatus run(IProgressMonitor monitor) {
+		        	connection.refreshApps(null);
+		        	ViewHelper.refreshMicroclimateExplorerView(connection);
+		        	return Status.OK_STATUS;
+    			}
+    		};
+    		job.schedule();
         } else if (microclimateObject instanceof MicroclimateApplication) {
-        	MicroclimateApplication app = (MicroclimateApplication) microclimateObject;
-        	app.mcConnection.refreshApps(app.projectID);
-        	ViewHelper.refreshMicroclimateExplorerView(app);
+        	final MicroclimateApplication app = (MicroclimateApplication) microclimateObject;
+        	Job job = new Job(NLS.bind(Messages.RefreshProjectJobLabel, app.name)) {
+    			@Override
+    			protected IStatus run(IProgressMonitor monitor) {
+    				app.mcConnection.refreshApps(app.projectID);
+    				ViewHelper.refreshMicroclimateExplorerView(app);
+		        	return Status.OK_STATUS;
+    			}
+    		};
+    		job.schedule();
         } else {
         	// Should not happen
         	MCLogger.logError("RefreshAction ran but no Microclimate object was selected");
