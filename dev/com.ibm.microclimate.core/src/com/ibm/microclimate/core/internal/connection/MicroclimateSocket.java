@@ -280,11 +280,11 @@ public class MicroclimateSocket {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		mcConnection.refreshApps(projectID);
 		MicroclimateApplication app = mcConnection.getAppByID(projectID);
-		if (app == null) {
+		if (app != null) {
+			app.setEnabled(true);
+		} else {
 			MCLogger.logError("No application found matching the project id for the project creation event: " + projectID); //$NON-NLS-1$
-			return;
 		}
-		app.setEnabled(true);
 		MCUtil.updateConnection(mcConnection);
 	}
 

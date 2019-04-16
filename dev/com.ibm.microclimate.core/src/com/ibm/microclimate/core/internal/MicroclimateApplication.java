@@ -13,6 +13,7 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
@@ -47,7 +48,7 @@ public class MicroclimateApplication {
 	private String containerId;
 	private ProjectCapabilities projectCapabilities;
 	private String action;
-	private List<ProjectLogInfo> logInfos;
+	private List<ProjectLogInfo> logInfos = Collections.emptyList();
 	private boolean metricsAvailable = false;
 
 	// Must be updated whenever httpPort changes. Can be null
