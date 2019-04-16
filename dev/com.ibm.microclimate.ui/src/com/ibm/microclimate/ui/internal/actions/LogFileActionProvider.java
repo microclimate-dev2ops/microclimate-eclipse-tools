@@ -60,7 +60,7 @@ public class LogFileActionProvider extends CommonActionProvider {
         	if (obj instanceof MCEclipseApplication) {
         		final MCEclipseApplication app = (MCEclipseApplication)obj;
         		if (app.mcConnection.checkVersion(1905, "2019_M5_E")) {
-        			if (app.isAvailable() && app.getLogInfos().size() > 0) {
+        			if (app.isAvailable() && app.getLogInfos() != null && !app.getLogInfos().isEmpty()) {
         				MenuManager menuMgr = new MenuManager(Messages.ShowLogFilesMenu, "ShowLogFiles");
         				showAllLogsAction.setApp(app);
         				menuMgr.add(showAllLogsAction);

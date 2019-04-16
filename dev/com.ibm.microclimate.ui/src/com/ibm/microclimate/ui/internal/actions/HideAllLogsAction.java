@@ -38,12 +38,14 @@ public class HideAllLogsAction extends Action {
 
     	// Only enable if there is at least one log file that has a console
         boolean enabled = false;
-    	for (ProjectLogInfo logInfo : app.getLogInfos()) {
-    		if (app.getConsole(logInfo) != null) {
-    			enabled = true;
-    			break;
-    		}
-    	}
+        if (app.getLogInfos() != null && !app.getLogInfos().isEmpty()) {
+	    	for (ProjectLogInfo logInfo : app.getLogInfos()) {
+	    		if (app.getConsole(logInfo) != null) {
+	    			enabled = true;
+	    			break;
+	    		}
+	    	}
+        }
     	setEnabled(enabled);
     }
 
@@ -51,9 +53,14 @@ public class HideAllLogsAction extends Action {
     public void run() {
         if (app == null) {
         	// should not be possible
-        	MCLogger.logError("ToggleConsolesAction ran but no Microclimate application was selected");
+        	MCLogger.logError("HideAllLogsAction ran but no Microclimate application was selected");
 			return;
 		}
+        
+        if (app.getLogInfos() == null || app.getLogInfos().isEmpty()) {
+        	MCLogger.logError("HideAllLogsAction ran but there are no logs for the selected application: " + app.name);
+        	return;
+        }
         
         // Remove any existing consoles for this app
         for (ProjectLogInfo logInfo : app.getLogInfos()) {
