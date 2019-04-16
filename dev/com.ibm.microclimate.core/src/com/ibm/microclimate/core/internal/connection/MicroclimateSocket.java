@@ -14,7 +14,9 @@ package com.ibm.microclimate.core.internal.connection;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.osgi.util.NLS;
@@ -57,6 +59,8 @@ public class MicroclimateSocket {
 	private Set<OldSocketConsole> oldSocketConsoles = new HashSet<>();
 	
 	private Set<SocketConsole> socketConsoles = new HashSet<>();
+	
+	private Map<String, IOperationHandler> projectCreateHandlers = new HashMap<String, IOperationHandler>();
 
 	// Track the previous Exception so we don't spam the logs with the same connection failure message
 	private Exception previousException;
@@ -286,6 +290,13 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found matching the project id for the project creation event: " + projectID); //$NON-NLS-1$
 		}
 		MCUtil.updateConnection(mcConnection);
+		String projectName = event.has(MCConstants.KEY_NAME) ? event.getString(MCConstants.KEY_NAME) : null;
+		if (projectName != null) {
+			IOperationHandler handler = projectCreateHandlers.get(projectName);
+			if (handler != null) {
+				handler.operationComplete(true, null);
+			}
+		}
 	}
 
 	private void onProjectChanged(JSONObject event) throws JSONException {
@@ -469,6 +480,14 @@ public class MicroclimateSocket {
 
 	public void deregisterSocketConsole(SocketConsole console) {
 		this.socketConsoles.remove(console);
+	}
+	
+	public void registerProjectCreateHandler(String projectName, IOperationHandler handler) {
+		this.projectCreateHandlers.put(projectName, handler);
+	}
+	
+	public void deregisterProjectCreateHandler(String projectName) {
+		this.projectCreateHandlers.remove(projectName);
 	}
 
 	private void onContainerLogs(JSONObject event) throws JSONException {
