@@ -779,13 +779,14 @@ public class MicroclimateConnection {
 
 		String createEndpoint = MCConstants.APIPATH_PROJECT_LIST;
 
-		URI url = baseUrl.resolve(createEndpoint);
+		URI uri = baseUrl.resolve(createEndpoint);
 
 		JSONObject createProjectPayload = new JSONObject();
 		createProjectPayload.put(MCConstants.KEY_NAME, name);
 		createProjectPayload.put(MCConstants.KEY_LANGUAGE, "nodejs");
 
-		HttpUtil.post(url, createProjectPayload);
+		HttpResult result = HttpUtil.post(uri, createProjectPayload);
+		checkResult(result, uri, false);
 	}
 
 	public void requestProjectDelete(String projectId)
