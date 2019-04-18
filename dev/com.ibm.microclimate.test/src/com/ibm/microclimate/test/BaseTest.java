@@ -42,7 +42,9 @@ import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.MicroclimateConsoleFactory;
+import com.ibm.microclimate.core.internal.console.ProjectLogInfo;
 import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
+import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.core.internal.constants.AppState;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
@@ -157,35 +159,49 @@ public abstract class BaseTest extends TestCase {
     }
     
     protected void showConsoles() throws Exception {
-    	MicroclimateApplication app = connection.getAppByName(projectName);
-    	if (!app.projectType.isType(ProjectType.TYPE_NODEJS)) {
-    		IConsole buildConsole = MicroclimateConsoleFactory.createBuildConsole(app);
-        	((MCEclipseApplication)app).setAppConsole(buildConsole);
+    	MCEclipseApplication app = (MCEclipseApplication) connection.getAppByName(projectName);
+    	if (connection.checkVersion(1905, "2019_M5_E")) {
+    		for (ProjectLogInfo logInfo : app.getLogInfos()) {
+        		if (app.getConsole(logInfo) == null) {
+        			SocketConsole console = MicroclimateConsoleFactory.createLogFileConsole(app, logInfo);
+        			app.addConsole(console);
+        		}
+        	}
+    	} else {
+	    	if (!app.projectType.isType(ProjectType.TYPE_NODEJS)) {
+	    		IConsole buildConsole = MicroclimateConsoleFactory.createBuildConsole(app);
+	        	((MCEclipseApplication)app).setAppConsole(buildConsole);
+	    	}
+	    	IConsole appConsole = MicroclimateConsoleFactory.createApplicationConsole(app);
+			((MCEclipseApplication)app).setAppConsole(appConsole);
     	}
-    	IConsole appConsole = MicroclimateConsoleFactory.createApplicationConsole(app);
-		((MCEclipseApplication)app).setAppConsole(appConsole);
-		// Wait for application log to have content - it is only updated every 20s
-		TestUtil.wait(new Condition() {
-			@Override
-			public boolean test() {
-				return ((TextConsole)appConsole).getDocument().getLength() > 0;
-			}
-		}, 20, 1);
     }
 
     protected void checkConsoles() throws Exception {
     	MicroclimateApplication app = connection.getAppByName(projectName);
     	Set<String> expectedConsoles = new HashSet<String>();
     	Set<String> foundConsoles = new HashSet<String>();
-    	if (!app.projectType.isType(ProjectType.TYPE_NODEJS)) {
-    		expectedConsoles.add("Build Log");
+    	if (connection.checkVersion(1905, "2019_M5_E")) {
+    		for (ProjectLogInfo logInfo : app.getLogInfos()) {
+    			expectedConsoles.add(logInfo.logName);
+    		}
+    	} else {
+	    	if (!app.projectType.isType(ProjectType.TYPE_NODEJS)) {
+	    		expectedConsoles.add("Build Log");
+	    	}
+	    	expectedConsoles.add("Application Log");
     	}
-    	expectedConsoles.add("Application Log");
     	IConsoleManager manager = ConsolePlugin.getDefault().getConsoleManager();
     	for (IConsole console : manager.getConsoles()) {
     		if (console.getName().contains(projectName)) {
     			TestUtil.print("Found console: " + console.getName());
     			assertTrue("The " + console.getName() + " console should be a TextConsole", console instanceof TextConsole);
+    			TestUtil.wait(new Condition() {
+    				@Override
+    				public boolean test() {
+    					return ((TextConsole)console).getDocument().getLength() > 0;
+    				}
+    			}, 20, 1);
     			assertTrue("The " + console.getName() + " console should not be empty", ((TextConsole)console).getDocument().getLength() > 0);
     			for (String name : expectedConsoles) {
     				if (console.getName().contains(name)) {
