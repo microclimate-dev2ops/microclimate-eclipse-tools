@@ -30,6 +30,7 @@ public class SocketConsole extends IOConsole {
 
 	private IOConsoleOutputStream outputStream;
 	private boolean isInitialized = false;
+	private boolean showOnUpdate = false;
 
 	public SocketConsole(String consoleName, ProjectLogInfo logInfo, MicroclimateApplication app) {
 		super(consoleName, MicroclimateConsoleFactory.MC_CONSOLE_TYPE,
@@ -58,6 +59,9 @@ public class SocketConsole extends IOConsole {
 
 		MCLogger.log("Appending contents to log: " + this.getName());		// $NON-NLS-1$
 		outputStream.write(contents);
+		if (showOnUpdate) {
+			activate();
+		}
 	}
 
 	@Override
@@ -74,5 +78,9 @@ public class SocketConsole extends IOConsole {
 		}
 
 		super.dispose();
+	}
+	
+	public void setShowOnUpdate(boolean value) {
+		showOnUpdate = value;
 	}
 }
