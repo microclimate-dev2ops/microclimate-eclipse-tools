@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
@@ -24,6 +25,7 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
 import com.ibm.microclimate.ui.internal.actions.ImportProjectAction;
 import com.ibm.microclimate.ui.internal.messages.Messages;
+import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class NewMicroclimateProjectWizard extends Wizard {
 
@@ -57,21 +59,28 @@ public class NewMicroclimateProjectWizard extends Wizard {
 		}
 		
 		try {
-			if (newProjectPage.importProject()) {
-				connection.getMCSocket().registerProjectCreateHandler(name, new IOperationHandler() {
-					@Override
-					public void operationComplete(boolean passed, String msg) {
-						connection.getMCSocket().deregisterProjectCreateHandler(name);
-						if (passed) {
-							MicroclimateApplication app = connection.getAppByName(name);
-							if (app != null) {
+			final boolean importProject = newProjectPage.importProject();
+			connection.getMCSocket().registerProjectCreateHandler(name, new IOperationHandler() {
+				@Override
+				public void operationComplete(boolean passed, String msg) {
+					connection.getMCSocket().deregisterProjectCreateHandler(name);
+					if (passed) {
+						MicroclimateApplication app = connection.getAppByName(name);
+						if (app != null) {
+							Display.getDefault().asyncExec(new Runnable() {
+								@Override
+								public void run() {
+									ViewHelper.expandConnection(connection);
+								}
+							});
+							if (importProject) {
 								ImportProjectAction.importProject(app);
-								return;
 							}
+							return;
 						}
 					}
-				});
-			}
+				}
+			});
 			connection.requestProjectCreate(info, name);
 			return true;
 		} catch (Exception e) {
