@@ -66,7 +66,7 @@ public class DeleteProjectAction extends SelectionProviderAction {
 			try {
 				app.mcConnection.requestProjectDelete(app.projectID);
 				IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
-				if (project != null && project.exists() && project.getLocation().equals(app.fullLocalPath)) {
+				if (project != null && project.exists() && project.getLocation().toFile().equals(app.fullLocalPath.toFile())) {
 					project.delete(false, true, new NullProgressMonitor());
 				}
 			} catch (Exception e) {

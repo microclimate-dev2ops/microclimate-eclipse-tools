@@ -73,16 +73,6 @@ public class MCUtil {
 		return os != null && os.toLowerCase().startsWith("windows");
 	}
 
-	public static boolean pathEquals(IPath path, IPath path2) {
-		if (isWindows()) {
-			// case-insensitivity on windows
-			String pathStr = path.toOSString();
-			String pathStr2 = path2.toOSString();
-			return pathStr.equalsIgnoreCase(pathStr2);
-		}
-		return path.equals(path2);
-	}
-
 	/**
 	 * Append finish to start, removing the last segment of start if it is equal to the first segment of finish.
 	 */
