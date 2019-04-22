@@ -71,6 +71,7 @@ public class Messages extends NLS {
 	public static String ShowAllLogFilesAction;
 	public static String HideAllLogFilesAction;
 	public static String ErrorOnShowLogFileDialogTitle;
+	public static String ShowOnContentChangeAction;
 	
 	public static String ActionNewConnection;
 	

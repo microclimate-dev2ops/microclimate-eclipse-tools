@@ -260,5 +260,15 @@
 			markerType="com.ibm.microclimate.core.validationMarker"
 			class="com.ibm.microclimate.ui.internal.marker.MicroclimateMarkerResolutionGenerator"/>
 	</extension>
+	
+	<extension point="org.eclipse.ui.console.consolePageParticipants">
+      <consolePageParticipant
+      		id="com.ibm.microclimate.ui.socketConsolePageParticipant"
+            class="com.ibm.microclimate.ui.internal.console.SocketConsolePageParticipant">
+         <enablement>
+            <instanceof value="com.ibm.microclimate.core.internal.console.SocketConsole"/>
+         </enablement>
+      </consolePageParticipant>
+   </extension>
 
 </plugin>
