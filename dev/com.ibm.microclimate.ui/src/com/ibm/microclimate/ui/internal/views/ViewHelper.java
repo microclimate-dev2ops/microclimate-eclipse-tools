@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ import java.util.List;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -56,7 +57,9 @@ public class ViewHelper {
 			IViewPart view = getViewPart(MicroclimateExplorerView.VIEW_ID);
 			if (view instanceof CommonNavigator) {
 				CommonViewer viewer = ((CommonNavigator)view).getCommonViewer();
-				viewer.expandToLevel(2);
+				if (!viewer.getExpandedState(connection)) {
+					viewer.expandToLevel(2);
+				}
  			}
 		}
 	}
@@ -89,14 +92,15 @@ public class ViewHelper {
     }
     
 	public static IViewPart getViewPart(String viewId) {
-		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window != null) {
-            IWorkbenchPage page = window.getActivePage();
-            if (page != null) {
-                return page.findView(viewId);
-            }
-        }
-        return null;
+    	for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+    		for (IWorkbenchPage page : window.getPages()) {
+    			for (IViewReference reference : page.getViewReferences()) {
+    				if (viewId.equals(reference.getId())) {
+    					return reference.getView(false);
+    				}
+    			}
+    		}
+    	}
+    	return null;
 	}
-	
 }
