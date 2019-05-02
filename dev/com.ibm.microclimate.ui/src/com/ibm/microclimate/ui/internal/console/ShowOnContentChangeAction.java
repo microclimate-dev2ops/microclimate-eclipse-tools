@@ -20,6 +20,7 @@ import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
+@SuppressWarnings("restriction")
 public class ShowOnContentChangeAction extends Action {
 	
 	SocketConsole console;

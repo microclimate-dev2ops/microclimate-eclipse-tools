@@ -413,9 +413,6 @@ public class MicroclimateConnection {
 	}
 	
 	public JSONObject requestProjectMetricsStatus(MicroclimateApplication app) throws IOException, JSONException {
-		if (!app.mcConnection.checkVersion(1905, "2019_M5_E")) {
-			return null;
-		}
 		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
 				+ app.projectID + "/" 								//$NON-NLS-1$
 				+ MCConstants.APIPATH_METRICS_STATUS;
@@ -448,10 +445,7 @@ public class MicroclimateConnection {
 	
 	public List<ProjectLogInfo> requestProjectLogs(MicroclimateApplication app) throws JSONException, IOException {
 		List<ProjectLogInfo> logList = new ArrayList<ProjectLogInfo>();
-		if (!app.mcConnection.checkVersion(1905, "2019_M5_E")) {
-			return logList;
-		}
-		
+
 		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
 				+ app.projectID + "/"								//$NON-NLS-1$
 				+ MCConstants.APIPATH_LOGS;
@@ -597,7 +591,7 @@ public class MicroclimateConnection {
 	
 	public List<ProjectTemplateInfo> requestProjectTemplates() throws IOException, JSONException {
 		List<ProjectTemplateInfo> templates = new ArrayList<ProjectTemplateInfo>();
-		final URI uri = baseUrl.resolve(MCConstants.APIPATH_BASEV2 + "/" + MCConstants.APIPATH_PROJECT_TYPES);
+		final URI uri = baseUrl.resolve(MCConstants.APIPATH_BASE + "/" + MCConstants.APIPATH_PROJECT_TYPES);
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
 		
@@ -618,7 +612,7 @@ public class MicroclimateConnection {
 			return;
 		}
 
-		String endpoint = MCConstants.APIPATH_BASEV2 + "/" + MCConstants.APIPATH_PROJECTS;
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST;
 
 		URI uri = baseUrl.resolve(endpoint);
 

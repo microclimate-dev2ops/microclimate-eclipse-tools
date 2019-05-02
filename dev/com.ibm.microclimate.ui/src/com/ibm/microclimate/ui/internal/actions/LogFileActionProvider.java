@@ -30,9 +30,6 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
  */
 public class LogFileActionProvider extends CommonActionProvider {
 	
-	private ToggleAppConsoleAction appLogAction;
-	private ToggleBuildConsoleAction buildLogAction;
-	
 	private ShowAllLogsAction showAllLogsAction;
 	private HideAllLogsAction hideAllLogsAction;
 	
@@ -40,8 +37,6 @@ public class LogFileActionProvider extends CommonActionProvider {
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
-        buildLogAction = new ToggleBuildConsoleAction();
-        appLogAction = new ToggleAppConsoleAction();
         showAllLogsAction = new ShowAllLogsAction();
         hideAllLogsAction = new HideAllLogsAction();
     }
@@ -59,29 +54,18 @@ public class LogFileActionProvider extends CommonActionProvider {
         	Object obj = sel.getFirstElement();
         	if (obj instanceof MCEclipseApplication) {
         		final MCEclipseApplication app = (MCEclipseApplication)obj;
-        		if (app.mcConnection.checkVersion(1905, "2019_M5_E")) {
-        			if (app.isAvailable() && app.getLogInfos() != null && !app.getLogInfos().isEmpty()) {
-        				MenuManager menuMgr = new MenuManager(Messages.ShowLogFilesMenu, "ShowLogFiles");
-        				showAllLogsAction.setApp(app);
-        				menuMgr.add(showAllLogsAction);
-        				hideAllLogsAction.setApp(app);
-        				menuMgr.add(hideAllLogsAction);
-        				menuMgr.add(new Separator());
-        				for (ProjectLogInfo logInfo : app.getLogInfos()) {
-        					menuMgr.add(new LogFileAction(app, logInfo, viewSite));
-        				}
-        				menu.appendToGroup(ICommonMenuConstants.GROUP_SHOW, menuMgr);
-        			}
-        		} else {
-        			buildLogAction.setApp(app);
-        			if (buildLogAction.consoleSupported()) {
-        				menu.appendToGroup(ICommonMenuConstants.GROUP_SHOW, buildLogAction);
-        			}
-        			appLogAction.setApp(app);
-        			if (appLogAction.consoleSupported()) {
-        				menu.appendToGroup(ICommonMenuConstants.GROUP_SHOW, appLogAction);
-        			}
-        		}
+    			if (app.isAvailable() && app.getLogInfos() != null && !app.getLogInfos().isEmpty()) {
+    				MenuManager menuMgr = new MenuManager(Messages.ShowLogFilesMenu, "ShowLogFiles");
+    				showAllLogsAction.setApp(app);
+    				menuMgr.add(showAllLogsAction);
+    				hideAllLogsAction.setApp(app);
+    				menuMgr.add(hideAllLogsAction);
+    				menuMgr.add(new Separator());
+    				for (ProjectLogInfo logInfo : app.getLogInfos()) {
+    					menuMgr.add(new LogFileAction(app, logInfo, viewSite));
+    				}
+    				menu.appendToGroup(ICommonMenuConstants.GROUP_SHOW, menuMgr);
+    			}
         	}
         }
 	}

@@ -30,7 +30,6 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
 public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 	
 	private OpenMicroclimateUIAction openUIHomePageAction;
-	private OpenMicroclimateUIAction openNewProjectPageAction;
 	private OpenMicroclimateUIAction openImportProjectPageAction;
 	private NewProjectAction newProjectAction;
 	
@@ -39,7 +38,6 @@ public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 		super.init(aSite);
 		ISelectionProvider selProvider = aSite.getStructuredViewer();
 		openUIHomePageAction = new OpenMicroclimateUIAction(Messages.OpenUIAction_Label, Page.HOME, selProvider);
-		openNewProjectPageAction = new OpenMicroclimateUIAction(Messages.OpenUINewProjectAction_Label, Page.NEW_PROJECT, selProvider);
 		openImportProjectPageAction = new OpenMicroclimateUIAction(Messages.OpenUIImportProjectAction_Label, Page.IMPORT_PROJECT, selProvider);
 		newProjectAction = new NewProjectAction(selProvider);
 	}
@@ -56,16 +54,9 @@ public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MicroclimateConnection) {
-				MicroclimateConnection connection = (MicroclimateConnection)obj;
-				if (connection.checkVersion(1905, "2019_M5_E")) {
-					menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, openUIHomePageAction);
-					menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
-					menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, openImportProjectPageAction);
-				} else {
-					menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, openUIHomePageAction);
-					menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, openNewProjectPageAction);
-					menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, openImportProjectPageAction);
-				}
+				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, openUIHomePageAction);
+				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
+				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, openImportProjectPageAction);
 			}
 		}
 	}
