@@ -35,7 +35,6 @@ public class OpenMicroclimateUIAction extends SelectionProviderAction {
 	
 	public enum Page {
 		HOME,
-		NEW_PROJECT,
 		IMPORT_PROJECT
 	};
 	
@@ -82,9 +81,6 @@ public class OpenMicroclimateUIAction extends SelectionProviderAction {
 			switch (page) {
 				case HOME:
 					uri = connection.baseUrl;
-					break;
-				case NEW_PROJECT:
-					uri = connection.getNewProjectURI();
 					break;
 				case IMPORT_PROJECT:
 					uri = connection.getImportProjectURI();

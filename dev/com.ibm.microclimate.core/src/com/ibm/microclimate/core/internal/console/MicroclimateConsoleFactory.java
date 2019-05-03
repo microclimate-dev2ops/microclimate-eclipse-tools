@@ -11,7 +11,6 @@
 
 package com.ibm.microclimate.core.internal.console;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
@@ -19,34 +18,13 @@ import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.IOConsole;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.messages.Messages;
 
 public class MicroclimateConsoleFactory {
 
 	static final String MC_CONSOLE_TYPE = "microclimate-console"; //$NON-NLS-1$
-	
-	public static IOConsole createApplicationConsole(MicroclimateApplication app) {
-		String appLogName = NLS.bind(Messages.AppConsoleName, app.name);
-		IOConsole appConsole = new OldSocketConsole(appLogName, app);
-		onNewConsole(appConsole);
-		return appConsole;
-	}
-	
-	public static IOConsole createBuildConsole(MicroclimateApplication app) {
-		if (app.hasBuildLog()) {
-			String buildLogName = NLS.bind(Messages.BuildConsoleName, app.name);
-			IOConsole buildConsole = new BuildLogConsole(buildLogName, app);
-			onNewConsole(buildConsole);
-			return buildConsole;
-		}
-		else {
-			MCLogger.logError("No buildLogPath is set for app " + app.name); 		// $NON-NLS-1$
-		}
-		return null;
-	}
-	
+
 	public static SocketConsole createLogFileConsole(MicroclimateApplication app, ProjectLogInfo logInfo) {
 		String consoleName;
 		consoleName = NLS.bind(Messages.LogFileConsoleName, app.name, logInfo.logName);

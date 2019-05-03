@@ -27,7 +27,6 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.console.OldSocketConsole;
 import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
@@ -56,8 +55,6 @@ public class MicroclimateSocket {
 
 	private volatile boolean hasConnected = false;
 
-	private Set<OldSocketConsole> oldSocketConsoles = new HashSet<>();
-	
 	private Set<SocketConsole> socketConsoles = new HashSet<>();
 	
 	private Map<String, IOperationHandler> projectCreateHandlers = new HashMap<String, IOperationHandler>();
@@ -73,7 +70,6 @@ public class MicroclimateSocket {
 			EVENT_PROJECT_RESTART = "projectRestartResult", 		//$NON-NLS-1$
 			EVENT_PROJECT_CLOSED = "projectClosed", 				//$NON-NLS-1$
 			EVENT_PROJECT_DELETION = "projectDeletion", 			//$NON-NLS-1$
-			EVENT_CONTAINER_LOGS = "container-logs",				//$NON-NLS-1$
 			EVENT_PROJECT_VALIDATED = "projectValidated",			//$NON-NLS-1$
 			EVENT_LOG_UPDATE = "log-update",						//$NON-NLS-1$
 			EVENT_PROJECT_SETTINGS_CHANGED = "projectSettingsChanged";	//$NON-NLS-1$
@@ -219,20 +215,6 @@ public class MicroclimateSocket {
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectDeletion(event);
-				} catch (JSONException e) {
-					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
-				}
-			}
-		})
-		.on(EVENT_CONTAINER_LOGS, new Emitter.Listener() {
-			@Override
-			public void call(Object... arg0) {
-				// can't print this whole thing because the logs strings flood the output
-				MCLogger.log(EVENT_CONTAINER_LOGS);
-
-				try {
-					JSONObject event = new JSONObject(arg0[0].toString());
-					onContainerLogs(event);
 				} catch (JSONException e) {
 					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -464,15 +446,6 @@ public class MicroclimateSocket {
 		app.dispose();
 	}
 
-	public void registerOldSocketConsole(OldSocketConsole console) {
-		MCLogger.log("Register socketConsole for projectID " + console.projectID); //$NON-NLS-1$
-		this.oldSocketConsoles.add(console);
-	}
-
-	public void deregisterOldSocketConsole(OldSocketConsole console) {
-		this.oldSocketConsoles.remove(console);
-	}
-	
 	public void registerSocketConsole(SocketConsole console) {
 		MCLogger.log("Register socketConsole for project: " + console.app.name); //$NON-NLS-1$
 		this.socketConsoles.add(console);
@@ -490,23 +463,6 @@ public class MicroclimateSocket {
 		this.projectCreateHandlers.remove(projectName);
 	}
 
-	private void onContainerLogs(JSONObject event) throws JSONException {
-		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
-		String logContents = event.getString(MCConstants.KEY_LOGS);
-		MCLogger.log("Update logs for project " + projectID); //$NON-NLS-1$
-
-		for (OldSocketConsole console : this.oldSocketConsoles) {
-			if (console.projectID.equals(projectID)) {
-				try {
-					console.update(logContents);
-				}
-				catch(IOException e) {
-					MCLogger.logError("Error updating console " + console.getName(), e);	// $NON-NLS-1$
-				}
-			}
-		}
-	}
-	
 	private void onLogUpdate(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		String type = event.getString(MCConstants.KEY_LOG_TYPE);

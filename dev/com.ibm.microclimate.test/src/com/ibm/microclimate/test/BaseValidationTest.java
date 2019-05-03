@@ -23,7 +23,6 @@ import org.junit.runners.MethodSorters;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.constants.BuildStatus;
 import com.ibm.microclimate.test.util.Condition;
-import com.ibm.microclimate.test.util.MicroclimateUtil;
 import com.ibm.microclimate.test.util.TestUtil;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

@@ -160,20 +160,11 @@ public abstract class BaseTest extends TestCase {
     
     protected void showConsoles() throws Exception {
     	MCEclipseApplication app = (MCEclipseApplication) connection.getAppByName(projectName);
-    	if (connection.checkVersion(1905, "2019_M5_E")) {
-    		for (ProjectLogInfo logInfo : app.getLogInfos()) {
-        		if (app.getConsole(logInfo) == null) {
-        			SocketConsole console = MicroclimateConsoleFactory.createLogFileConsole(app, logInfo);
-        			app.addConsole(console);
-        		}
-        	}
-    	} else {
-	    	if (!app.projectType.isType(ProjectType.TYPE_NODEJS)) {
-	    		IConsole buildConsole = MicroclimateConsoleFactory.createBuildConsole(app);
-	        	((MCEclipseApplication)app).setAppConsole(buildConsole);
-	    	}
-	    	IConsole appConsole = MicroclimateConsoleFactory.createApplicationConsole(app);
-			((MCEclipseApplication)app).setAppConsole(appConsole);
+		for (ProjectLogInfo logInfo : app.getLogInfos()) {
+    		if (app.getConsole(logInfo) == null) {
+    			SocketConsole console = MicroclimateConsoleFactory.createLogFileConsole(app, logInfo);
+    			app.addConsole(console);
+    		}
     	}
     }
 
@@ -181,16 +172,10 @@ public abstract class BaseTest extends TestCase {
     	MicroclimateApplication app = connection.getAppByName(projectName);
     	Set<String> expectedConsoles = new HashSet<String>();
     	Set<String> foundConsoles = new HashSet<String>();
-    	if (connection.checkVersion(1905, "2019_M5_E")) {
-    		for (ProjectLogInfo logInfo : app.getLogInfos()) {
-    			expectedConsoles.add(logInfo.logName);
-    		}
-    	} else {
-	    	if (!app.projectType.isType(ProjectType.TYPE_NODEJS)) {
-	    		expectedConsoles.add("Build Log");
-	    	}
-	    	expectedConsoles.add("Application Log");
-    	}
+		for (ProjectLogInfo logInfo : app.getLogInfos()) {
+			expectedConsoles.add(logInfo.logName);
+		}
+    	
     	IConsoleManager manager = ConsolePlugin.getDefault().getConsoleManager();
     	for (IConsole console : manager.getConsoles()) {
     		if (console.getName().contains(projectName)) {
@@ -267,32 +252,29 @@ public abstract class BaseTest extends TestCase {
 	}
 	
 	protected void createProject(ProjectType type, String name) throws IOException, JSONException {
-		if (connection.checkVersion(1905, "2019_M5_E")) {
-			ProjectTemplateInfo templateInfo = null;
-			List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
-			for (ProjectTemplateInfo template : templates) {
-				if (type.language.equals(template.getLanguage())) {
-					if (type.isLanguage(ProjectType.LANGUAGE_JAVA)) {
-						String extension = template.getExtension();
-						if (type.isType(ProjectType.TYPE_LIBERTY) && extension.toLowerCase().contains("microprofile")) {
-							templateInfo = template;
-							break;
-						}
-						if (type.isType(ProjectType.TYPE_SPRING) && extension.toLowerCase().contains("spring")) {
-							templateInfo = template;
-							break;
-						}
-					} else {
+		ProjectTemplateInfo templateInfo = null;
+		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
+		for (ProjectTemplateInfo template : templates) {
+			if (type.language.equals(template.getLanguage())) {
+				if (type.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+					String extension = template.getExtension();
+					if (type.isType(ProjectType.TYPE_LIBERTY) && extension.toLowerCase().contains("microprofile")) {
 						templateInfo = template;
 						break;
 					}
+					if (type.isType(ProjectType.TYPE_SPRING) && extension.toLowerCase().contains("spring")) {
+						templateInfo = template;
+						break;
+					}
+				} else {
+					templateInfo = template;
+					break;
 				}
 			}
-			assertNotNull("No template found that matches the project type: " + projectType, templateInfo);
-			connection.requestProjectCreate(templateInfo, name);
-		} else {
-			connection.requestProjectCreate(projectType, projectName);
 		}
+		assertNotNull("No template found that matches the project type: " + projectType, templateInfo);
+		connection.requestProjectCreate(templateInfo, name);
+
 	}
 
 }

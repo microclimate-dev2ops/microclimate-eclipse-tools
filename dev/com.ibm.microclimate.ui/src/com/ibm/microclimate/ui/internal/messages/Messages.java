@@ -65,8 +65,6 @@ public class Messages extends NLS {
 	public static String DisableAutoBuildLabel;
 	public static String ErrorOnEnableDisableAutoBuildDialogTitle;
 	
-	public static String ShowAppConsoleAction;
-	public static String ShowBuildConsoleAction;
 	public static String ShowLogFilesMenu;
 	public static String ShowAllLogFilesAction;
 	public static String HideAllLogFilesAction;
@@ -128,7 +126,6 @@ public class Messages extends NLS {
 	public static String BrowserSelectionNoBrowserSelected;
 	
 	public static String OpenUIAction_Label;
-	public static String OpenUINewProjectAction_Label;
 	public static String OpenUIImportProjectAction_Label;
 	
 	public static String NewProjectAction_Label;
