@@ -136,6 +136,7 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ShellTitle;
 	public static String NewProjectPage_WizardDescription;
 	public static String NewProjectPage_WizardTitle;
+	public static String NewProjectPage_TemplateGroupLabel;
 	public static String NewProjectPage_ProjectTypeGroup;
 	public static String NewProjectPage_FilterMessage;
 	public static String NewProjectPage_TypeColumn;
