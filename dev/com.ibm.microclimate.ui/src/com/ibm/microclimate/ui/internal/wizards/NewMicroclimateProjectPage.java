@@ -273,6 +273,8 @@ public class NewMicroclimateProjectPage extends WizardPage {
 			String language = template.getLanguage();
 			if (pattern.matches(type) || (language != null && pattern.matches(language))) {
 				TableItem item = new TableItem(table, SWT.NONE);
+				item.setForeground(table.getForeground());
+				item.setBackground(table.getBackground());
 				item.setText(0, type);
 				if (language != null) {
 					item.setText(1, language);
