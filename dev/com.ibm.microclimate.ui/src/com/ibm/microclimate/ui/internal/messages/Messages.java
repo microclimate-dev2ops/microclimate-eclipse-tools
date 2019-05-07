@@ -83,7 +83,7 @@ public class Messages extends NLS {
 	public static String DeleteProjectLabel;
 	public static String DeleteProjectTitle;
 	public static String DeleteProjectMessage;
-	public static String DeleteProjectErrorTitle;
+	public static String DeleteProjectJobTitle;
 	public static String DeleteProjectErrorMsg;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
