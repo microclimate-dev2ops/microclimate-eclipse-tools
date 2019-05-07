@@ -143,6 +143,12 @@ public class MicroclimateApplicationFactory {
 				mcApp.setAction(null);
 			}
 			
+			// Set the app state
+			if (appJso.has(MCConstants.KEY_OPEN_STATE)) {
+				String state = appJso.getString(MCConstants.KEY_OPEN_STATE);
+				mcApp.setEnabled(!MCConstants.VALUE_STATE_CLOSED.equals(state));
+			}
+			
 			// Set the app status
 			if (appJso.has(MCConstants.KEY_APP_STATUS)) {
 				String appStatus = appJso.getString(MCConstants.KEY_APP_STATUS);
