@@ -38,10 +38,12 @@ public class MCConstants {
 			APIPATH_LOGS = "logs",
 			APIPATH_METRICS_STATUS = "metrics/status",
 			APIPATH_PROJECT_TYPES = "project-types",
+			APIPATH_PROJECT_BIND = "bind",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
 			KEY_NAME = "name",
+			KEY_PATH = "path",
 			KEY_PROJECT_TYPE = "projectType",
 			KEY_BUILD_TYPE = "buildType",
 			KEY_LOC_DISK = "locOnDisk",

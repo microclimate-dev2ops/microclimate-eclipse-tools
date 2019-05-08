@@ -270,5 +270,29 @@
          </enablement>
       </consolePageParticipant>
    </extension>
+   
+	<extension point="org.eclipse.ui.popupMenus">
+		<objectContribution
+			adaptable="true"
+			objectClass="org.eclipse.core.resources.IProject"
+			id="com.ibm.microclimate.ui.internal.wizards.bindWizard">
+			<menu
+				label="%PROJECT_CONTEXT_MENU_NAME"
+				path="additions"
+				icon="%DEFAULT_ICON_PATH"
+				id="com.ibm.microclimate.ui.internal.projectContextMenu">
+				<separator
+					name="popupActions">
+				</separator>
+			</menu>
+			<action
+				label="%BIND_PROJECT_ACTION"
+				class="com.ibm.microclimate.ui.internal.actions.BindProjectAction"
+				menubarPath="com.ibm.microclimate.ui.internal.projectContextMenu/popupActions"
+				icon="%DEFAULT_ICON_PATH"
+				id="com.ibm.microclimate.ui.internal.wizards.bindProject">
+			</action>
+		</objectContribution>
+	</extension>
 
 </plugin>

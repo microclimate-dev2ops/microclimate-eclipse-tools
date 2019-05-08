@@ -18,6 +18,7 @@ public class ProjectType {
 	
 	public static final String UNKNOWN = "unknown";
 	
+	public static final String TYPE_LAGOM = "lagom";
 	public static final String TYPE_LIBERTY = "liberty";
 	public static final String TYPE_SPRING = "spring";
 	public static final String TYPE_NODEJS = "nodejs";
