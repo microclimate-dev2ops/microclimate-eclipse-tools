@@ -13,25 +13,50 @@ package com.ibm.microclimate.ui.internal.wizards;
 
 import java.util.List;
 
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.INewWizard;
+import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.IOperationHandler;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.actions.ImportProjectAction;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
-public class NewMicroclimateProjectWizard extends Wizard {
+public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 
-	private final MicroclimateConnection connection;
-	private final List<ProjectTemplateInfo> templateList;;
+	private MicroclimateConnection connection;
+	private MicroclimateConnection newConnection;
+	private List<ProjectTemplateInfo> templateList;
 	private NewMicroclimateProjectPage newProjectPage;
+	
+	public NewMicroclimateProjectWizard() {
+		try {
+			List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
+			if (connections.isEmpty()) {
+				newConnection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+				connection = newConnection;
+			} else {
+				connection = connections.get(0);
+			}
+			if (!connection.isConnected()) {
+				MCLogger.logError("The connection at " + connection.baseUrl + " is not active.");
+				return;
+			}
+			templateList = connection.requestProjectTemplates();
+		} catch (Exception e) {
+			MCLogger.logError("An error occurred trying to connect to Codewind and get the template list", e);
+		}
+	}
 	
 	public NewMicroclimateProjectWizard(MicroclimateConnection connection, List<ProjectTemplateInfo> templateList) {
 		this.connection = connection;
@@ -39,10 +64,24 @@ public class NewMicroclimateProjectWizard extends Wizard {
 	}
 
 	@Override
+	public void init(IWorkbench arg0, IStructuredSelection arg1) {
+		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_BANNER));
+		setHelpAvailable(false);
+	}
+
+	@Override
 	public void addPages() {
 		setWindowTitle(Messages.NewProjectPage_ShellTitle);
 		newProjectPage = new NewMicroclimateProjectPage(connection, templateList);
 		addPage(newProjectPage);
+	}
+
+	@Override
+	public boolean performCancel() {
+		if (newConnection != null) {
+			newConnection.close();
+		}
+		return super.performCancel();
 	}
 
 	@Override
@@ -82,6 +121,11 @@ public class NewMicroclimateProjectWizard extends Wizard {
 				}
 			});
 			connection.requestProjectCreate(info, name);
+			if (newConnection != null) {
+				MicroclimateConnectionManager.add(newConnection);
+			}
+			ViewHelper.openMicroclimateExplorerView();
+			ViewHelper.refreshMicroclimateExplorerView(connection);
 			return true;
 		} catch (Exception e) {
 			MCLogger.logError("An error occured trying to create a project with type: " + info.getExtension() + ", and name: " + name, e);
