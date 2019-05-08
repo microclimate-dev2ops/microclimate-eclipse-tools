@@ -69,8 +69,26 @@ public class MCUtil {
 	}
 
 	public static boolean isWindows() {
-		String os = System.getProperty("os.name");
-		return os != null && os.toLowerCase().startsWith("windows");
+		String os = System.getProperty("os.name"); //$NON-NLS-1$
+		return os != null && os.toLowerCase().startsWith("windows"); //$NON-NLS-1$
+	}
+	
+	public static String getHostPath(String containerPath) {
+		String hostPath = containerPath;
+		if (isWindows() && containerPath.startsWith("/")) { //$NON-NLS-1$
+			String device = containerPath.substring(1, 2);
+			hostPath = device + ":" + containerPath.substring(2); //$NON-NLS-1$
+		}
+		return hostPath;
+	}
+	
+	public static String getContainerPath(String hostPath) {
+		String containerPath = hostPath;
+		if (isWindows() && hostPath.indexOf(':') == 1) { //$NON-NLS-1$
+			containerPath = "/" + hostPath.charAt(0) + hostPath.substring(2);
+			containerPath = containerPath.replaceAll("\\\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return containerPath;
 	}
 
 	/**

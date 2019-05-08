@@ -624,6 +624,26 @@ public class MicroclimateConnection {
 		checkResult(result, uri, false);
 	}
 	
+	public void requestProjectBind(String name, String path, String language, String projectType)
+			throws JSONException, IOException {
+
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/" + MCConstants.APIPATH_PROJECT_BIND;
+
+		URI uri = baseUrl.resolve(endpoint);
+
+		JSONObject payload = new JSONObject();
+		payload.put(MCConstants.KEY_NAME, name);
+		payload.put(MCConstants.KEY_PATH, MCUtil.getContainerPath(path));
+		payload.put(MCConstants.KEY_LANGUAGE, language);
+		if (ProjectType.LANGUAGE_JAVA.equals(language)) {
+			payload.put(MCConstants.KEY_BUILD_TYPE, projectType);
+		}
+		payload.put(MCConstants.KEY_AUTO_BUILD, true);
+
+		HttpResult result = HttpUtil.post(uri, payload);
+		checkResult(result, uri, false);
+	}
+	
 	private void checkResult(HttpResult result, URI uri, boolean checkContent) throws IOException {
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response code %d for uri %s with error message %s", //$NON-NLS-1$
