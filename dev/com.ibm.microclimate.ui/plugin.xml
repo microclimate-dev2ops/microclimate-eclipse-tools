@@ -253,6 +253,16 @@
 			<description>%NEW_CONNECTION_DESCRIPTION</description>
 			<selection class="org.eclipse.core.resources.IResource"/>
 		</wizard>
+		<wizard
+			id="com.ibm.microcliamte.ui.wizards.newProject"
+			name="%NEW_PROJECT_MENU_LABEL"
+			class="com.ibm.microclimate.ui.internal.wizards.NewMicroclimateProjectWizard"
+			category="com.ibm.microclimate.ui.new"
+			project="true"
+			icon="%DEFAULT_ICON_PATH">
+			<description>%NEW_PROJECT_DESCRIPTION</description>
+			<selection class="org.eclipse.core.resources.IResource"/>
+		</wizard>
 	</extension>
 	
 	<extension point="org.eclipse.ui.ide.markerResolution">

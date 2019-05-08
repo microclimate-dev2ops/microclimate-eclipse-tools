@@ -27,6 +27,8 @@ import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;;
  * and manage persisting them to and from the Preferences.
  */
 public class MicroclimateConnectionManager {
+	
+	public static final String DEFAULT_CONNECTION_URL = "http://localhost:9090";
 
 	// Singleton instance. Never access this directly. Use the instance() method.
 	private static MicroclimateConnectionManager instance;
@@ -206,5 +208,9 @@ public class MicroclimateConnectionManager {
 	public static boolean removeConnection(String mcConnectionUrl) {
 		MicroclimateConnectionManager.remove(mcConnectionUrl);
 		return true;
+	}
+	
+	public static MicroclimateConnection createConnection(String uriStr) throws Exception {
+		return MicroclimateObjectFactory.createMicroclimateConnection(new URI(uriStr));
 	}
 }

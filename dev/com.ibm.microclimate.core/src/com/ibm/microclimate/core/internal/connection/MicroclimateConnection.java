@@ -638,7 +638,7 @@ public class MicroclimateConnection {
 		if (ProjectType.LANGUAGE_JAVA.equals(language)) {
 			payload.put(MCConstants.KEY_BUILD_TYPE, projectType);
 		}
-		payload.put(MCConstants.KEY_AUTO_BUILD, true);
+		payload.put(MCConstants.KEY_AUTO_BUILD, false);
 
 		HttpResult result = HttpUtil.post(uri, payload);
 		checkResult(result, uri, false);
