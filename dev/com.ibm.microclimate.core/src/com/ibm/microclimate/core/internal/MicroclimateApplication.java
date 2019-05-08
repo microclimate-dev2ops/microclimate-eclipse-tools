@@ -129,7 +129,12 @@ public class MicroclimateApplication {
 	}
 	
 	public synchronized void setEnabled(boolean enabled) {
+		boolean reenabled = enabled && !this.enabled;
 		this.enabled = enabled;
+		if (reenabled) {
+			mcConnection.refreshApps(projectID);
+			MCUtil.updateApplication(this);
+		}
 	}
 	
 	public synchronized void setContainerId(String id) {
