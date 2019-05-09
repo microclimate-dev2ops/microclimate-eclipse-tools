@@ -90,8 +90,6 @@ public class Messages extends NLS {
 	
 	public static String ImportProjectError;
 	public static String StartBuildError;
-	public static String OpenMicroclimateUIError;
-	public static String OpenMicroclimateUINotConnectedError;
 	
 	public static String DialogYesButton;
 	public static String DialogNoButton;
@@ -107,7 +105,6 @@ public class Messages extends NLS {
 	
 	public static String BrowserTooltipApp;
 	public static String BrowserTooltipAppMonitor;
-	public static String BrowserTooltipAppOverview;
 	
 	public static String NodeJsBrowserDialogCopyToClipboardButton;
 	public static String NodeJsBrowserDialogOpenChromeButton;
@@ -124,9 +121,6 @@ public class Messages extends NLS {
 	public static String BrowserSelectionManageButtonText;
 	public static String BrowserSelectionListLabel;
 	public static String BrowserSelectionNoBrowserSelected;
-	
-	public static String OpenUIAction_Label;
-	public static String OpenUIImportProjectAction_Label;
 	
 	public static String NewProjectAction_Label;
 	public static String NewProjectWizard_ShellTitle;
