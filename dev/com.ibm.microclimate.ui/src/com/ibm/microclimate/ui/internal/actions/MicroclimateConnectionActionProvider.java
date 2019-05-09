@@ -28,12 +28,14 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 	
 	private NewProjectAction newProjectAction;
+	private BindAction bindAction;
 	
 	@Override
 	public void init(ICommonActionExtensionSite aSite) {
 		super.init(aSite);
 		ISelectionProvider selProvider = aSite.getStructuredViewer();
 		newProjectAction = new NewProjectAction(selProvider);
+		bindAction = new BindAction(selProvider);
 	}
 	
 	@Override
@@ -49,6 +51,7 @@ public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof MicroclimateConnection) {
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
+				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
 			}
 		}
 	}

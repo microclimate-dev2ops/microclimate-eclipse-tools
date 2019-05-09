@@ -33,9 +33,14 @@ import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class BindProjectWizard extends Wizard implements INewWizard {
 
+	private ProjectSelectionPage projectPage;
 	private LanguageSelectionPage languagePage;
 	
-	private final IProject project;
+	private IProject project;
+	
+	public BindProjectWizard() {
+		this(null);
+	}
 	
 	public BindProjectWizard(IProject project) {
 		super();
@@ -51,14 +56,22 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		setWindowTitle(Messages.NewConnectionWizard_ShellTitle);
+		setWindowTitle("Add Project to Codewind");
+		if (project == null) {
+			projectPage = new ProjectSelectionPage();
+			addPage(projectPage);
+		}
 		languagePage = new LanguageSelectionPage();
 		addPage(languagePage);
 	}
 
 	@Override
 	public boolean canFinish() {
-		return languagePage.canFinish();
+		boolean canFinish = languagePage.canFinish();
+		if (projectPage != null) {
+			canFinish &= projectPage.canFinish();
+		}
+		return canFinish;
 	}
 
 	@Override
@@ -70,6 +83,10 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	public boolean performFinish() {
 		if(!canFinish()) {
 			return false;
+		}
+		
+		if (projectPage != null) {
+			project = projectPage.getProject();
 		}
 
 		try {
