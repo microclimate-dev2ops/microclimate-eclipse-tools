@@ -591,7 +591,7 @@ public class MicroclimateConnection {
 	
 	public List<ProjectTemplateInfo> requestProjectTemplates() throws IOException, JSONException {
 		List<ProjectTemplateInfo> templates = new ArrayList<ProjectTemplateInfo>();
-		final URI uri = baseUrl.resolve(MCConstants.APIPATH_BASE + "/" + MCConstants.APIPATH_PROJECT_TYPES);
+		final URI uri = baseUrl.resolve(MCConstants.APIPATH_BASE + "/" + MCConstants.APIPATH_TEMPLATES);
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
 		

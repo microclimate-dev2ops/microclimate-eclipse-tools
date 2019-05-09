@@ -28,7 +28,6 @@ import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
-import com.ibm.microclimate.ui.internal.messages.Messages;
 import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class BindProjectWizard extends Wizard implements INewWizard {
@@ -36,29 +35,39 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	private ProjectSelectionPage projectPage;
 	private LanguageSelectionPage languagePage;
 	
-	private IProject project;
+	private MicroclimateConnection connection = null;
+	private IProject project = null;
 	
-	public BindProjectWizard() {
-		this(null);
+	// If a connection is passed in and no project then the project selection page will be shown
+	public BindProjectWizard(MicroclimateConnection connection) {
+		super();
+		this.connection = connection;
+		init();
 	}
 	
+	// If the project is passed in then the project selection page will not be shown
 	public BindProjectWizard(IProject project) {
 		super();
 		this.project = project;
+		init();
+	}
+	
+	private void init() {
 		setNeedsProgressMonitor(true);
+		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_BANNER));
+		setHelpAvailable(false);
 	}
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_BANNER));
-		setHelpAvailable(false);
+		// Empty
 	}
 
 	@Override
 	public void addPages() {
 		setWindowTitle("Add Project to Codewind");
 		if (project == null) {
-			projectPage = new ProjectSelectionPage();
+			projectPage = new ProjectSelectionPage(connection);
 			addPage(projectPage);
 		}
 		languagePage = new LanguageSelectionPage();
@@ -103,8 +112,12 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	        				connection = connections.get(0);
 	        			}
 	        			if (!connection.isConnected()) {
-	        				MCLogger.logError("The connection at " + connection.baseUrl + " is not active.");
+	        				MCLogger.log("The connection at " + connection.baseUrl + " is not active. Could not bind project: " + project.getName());
 	        				throw new Exception("The connection at " + connection.baseUrl + " is not active. Check that Codewind is running.");
+	        			}
+	        			if (connection.getAppByName(project.getName()) != null) {
+	        				MCLogger.log("The connection at " + connection.baseUrl + " already has a project named: " + project.getName());
+	        				throw new Exception("The connection at " + connection.baseUrl + " already has a project named: " + project.getName());
 	        			}
 	        			connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
 	        			if (newConnection != null) {

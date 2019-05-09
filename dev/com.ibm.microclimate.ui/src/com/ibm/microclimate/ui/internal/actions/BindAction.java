@@ -64,7 +64,7 @@ public class BindAction extends SelectionProviderAction {
 		}
 
 		try {
-			BindProjectWizard wizard = new BindProjectWizard();
+			BindProjectWizard wizard = new BindProjectWizard(connection);
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 			if (dialog.open() == Window.CANCEL) {
 				return;
