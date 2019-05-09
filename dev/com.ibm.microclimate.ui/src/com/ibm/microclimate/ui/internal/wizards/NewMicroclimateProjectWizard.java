@@ -56,6 +56,8 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 		} catch (Exception e) {
 			MCLogger.logError("An error occurred trying to connect to Codewind and get the template list", e);
 		}
+		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_BANNER));
+		setHelpAvailable(false);
 	}
 	
 	public NewMicroclimateProjectWizard(MicroclimateConnection connection, List<ProjectTemplateInfo> templateList) {
@@ -65,8 +67,7 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void init(IWorkbench arg0, IStructuredSelection arg1) {
-		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_BANNER));
-		setHelpAvailable(false);
+		// Empty
 	}
 
 	@Override

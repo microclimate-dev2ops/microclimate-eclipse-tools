@@ -30,16 +30,20 @@ import org.eclipse.ui.dialogs.SearchPattern;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+
 public class ProjectSelectionPage extends WizardPage {
 	
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
+	private final MicroclimateConnection connection;
 	private IProject project = null;
 
-	protected ProjectSelectionPage() {
+	protected ProjectSelectionPage(MicroclimateConnection connection) {
 		super("Select Project");
 		setTitle("Project Selection");
 		setDescription("Select the project to add to Codewind");
 		pattern.setPattern("*");
+		this.connection = connection;
 	}
 
 	@Override
@@ -77,6 +81,9 @@ public class ProjectSelectionPage extends WizardPage {
 					return false;
 				}
 				if (!pattern.matches(project.getName())) {
+					return false;
+				}
+				if (connection != null && connection.getAppByName(project.getName()) != null) {
 					return false;
 				}
 				return true;

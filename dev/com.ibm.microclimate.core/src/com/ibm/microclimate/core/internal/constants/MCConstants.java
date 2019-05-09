@@ -37,7 +37,7 @@ public class MCConstants {
 			APIPATH_CAPABILITIES = "capabilities",
 			APIPATH_LOGS = "logs",
 			APIPATH_METRICS_STATUS = "metrics/status",
-			APIPATH_PROJECT_TYPES = "project-types",
+			APIPATH_TEMPLATES = "templates",
 			APIPATH_PROJECT_BIND = "bind",
 
 			// JSON keys
