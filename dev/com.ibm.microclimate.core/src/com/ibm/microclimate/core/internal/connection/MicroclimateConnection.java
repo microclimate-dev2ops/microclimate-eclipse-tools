@@ -13,6 +13,7 @@ package com.ibm.microclimate.core.internal.connection;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -608,20 +609,15 @@ public class MicroclimateConnection {
 	
 	public void requestProjectCreate(ProjectTemplateInfo templateInfo, String name)
 			throws JSONException, IOException {
-		
-		// Special case node.js projects which don't have a template
-		if (ProjectType.LANGUAGE_NODEJS.equals(templateInfo.getLanguage())) {
-			requestNodeProjectCreate(name);
-			return;
-		}
 
 		String endpoint = MCConstants.APIPATH_PROJECT_LIST;
 
 		URI uri = baseUrl.resolve(endpoint);
 
 		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(MCConstants.KEY_NAME, name);
-		createProjectPayload.put(MCConstants.KEY_EXTENSION, templateInfo.getExtension());
+		createProjectPayload.put(MCConstants.KEY_PROJECT_NAME, name);
+		createProjectPayload.put(MCConstants.KEY_PARENT_PATH, "/microclimate-workspace/" + name);
+		createProjectPayload.put(MCConstants.KEY_TEMPLATE_ID, templateInfo.getExtension());
 
 		HttpResult result = HttpUtil.post(uri, createProjectPayload);
 		checkResult(result, uri, false);
@@ -858,6 +854,19 @@ public class MicroclimateConnection {
 			return uri.toURL();
 		} catch (Exception e) {
 			MCLogger.logError("Failed to get the URL for the " + view + " view and the " + app.name + "application.", e);  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$ 
+		}
+		return null;
+	}
+	
+	public URL getPerformanceMonitorURL(MicroclimateApplication app) {
+		try {
+			URI uri = baseUrl;
+			uri = uri.resolve("performance/charts");
+			String query = MCConstants.QUERY_PROJECT + "=" + app.projectID;
+			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
+			return uri.toURL();
+		} catch (Exception e) {
+			MCLogger.logError("Failed to get the performance monitor URL for the " + app.name + "application.", e);  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$ 
 		}
 		return null;
 	}
