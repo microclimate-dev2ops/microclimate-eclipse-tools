@@ -38,6 +38,7 @@ public class MicroclimateApplication {
 	public final IPath fullLocalPath;
 	public final ProjectType projectType;
 
+	
 	private String contextRoot;	// can be null
 	private StartMode startMode;
 	private AppState appState;
@@ -53,6 +54,7 @@ public class MicroclimateApplication {
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
+	private URL rootUrl;
 
 	// These are set by the MicroclimateSocket so we have to make sure the reads and writes are synchronized
 	// An httpPort of -1 indicates the app is not started - could be building or disabled.
@@ -77,17 +79,18 @@ public class MicroclimateApplication {
 		this.buildStatus = BuildStatus.UNKOWN;
 	}
 
-	private void setBaseUrl() throws MalformedURLException {
+	private void setUrls() throws MalformedURLException {
 		if (httpPort == -1) {
 			MCLogger.log("Un-setting baseUrl because httpPort is not valid"); //$NON-NLS-1$
 			baseUrl = null;
+			rootUrl = null;
 			return;
 		}
 
 		baseUrl = new URL("http", host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
-
+		rootUrl = baseUrl;
 		if (contextRoot != null && !contextRoot.isEmpty()) {
-			baseUrl = new URL(baseUrl, contextRoot);
+			rootUrl = new URL(baseUrl, contextRoot);
 		}
 	}
 	
@@ -114,7 +117,7 @@ public class MicroclimateApplication {
 	public synchronized void setContextRoot(String contextRoot) {
 		this.contextRoot = contextRoot;
 		try {
-			setBaseUrl();
+			setUrls();
 		} catch (MalformedURLException e) {
 			MCLogger.logError("An error occurred updating the base url with the new context root: " + contextRoot, e);
 		}
@@ -188,6 +191,22 @@ public class MicroclimateApplication {
 		return baseUrl;
 	}
 	
+	/**
+	 * Can return null if this project hasn't started yet (ie httpPort == -1)
+	 */
+	public URL getRootUrl() {
+		return rootUrl;
+	}
+	
+	public URL getMetricsUrl() {
+		try {
+			return new URL(getBaseUrl(), projectType.getMetricsRoot());
+		} catch (MalformedURLException e) {
+			MCLogger.logError("An error occurred trying to construct the application metrics URL", e);
+		}
+		return null;
+	}
+	
 	public synchronized AppState getAppState() {
 		return appState;
 	}
@@ -229,7 +248,7 @@ public class MicroclimateApplication {
 	}
 
 	public boolean isRunning() {
-		return baseUrl != null;
+		return rootUrl != null;
 	}
 	
 	public boolean isDeleting() {
@@ -258,17 +277,17 @@ public class MicroclimateApplication {
 	}
 
 	public synchronized void setHttpPort(int httpPort) {
-		MCLogger.log("Set HTTP port for " + baseUrl + " to " + httpPort); //$NON-NLS-1$ //$NON-NLS-2$
+		MCLogger.log("Set HTTP port for " + rootUrl + " to " + httpPort); //$NON-NLS-1$ //$NON-NLS-2$
 		this.httpPort = httpPort;
 		try {
-			setBaseUrl();
+			setUrls();
 		} catch (MalformedURLException e) {
 			MCLogger.logError(e);
 		}
 	}
 
 	public synchronized void setDebugPort(int debugPort) {
-		MCLogger.log("Set debug port for " + baseUrl + " to " + debugPort); //$NON-NLS-1$ //$NON-NLS-2$
+		MCLogger.log("Set debug port for " + rootUrl + " to " + debugPort); //$NON-NLS-1$ //$NON-NLS-2$
 		this.debugPort = debugPort;
 	}
 
@@ -344,7 +363,7 @@ public class MicroclimateApplication {
 	@Override
 	public String toString() {
 		return String.format("%s@%s id=%s name=%s type=%s loc=%s", //$NON-NLS-1$
-				MicroclimateApplication.class.getSimpleName(), baseUrl.toString(),
+				MicroclimateApplication.class.getSimpleName(), rootUrl.toString(),
 				projectID, name, projectType, fullLocalPath.toOSString());
 	}
 }

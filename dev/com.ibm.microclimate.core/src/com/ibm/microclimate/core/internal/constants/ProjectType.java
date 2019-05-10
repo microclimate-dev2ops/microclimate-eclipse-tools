@@ -68,5 +68,18 @@ public class ProjectType {
 		}
 		return null;
 	}
+	
+	public String getMetricsRoot() {
+		if (LANGUAGE_NODEJS.equals(language)) {
+			return "appmetrics-dash";
+		}
+		if (LANGUAGE_SWIFT.equals(language)) {
+			return "swiftmetrics-dash";
+		}
+		if (LANGUAGE_JAVA.equals(language)) {
+			return "javametrics-dash";
+		}
+		return null;
+	}
 
 }

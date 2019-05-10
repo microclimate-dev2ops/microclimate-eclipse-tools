@@ -121,7 +121,7 @@ public abstract class BaseTest extends TestCase {
     
     protected void pingApp(String expectedText) throws Exception {
     	MicroclimateApplication app = connection.getAppByName(projectName);
-    	URL url = app.getBaseUrl();
+    	URL url = app.getRootUrl();
     	url = new URL(url.toExternalForm() + relativeURL);
     	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
     	for (int i = 0; i < 15 && !result.isGoodResponse; i++) {

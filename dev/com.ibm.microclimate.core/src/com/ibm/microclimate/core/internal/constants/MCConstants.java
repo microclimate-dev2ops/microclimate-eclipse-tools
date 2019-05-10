@@ -82,6 +82,9 @@ public class MCConstants {
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",
 			KEY_EXTENSION = "extension",
+			KEY_PROJECT_NAME = "projectName",
+			KEY_PARENT_PATH = "parentPath",
+			KEY_TEMPLATE_ID = "templateID",
 
 			KEY_START_MODE = "startMode",
 			KEY_ACTION = "action",

@@ -74,6 +74,8 @@ public class Messages extends NLS {
 	public static String ActionNewConnection;
 	
 	public static String ActionOpenAppMonitor;
+	
+	public static String ActionOpenPerformanceMonitor;
 
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;
@@ -105,6 +107,7 @@ public class Messages extends NLS {
 	
 	public static String BrowserTooltipApp;
 	public static String BrowserTooltipAppMonitor;
+	public static String BrowserTooltipPerformanceMonitor;
 	
 	public static String NodeJsBrowserDialogCopyToClipboardButton;
 	public static String NodeJsBrowserDialogOpenChromeButton;
