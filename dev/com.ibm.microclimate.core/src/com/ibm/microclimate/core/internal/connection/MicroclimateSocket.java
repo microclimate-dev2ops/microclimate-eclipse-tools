@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +28,7 @@ import org.json.JSONObject;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
+import com.ibm.microclimate.core.internal.console.ProjectLogInfo;
 import com.ibm.microclimate.core.internal.console.SocketConsole;
 import com.ibm.microclimate.core.internal.constants.MCConstants;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
@@ -72,6 +74,7 @@ public class MicroclimateSocket {
 			EVENT_PROJECT_DELETION = "projectDeletion", 			//$NON-NLS-1$
 			EVENT_PROJECT_VALIDATED = "projectValidated",			//$NON-NLS-1$
 			EVENT_LOG_UPDATE = "log-update",						//$NON-NLS-1$
+			EVENT_PROJECT_LOGS_LIST_CHANGED = "projectLogsListChanged",		//$NON-NLS-1$
 			EVENT_PROJECT_SETTINGS_CHANGED = "projectSettingsChanged";	//$NON-NLS-1$
 
 	public MicroclimateSocket(MicroclimateConnection mcConnection) throws URISyntaxException {
@@ -215,6 +218,19 @@ public class MicroclimateSocket {
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectDeletion(event);
+				} catch (JSONException e) {
+					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
+			}
+		})
+		.on(EVENT_PROJECT_LOGS_LIST_CHANGED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				MCLogger.log(EVENT_PROJECT_LOGS_LIST_CHANGED + ": " + arg0[0].toString()); //$NON-NLS-1$
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onProjectLogsListChanged(event);
 				} catch (JSONException e) {
 					MCLogger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -480,6 +496,31 @@ public class MicroclimateSocket {
 					MCLogger.logError("Error updating console " + console.getName(), e);	// $NON-NLS-1$
 				}
 			}
+		}
+	}
+	
+	private void onProjectLogsListChanged(JSONObject event) throws JSONException {
+		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
+		MicroclimateApplication app = mcConnection.getAppByID(projectID);
+		if (app == null) {
+			// Likely a new project is being created
+			mcConnection.refreshApps(projectID);
+			MCUtil.updateConnection(mcConnection);
+			return;
+		}
+
+		String type;
+		if (event.has(MCConstants.KEY_LOG_BUILD)) {
+			type = MCConstants.KEY_LOG_BUILD;
+			JSONArray logs = event.getJSONArray(MCConstants.KEY_LOG_BUILD);
+			List<ProjectLogInfo> logInfos = MicroclimateConnection.getLogs(logs, type);
+			app.addLogInfos(logInfos);
+		}
+		if (event.has(MCConstants.KEY_LOG_APP)) {
+			type = MCConstants.KEY_LOG_APP;
+			JSONArray logs = event.getJSONArray(MCConstants.KEY_LOG_APP);
+			List<ProjectLogInfo> logInfos = MicroclimateConnection.getLogs(logs, type);
+			app.addLogInfos(logInfos);
 		}
 	}
 	

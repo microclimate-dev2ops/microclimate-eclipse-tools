@@ -81,7 +81,7 @@ public class Messages extends NLS {
 	public static String DeleteProjectLabel;
 	public static String DeleteProjectTitle;
 	public static String DeleteProjectMessage;
-	public static String DeleteProjectErrorTitle;
+	public static String DeleteProjectJobTitle;
 	public static String DeleteProjectErrorMsg;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
@@ -127,6 +127,7 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ShellTitle;
 	public static String NewProjectPage_WizardDescription;
 	public static String NewProjectPage_WizardTitle;
+	public static String NewProjectPage_TemplateGroupLabel;
 	public static String NewProjectPage_ProjectTypeGroup;
 	public static String NewProjectPage_FilterMessage;
 	public static String NewProjectPage_TypeColumn;

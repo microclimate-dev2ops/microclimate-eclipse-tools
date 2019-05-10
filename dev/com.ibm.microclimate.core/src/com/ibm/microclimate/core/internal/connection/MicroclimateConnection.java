@@ -462,13 +462,16 @@ public class MicroclimateConnection {
 		return logList;
 	}
 	
-	private List<ProjectLogInfo> getLogs(JSONArray logs, String type) throws JSONException {
+	public static List<ProjectLogInfo> getLogs(JSONArray logs, String type) throws JSONException {
 		List<ProjectLogInfo> logList = new ArrayList<ProjectLogInfo>();
 		if (logs != null) {
 			for (int i = 0; i < logs.length(); i++) {
 				JSONObject log = logs.getJSONObject(i);
 				if (log.has(MCConstants.KEY_LOG_NAME)) {
 					String logName = log.getString(MCConstants.KEY_LOG_NAME);
+					if ("-".equals(logName)) {
+						continue;
+					}
 					String workspacePath = null;
 					if (log.has(MCConstants.KEY_LOG_WORKSPACE_PATH)) {
 						workspacePath = log.getString(MCConstants.KEY_LOG_WORKSPACE_PATH);
@@ -633,12 +636,16 @@ public class MicroclimateConnection {
 
 		JSONObject payload = new JSONObject();
 		payload.put(MCConstants.KEY_NAME, name);
-		payload.put(MCConstants.KEY_PATH, MCUtil.getContainerPath(path));
+//		payload.put(MCConstants.KEY_PATH, MCUtil.getContainerPath(path));
+		payload.put(MCConstants.KEY_PATH, "/microclimate-workspace/" + name);
 		payload.put(MCConstants.KEY_LANGUAGE, language);
-		if (ProjectType.LANGUAGE_JAVA.equals(language)) {
-			payload.put(MCConstants.KEY_BUILD_TYPE, projectType);
+		if (projectType == null) {
+			projectType = ProjectType.getType(language);
 		}
-		payload.put(MCConstants.KEY_AUTO_BUILD, false);
+		if (projectType != null) {
+			payload.put(MCConstants.KEY_PROJECT_TYPE, projectType);
+		}
+		payload.put(MCConstants.KEY_AUTO_BUILD, true);
 
 		HttpResult result = HttpUtil.post(uri, payload);
 		checkResult(result, uri, false);

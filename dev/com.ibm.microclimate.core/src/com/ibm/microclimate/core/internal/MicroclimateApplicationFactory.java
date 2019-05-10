@@ -99,12 +99,7 @@ public class MicroclimateApplicationFactory {
 
 			ProjectType type = ProjectType.UNKNOWN_TYPE;
 			try {
-				// from portal: projectType and buildType are equivalent - however
-				// buildType is always present, projectType is missing for disabled/stopped projects
-				// We should use projectType if it gets fixed.
-				// String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
-
-				String typeStr = appJso.getString(MCConstants.KEY_BUILD_TYPE);
+				String typeStr = appJso.getString(MCConstants.KEY_PROJECT_TYPE);
 				String languageStr = appJso.getString(MCConstants.KEY_LANGUAGE);
 				type = new ProjectType(typeStr, languageStr);
 			}
@@ -143,6 +138,16 @@ public class MicroclimateApplicationFactory {
 				mcApp.setAction(null);
 			}
 			
+			// Set the app state
+			if (appJso.has(MCConstants.KEY_OPEN_STATE)) {
+				String state = appJso.getString(MCConstants.KEY_OPEN_STATE);
+				if (MCConstants.VALUE_STATE_CLOSED.equals(state)) {
+					mcApp.setEnabled(false);
+					return;
+				}
+			}
+			mcApp.setEnabled(true);
+						
 			// Set the app status
 			if (appJso.has(MCConstants.KEY_APP_STATUS)) {
 				String appStatus = appJso.getString(MCConstants.KEY_APP_STATUS);

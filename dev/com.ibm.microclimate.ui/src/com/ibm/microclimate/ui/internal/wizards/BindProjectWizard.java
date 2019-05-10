@@ -136,7 +136,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	        				newConnection.close();
 	        			}
 	        			MCLogger.logError("Project bind failed for project: " + project.getName(), e);
-	        			throw new InvocationTargetException(e);
+	        			throw new InvocationTargetException(e, e.getMessage());
 	        		}
 			    }
 			});
