@@ -13,7 +13,10 @@ package com.ibm.microclimate.ui.internal.actions;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
@@ -24,6 +27,7 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 import com.ibm.microclimate.core.internal.MCEclipseApplication;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
 /**
@@ -63,17 +67,23 @@ public class DeleteProjectAction extends SelectionProviderAction {
 		}
 
 		if (MCUtil.openConfirmDialog(Messages.DeleteProjectTitle, NLS.bind(Messages.DeleteProjectMessage, app.name))) {
-			try {
-				app.mcConnection.requestProjectDelete(app.projectID);
-				IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
-				if (project != null && project.exists() && project.getLocation().toFile().equals(app.fullLocalPath.toFile())) {
-					project.delete(false, true, new NullProgressMonitor());
-				}
-			} catch (Exception e) {
-				MCLogger.logError("An error occurred deleting the project: " + app.name + ", with id: " + app.projectID, e);
-				MCUtil.openDialog(true, Messages.DeleteProjectErrorTitle,
-						NLS.bind(Messages.DeleteProjectErrorMsg, new String[] {app.name, e.getMessage()}));
-			}
+			Job job = new Job(NLS.bind(Messages.DeleteProjectJobTitle, app.name)) {
+    			@Override
+    			protected IStatus run(IProgressMonitor monitor) {
+    				try {
+    					app.mcConnection.requestProjectDelete(app.projectID);
+    					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+    					if (project != null && project.exists() && project.getLocation().toFile().equals(app.fullLocalPath.toFile())) {
+    						project.delete(false, true, monitor);
+    					}
+    					return Status.OK_STATUS;
+    				} catch (Exception e) {
+    					MCLogger.logError("An error occurred deleting the project: " + app.name + ", with id: " + app.projectID, e);
+    					return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID, NLS.bind(Messages.DeleteProjectErrorMsg, app.name), e);
+    				}
+    			}
+    		};
+    		job.schedule();
 		}
 	}
 }

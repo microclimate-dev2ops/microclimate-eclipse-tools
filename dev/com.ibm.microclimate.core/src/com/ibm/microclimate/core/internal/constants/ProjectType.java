@@ -18,9 +18,9 @@ public class ProjectType {
 	
 	public static final String UNKNOWN = "unknown";
 	
-	public static final String TYPE_LAGOM = "lagom";
 	public static final String TYPE_LIBERTY = "liberty";
 	public static final String TYPE_SPRING = "spring";
+	public static final String TYPE_SWIFT = "swift";
 	public static final String TYPE_NODEJS = "nodejs";
 	public static final String TYPE_DOCKER = "docker";
 	
@@ -51,6 +51,22 @@ public class ProjectType {
 	@Override
 	public String toString() {
 		return ("Project type: " + type + ", project language: " + language);
+	}
+	
+	public static String getType(String language) {
+		if (LANGUAGE_NODEJS.equals(language)) {
+			return TYPE_NODEJS;
+		}
+		if (LANGUAGE_SWIFT.equals(language)) {
+			return TYPE_SWIFT;
+		}
+		if (LANGUAGE_PYTHON.equals(language)) {
+			return TYPE_DOCKER;
+		}
+		if (LANGUAGE_GO.equals(language)) {
+			return TYPE_DOCKER;
+		}
+		return null;
 	}
 
 }

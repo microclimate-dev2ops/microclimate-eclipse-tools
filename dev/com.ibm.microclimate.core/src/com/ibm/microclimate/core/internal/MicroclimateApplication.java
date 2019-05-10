@@ -13,7 +13,7 @@ package com.ibm.microclimate.core.internal;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
@@ -48,7 +48,7 @@ public class MicroclimateApplication {
 	private String containerId;
 	private ProjectCapabilities projectCapabilities;
 	private String action;
-	private List<ProjectLogInfo> logInfos = Collections.emptyList();
+	private List<ProjectLogInfo> logInfos = new ArrayList<ProjectLogInfo>();
 	private boolean metricsAvailable = false;
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -129,7 +129,12 @@ public class MicroclimateApplication {
 	}
 	
 	public synchronized void setEnabled(boolean enabled) {
+		boolean reenabled = enabled && !this.enabled;
 		this.enabled = enabled;
+		if (reenabled) {
+			mcConnection.refreshApps(projectID);
+			MCUtil.updateApplication(this);
+		}
 	}
 	
 	public synchronized void setContainerId(String id) {
@@ -140,7 +145,35 @@ public class MicroclimateApplication {
 		this.action = action;
 	}
 	
+	public synchronized void addLogInfos(List<ProjectLogInfo> newLogInfos) {
+		if (newLogInfos == null || newLogInfos.isEmpty()) {
+			MCLogger.logError("Trying to add empty log infos to project: " + name);
+			return;
+		}
+		if (this.logInfos == null || this.logInfos.isEmpty()) {
+			this.logInfos = newLogInfos;
+			return;
+		}
+		for (ProjectLogInfo newLogInfo : newLogInfos) {
+			boolean found = false;
+			for (ProjectLogInfo logInfo : this.logInfos) {
+				// There should not be more than one log with the same name for a project
+				if (logInfo.logName.equals(newLogInfo.logName)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				this.logInfos.add(newLogInfo);
+			}
+		}
+	}
+	
 	public synchronized void setLogInfos(List<ProjectLogInfo> logInfos) {
+		if (logInfos == null) {
+			MCLogger.logError("The logs should not be set to null for project: " + name);
+			return;
+		}
 		this.logInfos = logInfos;
 	}
 	

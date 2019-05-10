@@ -45,7 +45,6 @@ public class MCConstants {
 			KEY_NAME = "name",
 			KEY_PATH = "path",
 			KEY_PROJECT_TYPE = "projectType",
-			KEY_BUILD_TYPE = "buildType",
 			KEY_LOC_DISK = "locOnDisk",
 			KEY_CONTEXTROOT = "contextroot",
 			KEY_CONTEXT_ROOT = "contextRoot",

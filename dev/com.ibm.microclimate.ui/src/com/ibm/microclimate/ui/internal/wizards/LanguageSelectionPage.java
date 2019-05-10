@@ -153,8 +153,6 @@ public class LanguageSelectionPage extends WizardPage {
 	
 	private void fillTypeTable(Table typeTable) {
 		TableItem item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_LAGOM);
-		item = new TableItem(typeTable, SWT.NONE);
 		item.setText(ProjectType.TYPE_LIBERTY);
 		item = new TableItem(typeTable, SWT.NONE);
 		item.setText(ProjectType.TYPE_SPRING);

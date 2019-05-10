@@ -96,6 +96,10 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 		
 		// Project template composite
+		Text templateText = new Text(composite, SWT.READ_ONLY);
+		templateText.setText(Messages.NewProjectPage_TemplateGroupLabel);
+		templateText.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 2, 1));
+		
 		Group templateGroup = new Group(composite, SWT.NONE);
 		templateGroup.setText(Messages.NewProjectPage_ProjectTypeGroup);
 		GridLayout layout = new GridLayout();
@@ -269,6 +273,8 @@ public class NewMicroclimateProjectPage extends WizardPage {
 			String language = template.getLanguage();
 			if (pattern.matches(type) || (language != null && pattern.matches(language))) {
 				TableItem item = new TableItem(table, SWT.NONE);
+				item.setForeground(table.getForeground());
+				item.setBackground(table.getBackground());
 				item.setText(0, type);
 				if (language != null) {
 					item.setText(1, language);
