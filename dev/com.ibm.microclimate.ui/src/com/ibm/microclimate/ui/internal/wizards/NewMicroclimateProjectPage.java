@@ -11,10 +11,14 @@
 
 package com.ibm.microclimate.ui.internal.wizards;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.wizard.WizardPage;
@@ -39,7 +43,10 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SearchPattern;
 
+import com.ibm.microclimate.core.internal.InstallUtil;
+import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
 import com.ibm.microclimate.ui.internal.messages.Messages;
 
@@ -47,8 +54,8 @@ public class NewMicroclimateProjectPage extends WizardPage {
 	
 	private static final Pattern projectNamePattern = Pattern.compile("^[a-z0-9]*$");
 	
-	private final MicroclimateConnection connection;
-	private final List<ProjectTemplateInfo> templateList;
+	private MicroclimateConnection connection;
+	private List<ProjectTemplateInfo> templateList;
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
 	private Text filterText;
 	private Table selectionTable;
@@ -60,12 +67,6 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		super(Messages.NewProjectPage_ShellTitle);
 		setTitle(Messages.NewProjectPage_WizardTitle);
 		setDescription(Messages.NewProjectPage_WizardDescription);
-		templateList.sort(new Comparator<ProjectTemplateInfo>() {
-			@Override
-			public int compare(ProjectTemplateInfo info1, ProjectTemplateInfo info2) {
-				return info1.getLabel().compareTo(info2.getLabel());
-			}
-		});
 		this.connection = connection;
 		this.templateList = templateList;
 		setPageComplete(false);
@@ -75,12 +76,90 @@ public class NewMicroclimateProjectPage extends WizardPage {
 	public void createControl(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NULL);
 		composite.setLayout(new GridLayout());
+		
+		if (connection == null) {
+			createConnection();
+			if (connection == null) {
+				setErrorMessage("Could not connect to Codewind. Check logs for more information.");
+				setControl(composite);
+				return;
+			}
+		}
+		
+		if (templateList == null || templateList.isEmpty()) {
+			getTemplates();
+			if (templateList == null || templateList.isEmpty()) {
+				setErrorMessage("Could not get the list of templates. Check logs for more information.");
+				setControl(composite);
+				return;
+			}
+		}
+		
+		templateList.sort(new Comparator<ProjectTemplateInfo>() {
+			@Override
+			public int compare(ProjectTemplateInfo info1, ProjectTemplateInfo info2) {
+				return info1.getLabel().compareTo(info2.getLabel());
+			}
+		});
 
 		createContents(composite);
 
 		setControl(composite);
 	}
-
+	
+	private void createConnection() {
+		List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
+		if (connections != null && !connections.isEmpty()) {
+			connection = connections.get(0);
+			if (!connection.isConnected()) {
+				MCLogger.logError("The connection at " + connection.baseUrl + " is not active.");
+				return;
+			}
+		} else {
+			try {
+				// Will throw an Exception if fails
+				connection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+			} catch(Exception e) {
+				MCLogger.log("Attempting to connect to Codewind failed: " + e.getMessage());
+			}
+		}
+		
+		if (connection == null) {
+			IRunnableWithProgress runnable = new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException {
+					monitor.beginTask("Starting Codewind", IProgressMonitor.UNKNOWN);
+					try {
+						String path = InstallUtil.getInstallExecutable();
+						System.out.println("Install executable path: " + path);
+					} catch (IOException e) {
+						throw new InvocationTargetException(e, "An error occurred while getting the path of the install executable: " + e.getMessage());
+					}
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						// Ignore
+					}
+				}
+			};
+			try {
+				getWizard().getContainer().run(true, true, runnable);
+			} catch (InvocationTargetException e) {
+				MCLogger.logError("An error occurred trying to start Codewind", e);
+			} catch (InterruptedException e) {
+				MCLogger.logError("Codewind start was interrupted", e);
+			}
+		}
+	}
+	
+	private void getTemplates() {
+		try {
+			templateList = connection.requestProjectTemplates();
+		} catch (Exception e) {
+			MCLogger.logError("An error occurred trying to get the list of templates", e);
+		}
+	}
+	
 	private void createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(2, false));
@@ -253,6 +332,10 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		return null;
 	}
 	
+	public MicroclimateConnection getConnection() {
+		return connection;
+	}
+	
 	public String getProjectName() {
 		if (projectNameText != null) {
 			return projectNameText.getText();
@@ -381,4 +464,5 @@ public class NewMicroclimateProjectPage extends WizardPage {
 
 		table.setLayout(tableLayout);
 	}
+
 }

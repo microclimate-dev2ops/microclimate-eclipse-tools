@@ -34,33 +34,18 @@ import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 
-	private MicroclimateConnection connection;
-	private MicroclimateConnection newConnection;
-	private List<ProjectTemplateInfo> templateList;
-	private NewMicroclimateProjectPage newProjectPage;
+	private MicroclimateConnection connection = null;
+	private List<ProjectTemplateInfo> templateList = null;
+	private NewMicroclimateProjectPage newProjectPage = null;
 	
 	public NewMicroclimateProjectWizard() {
-		try {
-			List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
-			if (connections.isEmpty()) {
-				newConnection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
-				connection = newConnection;
-			} else {
-				connection = connections.get(0);
-			}
-			if (!connection.isConnected()) {
-				MCLogger.logError("The connection at " + connection.baseUrl + " is not active.");
-				return;
-			}
-			templateList = connection.requestProjectTemplates();
-		} catch (Exception e) {
-			MCLogger.logError("An error occurred trying to connect to Codewind and get the template list", e);
-		}
 		setDefaultPageImageDescriptor(MicroclimateUIPlugin.getImageDescriptor(MicroclimateUIPlugin.MICROCLIMATE_BANNER));
 		setHelpAvailable(false);
+		setNeedsProgressMonitor(true);
 	}
 	
 	public NewMicroclimateProjectWizard(MicroclimateConnection connection, List<ProjectTemplateInfo> templateList) {
+		this();
 		this.connection = connection;
 		this.templateList = templateList;
 	}
@@ -79,8 +64,9 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performCancel() {
-		if (newConnection != null) {
-			newConnection.close();
+		MicroclimateConnection conn = newProjectPage.getConnection();
+		if (conn != null && conn != connection) {
+			conn.close();
 		}
 		return super.performCancel();
 	}
@@ -93,24 +79,25 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 
 		ProjectTemplateInfo info = newProjectPage.getProjectTemplateInfo();
 		String name = newProjectPage.getProjectName();
-		if (info == null || name == null) {
-			MCLogger.logError("The project type or name was null for the new project wizard");
+		MicroclimateConnection newConnection = newProjectPage.getConnection();
+		if (info == null || name == null || newConnection == null) {
+			MCLogger.logError("The connection, project type or name was null for the new project wizard");
 			return false;
 		}
 		
 		try {
 			final boolean importProject = newProjectPage.importProject();
-			connection.getMCSocket().registerProjectCreateHandler(name, new IOperationHandler() {
+			newConnection.getMCSocket().registerProjectCreateHandler(name, new IOperationHandler() {
 				@Override
 				public void operationComplete(boolean passed, String msg) {
-					connection.getMCSocket().deregisterProjectCreateHandler(name);
+					newConnection.getMCSocket().deregisterProjectCreateHandler(name);
 					if (passed) {
-						MicroclimateApplication app = connection.getAppByName(name);
+						MicroclimateApplication app = newConnection.getAppByName(name);
 						if (app != null) {
 							Display.getDefault().asyncExec(new Runnable() {
 								@Override
 								public void run() {
-									ViewHelper.expandConnection(connection);
+									ViewHelper.expandConnection(newConnection);
 								}
 							});
 							if (importProject) {
@@ -121,12 +108,12 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 					}
 				}
 			});
-			connection.requestProjectCreate(info, name);
-			if (newConnection != null) {
+			newConnection.requestProjectCreate(info, name);
+			if (newConnection != connection) {
 				MicroclimateConnectionManager.add(newConnection);
 			}
 			ViewHelper.openMicroclimateExplorerView();
-			ViewHelper.refreshMicroclimateExplorerView(connection);
+			ViewHelper.refreshMicroclimateExplorerView(newConnection);
 			return true;
 		} catch (Exception e) {
 			MCLogger.logError("An error occured trying to create a project with type: " + info.getExtension() + ", and name: " + name, e);
