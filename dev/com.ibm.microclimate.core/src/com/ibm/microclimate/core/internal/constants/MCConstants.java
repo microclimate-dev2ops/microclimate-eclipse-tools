@@ -45,6 +45,7 @@ public class MCConstants {
 			KEY_PROJECT_ID = "projectID",
 			KEY_NAME = "name",
 			KEY_PATH = "path",
+			KEY_PROJECT_PATH = "projectPath",
 			KEY_PROJECT_TYPE = "projectType",
 			KEY_LOC_DISK = "locOnDisk",
 			KEY_CONTEXTROOT = "contextroot",
@@ -68,6 +69,7 @@ public class MCConstants {
 			VALUE_STATE_CLOSED = "closed",
 
 			KEY_STATUS = "status",
+			KEY_RESULT = "result",
 			KEY_APP_STATUS = "appStatus",
 			KEY_BUILD_STATUS = "buildStatus",
 			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
