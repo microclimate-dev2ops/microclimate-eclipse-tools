@@ -606,6 +606,16 @@ public class MicroclimateConnection {
 		return templates;
 	}
 	
+	public void requestProjectValidate(String path) throws JSONException, IOException {
+		String endpoint = MCConstants.APIPATH_BASE + "/" + MCConstants.APIPATH_VALIDATE;
+		URI uri = baseUrl.resolve(endpoint);
+		JSONObject createProjectPayload = new JSONObject();
+		createProjectPayload.put(MCConstants.KEY_PATH, path);
+		
+		HttpResult result = HttpUtil.post(uri, createProjectPayload);
+		checkResult(result, uri, false);
+	}
+	
 	public void requestProjectCreate(ProjectTemplateInfo templateInfo, String name)
 			throws JSONException, IOException {
 
@@ -632,7 +642,7 @@ public class MicroclimateConnection {
 
 		JSONObject payload = new JSONObject();
 		payload.put(MCConstants.KEY_NAME, name);
-		payload.put(MCConstants.KEY_PATH, localWorkspacePath.toString() + "/" + name);
+		payload.put(MCConstants.KEY_PATH, path);
 		payload.put(MCConstants.KEY_LANGUAGE, language);
 		if (projectType == null) {
 			projectType = ProjectType.getType(language);

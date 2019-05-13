@@ -27,6 +27,7 @@ import com.ibm.microclimate.core.internal.connection.IOperationHandler;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
+import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 import com.ibm.microclimate.ui.internal.actions.ImportProjectAction;
 import com.ibm.microclimate.ui.internal.messages.Messages;
@@ -109,6 +110,23 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 				}
 			});
 			newConnection.requestProjectCreate(info, name);
+			String type = null;
+			if (ProjectType.LANGUAGE_JAVA.equals(info.getLanguage())) {
+				if (info.getExtension().toLowerCase().contains("spring")) {
+					type = "spring";
+				} else if (info.getExtension().toLowerCase().contains("microprofile")) {
+					type = "liberty";
+				} else {
+					type = "docker";
+				}
+			} else if (ProjectType.LANGUAGE_NODEJS.equals(info.getLanguage())) {
+				type = "nodejs";
+			} else if (ProjectType.LANGUAGE_SWIFT.equals(info.getLanguage())) {
+				type = "swift";
+			} else {
+				type = "docker";
+			}
+			newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), type);
 			if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 				MicroclimateConnectionManager.add(newConnection);
 			}

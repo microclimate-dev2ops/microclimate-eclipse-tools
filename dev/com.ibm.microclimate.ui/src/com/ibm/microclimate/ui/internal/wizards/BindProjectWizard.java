@@ -103,6 +103,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		}
 
 		try {
+			newConnection.requestProjectValidate(project.getLocation().toFile().getAbsolutePath());
 			newConnection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
 			if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 				MicroclimateConnectionManager.add(newConnection);
