@@ -213,4 +213,5 @@ public class MicroclimateConnectionManager {
 	public static MicroclimateConnection createConnection(String uriStr) throws Exception {
 		return MicroclimateObjectFactory.createMicroclimateConnection(new URI(uriStr));
 	}
+
 }

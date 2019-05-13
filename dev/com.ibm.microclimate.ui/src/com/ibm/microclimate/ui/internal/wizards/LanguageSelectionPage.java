@@ -11,6 +11,13 @@
 
 package com.ibm.microclimate.ui.internal.wizards;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -20,18 +27,26 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import com.ibm.microclimate.core.internal.InstallUtil;
+import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.ProcessHelper;
+import com.ibm.microclimate.core.internal.ProcessHelper.ProcessResult;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
+import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.constants.ProjectType;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 
 public class LanguageSelectionPage extends WizardPage {
 
+	private MicroclimateConnection connection = null;
 	private String language = null;
 	private String type = null;
 
-	protected LanguageSelectionPage() {
+	protected LanguageSelectionPage(MicroclimateConnection connection) {
 		super("Select Language");
 		setTitle("Language and Type Selection");
 		setDescription("Select a language, and if applicable, a project type");
+		this.connection = connection;
 	}
 
 	@Override
@@ -43,6 +58,15 @@ public class LanguageSelectionPage extends WizardPage {
         layout.verticalSpacing = 7;
         composite.setLayout(layout);
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        
+        if (connection == null) {
+	        setupConnection();
+			if (connection == null) {
+				setErrorMessage("Could not connect to Codewind. Check logs for more information.");
+				setControl(composite);
+				return;
+			}
+        }
         
         Text languageLabel = new Text(composite, SWT.READ_ONLY);
         languageLabel.setText("Choose the project language:");
@@ -158,6 +182,10 @@ public class LanguageSelectionPage extends WizardPage {
 		item.setText(ProjectType.TYPE_SPRING);
 	}
 	
+	public MicroclimateConnection getConnection() {
+		return connection;
+	}
+	
 	public String getLanguage() {
 		return language;
 	}
@@ -165,4 +193,89 @@ public class LanguageSelectionPage extends WizardPage {
 	public String getType() {
 		return type;
 	}
+	
+	private void setupConnection() {
+		List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
+		if (connections != null && !connections.isEmpty()) {
+			connection = connections.get(0);
+		} else {
+			try {
+				// Will throw an Exception if fails
+				connection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+			} catch(Exception e) {
+				MCLogger.log("Attempting to connect to Codewind failed: " + e.getMessage());
+			}
+		}
+		
+		if (connection == null || !connection.isConnected()) {
+			IRunnableWithProgress runnable = new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException {
+					monitor.beginTask("Starting Codewind", IProgressMonitor.UNKNOWN);
+					Process startProcess = null;
+					try {
+						startProcess = InstallUtil.startCodewind();
+						ProcessResult result = ProcessHelper.waitForProcess(startProcess, 500, 300);
+						if (result.getExitValue() != 0) {
+							throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + result.getError());
+						}
+					} catch (IOException e) {
+						throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage());
+					} catch (TimeoutException e) {
+						throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage());
+					} finally {
+						if (startProcess != null && startProcess.isAlive()) {
+							startProcess.destroy();
+						}
+					}
+					
+				}
+			};
+			try {
+				getWizard().getContainer().run(true, true, runnable);
+			} catch (InvocationTargetException e) {
+				MCLogger.logError("An error occurred trying to start Codewind", e);
+				return;
+			} catch (InterruptedException e) {
+				MCLogger.logError("Codewind start was interrupted", e);
+				return;
+			}
+		}
+		
+		// If there was a connection, check to see if it is connected to Codewind now
+		if (connection != null) {
+			for (int i = 0; i < 10; i++) {
+				if (connection.isConnected()) {
+					break;
+				}
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					// Ignore
+				}
+			}
+			if (!connection.isConnected()) {
+				MCLogger.logError("The connection at " + connection.baseUrl + " is not active.");
+			}
+			return;
+		}
+		
+		// If there was no connection, try to create one
+		for (int i = 0; i < 10; i++) {
+			try {
+				connection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+				break;
+			} catch (Exception e) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					// Ignore
+				}
+			}
+		}
+		if (connection == null) {
+			MCLogger.logError("Failed to connect to Codewind at: " + MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+		}
+	}
+		
 }

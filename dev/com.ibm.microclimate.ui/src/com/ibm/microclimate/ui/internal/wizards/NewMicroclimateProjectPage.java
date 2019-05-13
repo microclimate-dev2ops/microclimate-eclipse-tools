@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -45,6 +46,8 @@ import org.eclipse.ui.dialogs.SearchPattern;
 
 import com.ibm.microclimate.core.internal.InstallUtil;
 import com.ibm.microclimate.core.internal.MCLogger;
+import com.ibm.microclimate.core.internal.ProcessHelper;
+import com.ibm.microclimate.core.internal.ProcessHelper.ProcessResult;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
@@ -78,7 +81,7 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		composite.setLayout(new GridLayout());
 		
 		if (connection == null) {
-			createConnection();
+			setupConnection();
 			if (connection == null) {
 				setErrorMessage("Could not connect to Codewind. Check logs for more information.");
 				setControl(composite);
@@ -106,60 +109,7 @@ public class NewMicroclimateProjectPage extends WizardPage {
 
 		setControl(composite);
 	}
-	
-	private void createConnection() {
-		List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
-		if (connections != null && !connections.isEmpty()) {
-			connection = connections.get(0);
-			if (!connection.isConnected()) {
-				MCLogger.logError("The connection at " + connection.baseUrl + " is not active.");
-				return;
-			}
-		} else {
-			try {
-				// Will throw an Exception if fails
-				connection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
-			} catch(Exception e) {
-				MCLogger.log("Attempting to connect to Codewind failed: " + e.getMessage());
-			}
-		}
-		
-		if (connection == null) {
-			IRunnableWithProgress runnable = new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException {
-					monitor.beginTask("Starting Codewind", IProgressMonitor.UNKNOWN);
-					try {
-						String path = InstallUtil.getInstallExecutable();
-						System.out.println("Install executable path: " + path);
-					} catch (IOException e) {
-						throw new InvocationTargetException(e, "An error occurred while getting the path of the install executable: " + e.getMessage());
-					}
-					try {
-						Thread.sleep(3000);
-					} catch (InterruptedException e) {
-						// Ignore
-					}
-				}
-			};
-			try {
-				getWizard().getContainer().run(true, true, runnable);
-			} catch (InvocationTargetException e) {
-				MCLogger.logError("An error occurred trying to start Codewind", e);
-			} catch (InterruptedException e) {
-				MCLogger.logError("Codewind start was interrupted", e);
-			}
-		}
-	}
-	
-	private void getTemplates() {
-		try {
-			templateList = connection.requestProjectTemplates();
-		} catch (Exception e) {
-			MCLogger.logError("An error occurred trying to get the list of templates", e);
-		}
-	}
-	
+
 	private void createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(2, false));
@@ -464,5 +414,96 @@ public class NewMicroclimateProjectPage extends WizardPage {
 
 		table.setLayout(tableLayout);
 	}
-
+	
+	private void setupConnection() {
+		List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
+		if (connections != null && !connections.isEmpty()) {
+			connection = connections.get(0);
+		} else {
+			try {
+				// Will throw an Exception if fails
+				connection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+			} catch(Exception e) {
+				MCLogger.log("Attempting to connect to Codewind failed: " + e.getMessage());
+			}
+		}
+		
+		if (connection == null || !connection.isConnected()) {
+			IRunnableWithProgress runnable = new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException {
+					monitor.beginTask("Starting Codewind", IProgressMonitor.UNKNOWN);
+					Process startProcess = null;
+					try {
+						startProcess = InstallUtil.startCodewind();
+						ProcessResult result = ProcessHelper.waitForProcess(startProcess, 500, 300);
+						if (result.getExitValue() != 0) {
+							throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + result.getError());
+						}
+					} catch (IOException e) {
+						throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage());
+					} catch (TimeoutException e) {
+						throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage());
+					} finally {
+						if (startProcess != null && startProcess.isAlive()) {
+							startProcess.destroy();
+						}
+					}
+					
+				}
+			};
+			try {
+				getWizard().getContainer().run(true, true, runnable);
+			} catch (InvocationTargetException e) {
+				MCLogger.logError("An error occurred trying to start Codewind", e);
+				return;
+			} catch (InterruptedException e) {
+				MCLogger.logError("Codewind start was interrupted", e);
+				return;
+			}
+		}
+		
+		// If there was a connection, check to see if it is connected to Codewind now
+		if (connection != null) {
+			for (int i = 0; i < 10; i++) {
+				if (connection.isConnected()) {
+					break;
+				}
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					// Ignore
+				}
+			}
+			if (!connection.isConnected()) {
+				MCLogger.logError("The connection at " + connection.baseUrl + " is not active.");
+			}
+			return;
+		}
+		
+		// If there was no connection, try to create one
+		for (int i = 0; i < 10; i++) {
+			try {
+				connection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+				break;
+			} catch (Exception e) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					// Ignore
+				}
+			}
+		}
+		if (connection == null) {
+			MCLogger.logError("Failed to connect to Codewind at: " + MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
+		}
+	}
+	
+	private void getTemplates() {
+		try {
+			templateList = connection.requestProjectTemplates();
+		} catch (Exception e) {
+			MCLogger.logError("An error occurred trying to get the list of templates", e);
+		}
+	}
 }
