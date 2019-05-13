@@ -55,7 +55,7 @@ import com.ibm.microclimate.ui.internal.messages.Messages;
 
 public class NewMicroclimateProjectPage extends WizardPage {
 	
-	private static final Pattern projectNamePattern = Pattern.compile("^[a-z0-9]*$");
+	private static final Pattern projectNamePattern = Pattern.compile("^[a-zA-Z0-9_.-]+$");
 	
 	private MicroclimateConnection connection;
 	private List<ProjectTemplateInfo> templateList;
