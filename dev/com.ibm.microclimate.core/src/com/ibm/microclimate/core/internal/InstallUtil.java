@@ -13,13 +13,17 @@ package com.ibm.microclimate.core.internal;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import com.ibm.microclimate.core.MicroclimateCorePlugin;
@@ -30,12 +34,28 @@ public class InstallUtil {
 	private static final Map<OperatingSystem, String> installMap = new HashMap<OperatingSystem, String>();
 
 	static {
-		installMap.put(OperatingSystem.LINUX, "resources/linux/install");
-		installMap.put(OperatingSystem.MAC, "resources/osx/install");
-		installMap.put(OperatingSystem.WINDOWS, "resources/windows/install.exe");
+		installMap.put(OperatingSystem.LINUX, "resources/linux/installer");
+		installMap.put(OperatingSystem.MAC, "resources/osx/installer");
+		installMap.put(OperatingSystem.WINDOWS, "resources/windows/installer.exe");
 	}
 	
-	public static String getInstallExecutable() throws IOException {
+	private static final String INSTALLER_DIR = "installerWorkDir";
+	private static final String START_CMD = "start";
+	
+	public static Process startCodewind() throws IOException {
+		String installerPath = getInstallerExecutable();
+		String[] command = {installerPath, START_CMD};
+		ProcessBuilder builder = new ProcessBuilder(command);
+		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.MAC) {
+			String pathVar = System.getenv("PATH");
+			pathVar = "/usr/local/bin:" + pathVar;
+			Map<String, String> env = builder.environment();
+			env.put("PATH", pathVar);
+		}
+		return builder.start();
+	}
+	
+	public static String getInstallerExecutable() throws IOException {
 		// Get the current platform and choose the correct executable path
 		OperatingSystem os = PlatformUtil.getOS(System.getProperty("os.name"));
 		String relPath = installMap.get(os);
@@ -45,19 +65,43 @@ public class InstallUtil {
 			throw new IOException(msg);
 		}
 		
-		try {
-			URL url = FileLocator.find(MicroclimateCorePlugin.getDefault().getBundle(), new Path(relPath));
-			if (url != null) {
-				url = FileLocator.resolve(url);
-				File file = Paths.get(url.toURI()).toFile();
-				return file.getCanonicalPath();
-			}
-		} catch (URISyntaxException e) {
-			String msg = "An error occurred while trying to get the full path for the install executable:" + e.getMessage();
+		// Make the installer directory
+		String installerDir = getInstallerDir();
+		if (!FileUtil.makeDir(installerDir)) {
+			String msg = "Failed to make the directory for the installer utility: " + installerDir;
 			MCLogger.logError(msg);
 			throw new IOException(msg);
 		}
-		return null;
+		
+		// Get the executable name
+		String execName = relPath.substring(relPath.lastIndexOf('/') + 1);
+		
+		// Copy the executable over
+		InputStream stream = null;
+		String execPath = installerDir + File.separator + execName;
+		try {
+			stream = FileLocator.openStream(MicroclimateCorePlugin.getDefault().getBundle(), new Path(relPath), false);
+			FileUtil.copyFile(stream, execPath);
+			if (PlatformUtil.getOS() != PlatformUtil.OperatingSystem.WINDOWS) {
+				Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rwxr-xr-x");
+				File file = new File(execPath);
+				Files.setPosixFilePermissions(file.toPath(), permissions);
+			}
+			return execPath;
+		} finally {
+			if (stream != null) {
+				try {
+					stream.close();
+				} catch (IOException e) {
+					// Ignore
+				}
+			}
+		}
+	}
+	
+	private static String getInstallerDir() {
+		IPath stateLoc = MicroclimateCorePlugin.getDefault().getStateLocation();
+		return stateLoc.append(INSTALLER_DIR).toOSString();
 	}
 
 }

@@ -64,9 +64,9 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performCancel() {
-		MicroclimateConnection conn = newProjectPage.getConnection();
-		if (conn != null && conn != connection) {
-			conn.close();
+		MicroclimateConnection newConnection = newProjectPage.getConnection();
+		if (newConnection != null && MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+			newConnection.close();
 		}
 		return super.performCancel();
 	}
@@ -109,11 +109,12 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 				}
 			});
 			newConnection.requestProjectCreate(info, name);
-			if (newConnection != connection) {
+			if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 				MicroclimateConnectionManager.add(newConnection);
 			}
 			ViewHelper.openMicroclimateExplorerView();
 			ViewHelper.refreshMicroclimateExplorerView(newConnection);
+			ViewHelper.expandConnection(newConnection);
 			return true;
 		} catch (Exception e) {
 			MCLogger.logError("An error occured trying to create a project with type: " + info.getExtension() + ", and name: " + name, e);

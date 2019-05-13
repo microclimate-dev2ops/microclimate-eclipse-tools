@@ -85,13 +85,13 @@ public class MicroclimateConnection {
 
 		this.versionStr = getMCVersion(env);
 
-		if (UNKNOWN_VERSION.equals(versionStr)) {
-			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_VersionUnknown,
-					MCConstants.REQUIRED_MC_VERSION));
-		} else if (!isSupportedVersion(versionStr)) {
-			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_OldVersion,
-					versionStr, MCConstants.REQUIRED_MC_VERSION));
-		}
+//		if (UNKNOWN_VERSION.equals(versionStr)) {
+//			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_VersionUnknown,
+//					MCConstants.REQUIRED_MC_VERSION));
+//		} else if (!isSupportedVersion(versionStr)) {
+//			onInitFail(NLS.bind(Messages.MicroclimateConnection_ErrConnection_OldVersion,
+//					versionStr, MCConstants.REQUIRED_MC_VERSION));
+//		}
 
 		MCLogger.log("Microclimate version is: " + versionStr);			// $NON-NLS-1$
 
@@ -616,7 +616,7 @@ public class MicroclimateConnection {
 
 		JSONObject createProjectPayload = new JSONObject();
 		createProjectPayload.put(MCConstants.KEY_PROJECT_NAME, name);
-		createProjectPayload.put(MCConstants.KEY_PARENT_PATH, "/microclimate-workspace/" + name);
+		createProjectPayload.put(MCConstants.KEY_PARENT_PATH, localWorkspacePath.toString());
 		createProjectPayload.put(MCConstants.KEY_TEMPLATE_ID, templateInfo.getExtension());
 
 		HttpResult result = HttpUtil.post(uri, createProjectPayload);
@@ -632,8 +632,7 @@ public class MicroclimateConnection {
 
 		JSONObject payload = new JSONObject();
 		payload.put(MCConstants.KEY_NAME, name);
-//		payload.put(MCConstants.KEY_PATH, MCUtil.getContainerPath(path));
-		payload.put(MCConstants.KEY_PATH, "/microclimate-workspace/" + name);
+		payload.put(MCConstants.KEY_PATH, localWorkspacePath.toString() + "/" + name);
 		payload.put(MCConstants.KEY_LANGUAGE, language);
 		if (projectType == null) {
 			projectType = ProjectType.getType(language);

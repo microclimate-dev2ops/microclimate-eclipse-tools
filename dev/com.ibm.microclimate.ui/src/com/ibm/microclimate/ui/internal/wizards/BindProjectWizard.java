@@ -11,15 +11,9 @@
 
 package com.ibm.microclimate.ui.internal.wizards;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -70,7 +64,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			projectPage = new ProjectSelectionPage(connection);
 			addPage(projectPage);
 		}
-		languagePage = new LanguageSelectionPage();
+		languagePage = new LanguageSelectionPage(connection);
 		addPage(languagePage);
 	}
 
@@ -85,6 +79,10 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performCancel() {
+		MicroclimateConnection newConnection = languagePage.getConnection();
+		if (newConnection != null && MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+			newConnection.close();
+		}
 		return true;
 	}
 
@@ -94,57 +92,31 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			return false;
 		}
 		
+		MicroclimateConnection newConnection = languagePage.getConnection();
+		if (newConnection == null) {
+			MCLogger.logError("The connection was null for the add project wizard");
+			return false;
+		}
+		
 		if (projectPage != null) {
 			project = projectPage.getProject();
 		}
 
 		try {
-			getContainer().run(true, true, new IRunnableWithProgress() {
-			    @Override
-			    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-	        		MicroclimateConnection connection, newConnection = null;
-	        		try {
-	        			List<MicroclimateConnection> connections = MicroclimateConnectionManager.activeConnections();
-	        			if (connections.isEmpty()) {
-        					newConnection = MicroclimateConnectionManager.createConnection(MicroclimateConnectionManager.DEFAULT_CONNECTION_URL);
-        					connection = newConnection;
-	        			} else {
-	        				connection = connections.get(0);
-	        			}
-	        			if (!connection.isConnected()) {
-	        				MCLogger.log("The connection at " + connection.baseUrl + " is not active. Could not bind project: " + project.getName());
-	        				throw new Exception("The connection at " + connection.baseUrl + " is not active. Check that Codewind is running.");
-	        			}
-	        			if (connection.getAppByName(project.getName()) != null) {
-	        				MCLogger.log("The connection at " + connection.baseUrl + " already has a project named: " + project.getName());
-	        				throw new Exception("The connection at " + connection.baseUrl + " already has a project named: " + project.getName());
-	        			}
-	        			connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
-	        			if (newConnection != null) {
-	        				MicroclimateConnectionManager.add(newConnection);
-	        			}
-	        			Display.getDefault().asyncExec(new Runnable() {
-							@Override
-							public void run() {
-								ViewHelper.openMicroclimateExplorerView();
-			        			ViewHelper.refreshMicroclimateExplorerView(null);
-			        			ViewHelper.expandConnection(connection);
-							}
-	        			});
-	        		} catch (Exception e) {
-	        			if (newConnection != null) {
-	        				newConnection.close();
-	        			}
-	        			MCLogger.logError("Project bind failed for project: " + project.getName(), e);
-	        			throw new InvocationTargetException(e, e.getMessage());
-	        		}
-			    }
-			});
+			newConnection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
+			if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+				MicroclimateConnectionManager.add(newConnection);
+			}
+			ViewHelper.openMicroclimateExplorerView();
+			ViewHelper.refreshMicroclimateExplorerView(null);
+			ViewHelper.expandConnection(newConnection);
 		} catch (Exception e) {
+			MCLogger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e);
 			MCUtil.openDialog(true, "Project Add Error",
 					"An error occurred trying to add the " + project.getName() + " project to Codewind: " + e.getMessage());
-            return false;
+			return false;
 		}
+
 		return true;
 	}
 }
