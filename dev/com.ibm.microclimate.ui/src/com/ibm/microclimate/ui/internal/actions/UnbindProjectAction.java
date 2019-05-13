@@ -31,7 +31,6 @@ public class UnbindProjectAction extends SelectionProviderAction {
 	public UnbindProjectAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, "Remove");
 		selectionChanged(getStructuredSelection());
-		setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_ETOOL_DELETE));
 	}
 
 	@Override
@@ -56,7 +55,7 @@ public class UnbindProjectAction extends SelectionProviderAction {
 		}
 		
 		try {
-			app.mcConnection.requestProjectDelete(app.projectID);
+			app.mcConnection.requestProjectUnbind(app.projectID);
 		} catch (Exception e) {
 			MCLogger.logError("Error requesting application remove: " + app.name, e); //$NON-NLS-1$
 			MCUtil.openDialog(true, "An error occurred trying to remove the " + app.name + " application from Codewind.", e.getMessage());

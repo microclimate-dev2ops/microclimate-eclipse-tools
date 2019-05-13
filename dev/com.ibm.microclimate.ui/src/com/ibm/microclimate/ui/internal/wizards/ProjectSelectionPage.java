@@ -34,15 +34,17 @@ import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 
 public class ProjectSelectionPage extends WizardPage {
 	
+	private final BindProjectWizard wizard;
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
 	private final MicroclimateConnection connection;
 	private IProject project = null;
 
-	protected ProjectSelectionPage(MicroclimateConnection connection) {
+	protected ProjectSelectionPage(BindProjectWizard wizard, MicroclimateConnection connection) {
 		super("Select Project");
 		setTitle("Project Selection");
 		setDescription("Select the project to add to Codewind");
 		pattern.setPattern("*");
+		this.wizard = wizard;
 		this.connection = connection;
 	}
 
@@ -110,6 +112,7 @@ public class ProjectSelectionPage extends WizardPage {
 				if (event.getChecked()) {
 					projectList.setCheckedElements(new Object[] {event.getElement()});
 					project = (IProject) event.getElement();
+					wizard.setProject(project);
 				} else {
 					project = null;
 				}

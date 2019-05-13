@@ -61,10 +61,10 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	public void addPages() {
 		setWindowTitle("Add Project to Codewind");
 		if (project == null) {
-			projectPage = new ProjectSelectionPage(connection);
+			projectPage = new ProjectSelectionPage(this, connection);
 			addPage(projectPage);
 		}
-		languagePage = new LanguageSelectionPage(connection);
+		languagePage = new LanguageSelectionPage(connection, project);
 		addPage(languagePage);
 	}
 
@@ -103,7 +103,6 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		}
 
 		try {
-			newConnection.requestProjectValidate(project.getLocation().toFile().getAbsolutePath());
 			newConnection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
 			if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 				MicroclimateConnectionManager.add(newConnection);
@@ -119,5 +118,11 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		}
 
 		return true;
+	}
+	
+	public void setProject(IProject project) {
+		if (languagePage != null) {
+			languagePage.setProject(project);
+		}
 	}
 }

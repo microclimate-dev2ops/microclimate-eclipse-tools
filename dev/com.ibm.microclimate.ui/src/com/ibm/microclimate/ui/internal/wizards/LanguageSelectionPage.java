@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
@@ -39,14 +40,16 @@ import com.ibm.microclimate.ui.MicroclimateUIPlugin;
 public class LanguageSelectionPage extends WizardPage {
 
 	private MicroclimateConnection connection = null;
+	private IProject project = null;
 	private String language = null;
 	private String type = null;
 
-	protected LanguageSelectionPage(MicroclimateConnection connection) {
+	protected LanguageSelectionPage(MicroclimateConnection connection, IProject project) {
 		super("Select Language");
 		setTitle("Language and Type Selection");
 		setDescription("Select a language, and if applicable, a project type");
 		this.connection = connection;
+		this.project = project;
 	}
 
 	@Override
@@ -67,6 +70,8 @@ public class LanguageSelectionPage extends WizardPage {
 				return;
 			}
         }
+        
+        ProjectType projectType = getProjectType();
         
         Text languageLabel = new Text(composite, SWT.READ_ONLY);
         languageLabel.setText("Choose the project language:");
@@ -144,11 +149,35 @@ public class LanguageSelectionPage extends WizardPage {
     	typeLabel.setVisible(false);
     	typeTable.setVisible(false);
 
+    	if (projectType != null) {
+    		language = projectType.language;
+    		type = projectType.type;
+    		TableItem item = getItem(languageTable, language);
+    		if (item != null) {
+    			item.setChecked(true);
+    		}
+    		item = getItem(typeTable, type);
+    		if (item != null) {
+    			item.setChecked(true);
+    			typeLabel.setVisible(true);
+    			typeTable.setVisible(true);
+    		}
+    	}
+
 		setControl(composite);
+	}
+	
+	private TableItem getItem(Table table, String text) {
+		for (TableItem item : table.getItems()) {
+			if (item.getText().equals(text)) {
+				return item;
+			}
+		}
+		return null;
 	}
 
 	public boolean canFinish() {
-		if (language == null) {
+		if (language == null || ProjectType.UNKNOWN.equals(language)) {
 			return false;
 		}
 		if (ProjectType.LANGUAGE_JAVA.equals(language)) {
@@ -182,6 +211,10 @@ public class LanguageSelectionPage extends WizardPage {
 		item.setText(ProjectType.TYPE_SPRING);
 	}
 	
+	public void setProject(IProject project) {
+		this.project = project;
+	}
+	
 	public MicroclimateConnection getConnection() {
 		return connection;
 	}
@@ -191,7 +224,28 @@ public class LanguageSelectionPage extends WizardPage {
 	}
 	
 	public String getType() {
-		return type;
+		if (type != null) {
+			return type;
+		}
+		if (ProjectType.LANGUAGE_NODEJS.equals(language)) {
+			return "nodejs";
+		}
+		if (ProjectType.LANGUAGE_SWIFT.equals(language)) {
+			return "swift";
+		}
+        return "docker";
+	}
+	
+	private ProjectType getProjectType() {
+		if (connection == null || project == null) {
+			return null;
+		}
+		try {
+			return connection.requestProjectValidate(project.getLocation().toFile().getAbsolutePath());
+		} catch (Exception e) {
+			MCLogger.logError("Could not get the project type because validate failed for project: " + project.getName());
+		}
+		return null;
 	}
 	
 	private void setupConnection() {

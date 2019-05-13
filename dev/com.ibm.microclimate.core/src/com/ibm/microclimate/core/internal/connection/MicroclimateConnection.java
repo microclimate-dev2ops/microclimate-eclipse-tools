@@ -606,14 +606,26 @@ public class MicroclimateConnection {
 		return templates;
 	}
 	
-	public void requestProjectValidate(String path) throws JSONException, IOException {
+	public ProjectType requestProjectValidate(String path) throws JSONException, IOException {
 		String endpoint = MCConstants.APIPATH_BASE + "/" + MCConstants.APIPATH_VALIDATE;
 		URI uri = baseUrl.resolve(endpoint);
 		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(MCConstants.KEY_PATH, path);
+		createProjectPayload.put(MCConstants.KEY_PROJECT_PATH, path);
 		
 		HttpResult result = HttpUtil.post(uri, createProjectPayload);
 		checkResult(result, uri, false);
+		
+		JSONObject resultJson = new JSONObject(result.response);
+		if (MCConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(MCConstants.KEY_STATUS))) {
+			if (resultJson.has(MCConstants.KEY_RESULT)) {
+				JSONObject typeJson = resultJson.getJSONObject(MCConstants.KEY_RESULT);
+				String language = typeJson.getString(MCConstants.KEY_LANGUAGE);
+				String projectType = typeJson.getString(MCConstants.KEY_PROJECT_TYPE);
+				return new ProjectType(projectType, language);
+			}
+			return null;
+		}
+		throw new IOException("Validate failed for project: " + path);
 	}
 	
 	public void requestProjectCreate(ProjectTemplateInfo templateInfo, String name)
