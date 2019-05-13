@@ -26,6 +26,7 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
+	private UnbindProjectAction unbindProjectAction;
 	private DeleteProjectAction deleteProjectAction;
 	
     @Override
@@ -36,6 +37,7 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
+        unbindProjectAction = new UnbindProjectAction(selProvider);
         deleteProjectAction = new DeleteProjectAction(selProvider);
     }
     
@@ -53,6 +55,7 @@ public class MicroclimateApplicationActionProvider extends CommonActionProvider 
     	if (openPerfMonitorAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openPerfMonitorAction);
     	}
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, unbindProjectAction);
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, deleteProjectAction);
     	
     }

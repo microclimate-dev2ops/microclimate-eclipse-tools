@@ -13,7 +13,6 @@ package com.ibm.microclimate.core.internal.connection;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -621,6 +620,7 @@ public class MicroclimateConnection {
 
 		HttpResult result = HttpUtil.post(uri, createProjectPayload);
 		checkResult(result, uri, false);
+		MCUtil.updateConnection(this);
 	}
 	
 	public void requestProjectBind(String name, String path, String language, String projectType)
@@ -644,6 +644,15 @@ public class MicroclimateConnection {
 
 		HttpResult result = HttpUtil.post(uri, payload);
 		checkResult(result, uri, false);
+		MCUtil.updateConnection(this);
+	}
+	
+	public void requestProjectUnbind(String projectID) throws IOException {
+		String endpoint = MCConstants.APIPATH_PROJECT_LIST + "/" + projectID + "/" + MCConstants.APIPATH_PROJECT_UNBIND;
+		URI uri = baseUrl.resolve(endpoint);
+		HttpResult result = HttpUtil.post(uri);
+		checkResult(result, uri, false);
+		MCUtil.updateConnection(this);
 	}
 	
 	private void checkResult(HttpResult result, URI uri, boolean checkContent) throws IOException {
