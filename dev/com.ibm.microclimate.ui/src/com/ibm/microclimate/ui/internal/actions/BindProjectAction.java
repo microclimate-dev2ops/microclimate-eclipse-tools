@@ -118,7 +118,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 				Process startProcess = null;
 				try {
 					startProcess = InstallUtil.startCodewind();
-					ProcessResult result = ProcessHelper.waitForProcess(startProcess, 1000, 60, monitor, "Starting Codewind");
+					ProcessResult result = ProcessHelper.waitForProcess(startProcess, 500, 60, monitor, "Starting Codewind");
 					if (result.getExitValue() != 0) {
 						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + result.getError());
 					}

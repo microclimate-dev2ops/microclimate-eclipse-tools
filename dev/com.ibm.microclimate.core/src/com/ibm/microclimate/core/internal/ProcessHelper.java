@@ -65,7 +65,8 @@ public class ProcessHelper {
         StringBuilder errBuilder = new StringBuilder();
         int iter = timeout * 1000 / pollingDelay;
         SubMonitor mon = SubMonitor.convert(monitor);
-        mon.beginTask(taskName, iter);
+        int work = 20;
+        mon.beginTask(taskName, work);
         try {
             in = p.getInputStream();
             err = p.getErrorStream();
@@ -77,7 +78,7 @@ public class ProcessHelper {
                 }
                 
                 mon.worked(1);
-                mon.setWorkRemaining(iter);
+                mon.setWorkRemaining(work);
 
                 // read data from the process
                 inBuilder.append(readInput(in, buf));
