@@ -20,13 +20,11 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
-import com.ibm.microclimate.core.internal.connection.IOperationHandler;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
@@ -93,19 +91,6 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					newConnection.getMCSocket().registerProjectCreateHandler(name, new IOperationHandler() {
-						@Override
-						public void operationComplete(boolean passed, String msg) {
-							newConnection.getMCSocket().deregisterProjectCreateHandler(name);
-							if (passed) {
-								MicroclimateApplication app = newConnection.getAppByName(name);
-								if (app != null) {
-									ViewHelper.expandConnection(newConnection);
-									ImportProjectAction.importProject(app);
-								}
-							}
-						}
-					});
 					newConnection.requestProjectCreate(info, name);
 					String type = null;
 					if (ProjectType.LANGUAGE_JAVA.equals(info.getLanguage())) {
@@ -126,6 +111,13 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), type);
 					if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 						MicroclimateConnectionManager.add(newConnection);
+					}
+					newConnection.refreshApps(null);
+					MicroclimateApplication app = newConnection.getAppByName(name);
+					if (app != null) {
+						ImportProjectAction.importProject(app);
+					} else {
+						MCLogger.logError("Could not get the application for import: " + name);
 					}
 					ViewHelper.openMicroclimateExplorerView();
 					ViewHelper.refreshMicroclimateExplorerView(newConnection);
