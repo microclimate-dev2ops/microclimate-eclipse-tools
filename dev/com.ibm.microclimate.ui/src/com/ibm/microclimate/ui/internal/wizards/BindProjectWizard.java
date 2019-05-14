@@ -18,7 +18,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -33,7 +32,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	private ProjectSelectionPage projectPage;
 	private LanguageSelectionPage languagePage;
 	
-	private MicroclimateConnection connection = null;
+	private final MicroclimateConnection connection;
 	private IProject project = null;
 	
 	// If a connection is passed in and no project then the project selection page will be shown
@@ -44,8 +43,9 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	}
 	
 	// If the project is passed in then the project selection page will not be shown
-	public BindProjectWizard(IProject project) {
+	public BindProjectWizard(MicroclimateConnection connection, IProject project) {
 		super();
+		this.connection = connection;
 		this.project = project;
 		init();
 	}
@@ -83,22 +83,12 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performCancel() {
-		MicroclimateConnection newConnection = languagePage.getConnection();
-		if (newConnection != null && MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
-			newConnection.close();
-		}
 		return true;
 	}
 
 	@Override
 	public boolean performFinish() {
 		if(!canFinish()) {
-			return false;
-		}
-		
-		MicroclimateConnection newConnection = languagePage.getConnection();
-		if (newConnection == null) {
-			MCLogger.logError("The connection was null for the add project wizard");
 			return false;
 		}
 		
@@ -110,18 +100,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					newConnection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
-					if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
-						MicroclimateConnectionManager.add(newConnection);
-					}
-					Display.getDefault().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							ViewHelper.openMicroclimateExplorerView();
-							ViewHelper.refreshMicroclimateExplorerView(null);
-							ViewHelper.expandConnection(newConnection);
-						}
-					});
+					connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					MCLogger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e);
@@ -139,4 +118,5 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			languagePage.setProject(project);
 		}
 	}
+
 }

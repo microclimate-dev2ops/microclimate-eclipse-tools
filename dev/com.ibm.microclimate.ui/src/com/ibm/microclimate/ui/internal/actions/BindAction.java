@@ -11,8 +11,6 @@
 
 package com.ibm.microclimate.ui.internal.actions;
 
-import java.util.List;
-
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -22,11 +20,9 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.console.ProjectTemplateInfo;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
-import com.ibm.microclimate.ui.internal.messages.Messages;
+import com.ibm.microclimate.ui.internal.views.ViewHelper;
 import com.ibm.microclimate.ui.internal.wizards.BindProjectWizard;
-import com.ibm.microclimate.ui.internal.wizards.NewMicroclimateProjectWizard;
 
 /**
  * Action to create a new project.
@@ -69,6 +65,9 @@ public class BindAction extends SelectionProviderAction {
 			if (dialog.open() == Window.CANCEL) {
 				return;
 			}
+			ViewHelper.openMicroclimateExplorerView();
+			ViewHelper.refreshMicroclimateExplorerView(null);
+			ViewHelper.expandConnection(connection);
 		} catch (Exception e) {
 			MCLogger.logError("An error occurred running the bind action on connection: " + connection.baseUrl, e);
 		}
