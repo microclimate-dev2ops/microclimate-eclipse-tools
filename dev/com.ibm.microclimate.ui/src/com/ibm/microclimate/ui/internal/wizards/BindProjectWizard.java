@@ -12,13 +12,17 @@
 package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
@@ -102,20 +106,30 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			project = projectPage.getProject();
 		}
 
-		try {
-			newConnection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
-			if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
-				MicroclimateConnectionManager.add(newConnection);
+		Job job = new Job("Adding project to Codewind: " + project.getName()) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				try {
+					newConnection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage(), languagePage.getType());
+					if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+						MicroclimateConnectionManager.add(newConnection);
+					}
+					Display.getDefault().asyncExec(new Runnable() {
+						@Override
+						public void run() {
+							ViewHelper.openMicroclimateExplorerView();
+							ViewHelper.refreshMicroclimateExplorerView(null);
+							ViewHelper.expandConnection(newConnection);
+						}
+					});
+					return Status.OK_STATUS;
+				} catch (Exception e) {
+					MCLogger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e);
+					return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID, "An error occurred trying to add the " + project.getName() + " project to Codewind.", e);
+				}
 			}
-			ViewHelper.openMicroclimateExplorerView();
-			ViewHelper.refreshMicroclimateExplorerView(null);
-			ViewHelper.expandConnection(newConnection);
-		} catch (Exception e) {
-			MCLogger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e);
-			MCUtil.openDialog(true, "Project Add Error",
-					"An error occurred trying to add the " + project.getName() + " project to Codewind: " + e.getMessage());
-			return false;
-		}
+		};
+		job.schedule();
 
 		return true;
 	}

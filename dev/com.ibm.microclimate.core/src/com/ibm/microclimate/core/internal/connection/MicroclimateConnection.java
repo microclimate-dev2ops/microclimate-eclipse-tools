@@ -610,7 +610,7 @@ public class MicroclimateConnection {
 		String endpoint = MCConstants.APIPATH_BASE + "/" + MCConstants.APIPATH_VALIDATE;
 		URI uri = baseUrl.resolve(endpoint);
 		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(MCConstants.KEY_PROJECT_PATH, path);
+		createProjectPayload.put(MCConstants.KEY_PROJECT_PATH, MCUtil.getContainerPath(path));
 		
 		HttpResult result = HttpUtil.post(uri, createProjectPayload);
 		checkResult(result, uri, false);
@@ -637,7 +637,7 @@ public class MicroclimateConnection {
 
 		JSONObject createProjectPayload = new JSONObject();
 		createProjectPayload.put(MCConstants.KEY_PROJECT_NAME, name);
-		createProjectPayload.put(MCConstants.KEY_PARENT_PATH, localWorkspacePath.toString());
+		createProjectPayload.put(MCConstants.KEY_PARENT_PATH, MCUtil.getContainerPath(localWorkspacePath.toString()));
 		createProjectPayload.put(MCConstants.KEY_TEMPLATE_ID, templateInfo.getExtension());
 
 		HttpResult result = HttpUtil.post(uri, createProjectPayload);
@@ -654,7 +654,7 @@ public class MicroclimateConnection {
 
 		JSONObject payload = new JSONObject();
 		payload.put(MCConstants.KEY_NAME, name);
-		payload.put(MCConstants.KEY_PATH, path);
+		payload.put(MCConstants.KEY_PATH, MCUtil.getContainerPath(path));
 		payload.put(MCConstants.KEY_LANGUAGE, language);
 		if (projectType == null) {
 			projectType = ProjectType.getType(language);

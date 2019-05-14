@@ -32,7 +32,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
@@ -64,7 +63,6 @@ public class NewMicroclimateProjectPage extends WizardPage {
 	private Table selectionTable;
 	private Text descriptionLabel;
 	private Text projectNameText;
-	private Button importButton;
 
 	protected NewMicroclimateProjectPage(MicroclimateConnection connection, List<ProjectTemplateInfo> templateList) {
 		super(Messages.NewProjectPage_ShellTitle);
@@ -193,14 +191,7 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		descriptionScroll.setLayoutData(data);
 		descriptionScroll.getVerticalBar().setPageIncrement(lineHeight);
 		descriptionScroll.getVerticalBar().setIncrement(lineHeight);
-		
-		spacer = new Label(composite, SWT.NONE);
-		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
-		
-		importButton = new Button(composite, SWT.CHECK);
-		importButton.setText(Messages.NewProjectPage_ImportLabel);
-		importButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
-		
+
 		// Listeners
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
@@ -251,7 +242,6 @@ public class NewMicroclimateProjectPage extends WizardPage {
 			selectionTable.setSelection(0);
 		}
 		updateDescription();
-		importButton.setSelection(true);
 		// resize description since the UI isn't visible yet
 		descriptionLabel.setSize(descriptionLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		projectNameText.setFocus();
@@ -291,10 +281,6 @@ public class NewMicroclimateProjectPage extends WizardPage {
 			return projectNameText.getText();
 		}
 		return null;
-	}
-	
-	public boolean importProject() {
-		return importButton.getSelection();
 	}
 
 	private void createItems(Table table, String filter) {
