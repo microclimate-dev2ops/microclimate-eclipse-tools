@@ -254,10 +254,15 @@ public class NewMicroclimateProjectPage extends WizardPage {
 	private boolean validate() {
 		String projectName = projectNameText.getText();
 		
+		if (projectName == null || projectName.isEmpty()) {
+			setErrorMessage(Messages.NewProjectPage_EmptyProjectName);
+			return false;
+		}
 		if (!projectNamePattern.matcher(projectName).matches()) {
 			setErrorMessage(Messages.NewProjectPage_InvalidProjectName);
 			return false;
-		} else if (connection.getAppByName(projectName) != null) {
+		}
+		if (connection.getAppByName(projectName) != null) {
 			setErrorMessage(NLS.bind(Messages.NewProjectPage_ProjectExistsError, projectName));
 			return false;
 		}
