@@ -132,14 +132,9 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 					if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 						MicroclimateConnectionManager.add(newConnection);
 					}
-					Display.getDefault().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							ViewHelper.openMicroclimateExplorerView();
-							ViewHelper.refreshMicroclimateExplorerView(newConnection);
-							ViewHelper.expandConnection(newConnection);
-						}
-					});
+					ViewHelper.openMicroclimateExplorerView();
+					ViewHelper.refreshMicroclimateExplorerView(newConnection);
+					ViewHelper.expandConnection(newConnection);
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					MCLogger.logError("An error occured trying to create a project with type: " + info.getExtension() + ", and name: " + name, e);
