@@ -115,11 +115,10 @@ public class BindProjectAction implements IObjectActionDelegate {
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
-				monitor.beginTask("Starting Codewind", IProgressMonitor.UNKNOWN);
 				Process startProcess = null;
 				try {
 					startProcess = InstallUtil.startCodewind();
-					ProcessResult result = ProcessHelper.waitForProcess(startProcess, 500, 300);
+					ProcessResult result = ProcessHelper.waitForProcess(startProcess, 1000, 60, monitor, "Starting Codewind");
 					if (result.getExitValue() != 0) {
 						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + result.getError());
 					}

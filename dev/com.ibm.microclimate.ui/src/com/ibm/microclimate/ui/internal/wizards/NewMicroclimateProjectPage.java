@@ -126,9 +126,10 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		Text templateText = new Text(composite, SWT.READ_ONLY);
 		templateText.setText(Messages.NewProjectPage_TemplateGroupLabel);
 		templateText.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 2, 1));
+		templateText.setBackground(composite.getBackground());
+		templateText.setForeground(composite.getForeground());
 		
 		Group templateGroup = new Group(composite, SWT.NONE);
-		templateGroup.setText(Messages.NewProjectPage_ProjectTypeGroup);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 8;
 		layout.marginWidth = 8;
@@ -181,7 +182,8 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		ScrolledComposite descriptionScroll = new ScrolledComposite(templateGroup, SWT.V_SCROLL);
 		descriptionLabel = new Text(descriptionScroll, SWT.WRAP | SWT.READ_ONLY);
 		descriptionLabel.setText(NLS.bind(Messages.NewProjectPage_DescriptionLabel, ""));
-		descriptionLabel.setBackground(parent.getBackground());
+		descriptionLabel.setBackground(templateGroup.getBackground());
+		descriptionLabel.setForeground(templateGroup.getForeground());
 		descriptionScroll.setContent(descriptionLabel);
 		
 		data = new GridData(GridData.FILL, GridData.FILL, true, false);
@@ -191,6 +193,8 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		descriptionScroll.setLayoutData(data);
 		descriptionScroll.getVerticalBar().setPageIncrement(lineHeight);
 		descriptionScroll.getVerticalBar().setIncrement(lineHeight);
+		descriptionScroll.setBackground(templateGroup.getBackground());
+		descriptionScroll.setForeground(templateGroup.getForeground());
 
 		// Listeners
 		filterText.addModifyListener(new ModifyListener() {
@@ -418,11 +422,10 @@ public class NewMicroclimateProjectPage extends WizardPage {
 			IRunnableWithProgress runnable = new IRunnableWithProgress() {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException {
-					monitor.beginTask("Starting Codewind", IProgressMonitor.UNKNOWN);
 					Process startProcess = null;
 					try {
 						startProcess = InstallUtil.startCodewind();
-						ProcessResult result = ProcessHelper.waitForProcess(startProcess, 500, 300);
+						ProcessResult result = ProcessHelper.waitForProcess(startProcess, 1000, 60, monitor, "Starting Codewind");
 						if (result.getExitValue() != 0) {
 							throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + result.getError());
 						}

@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
+
 public class ProcessHelper {
 
     public static class ProcessResult {
@@ -53,7 +56,7 @@ public class ProcessHelper {
      * @return the exit value
      * @throws IOException if the process fails to exit normally and cannot be terminated
      */
-    public static ProcessResult waitForProcess(final Process p, int pollingDelay, int timeout) throws IOException, TimeoutException {
+    public static ProcessResult waitForProcess(final Process p, int pollingDelay, int timeout, IProgressMonitor monitor, String taskName) throws IOException, TimeoutException {
         final int BUFFER_STEP = 1024;
         byte[] buf = new byte[BUFFER_STEP];
         InputStream in = null;
@@ -61,6 +64,8 @@ public class ProcessHelper {
         StringBuilder inBuilder = new StringBuilder();
         StringBuilder errBuilder = new StringBuilder();
         int iter = timeout * 1000 / pollingDelay;
+        SubMonitor mon = SubMonitor.convert(monitor);
+        mon.beginTask(taskName, iter);
         try {
             in = p.getInputStream();
             err = p.getErrorStream();
@@ -70,6 +75,9 @@ public class ProcessHelper {
                 } catch (InterruptedException e) {
                     // ignore
                 }
+                
+                mon.worked(1);
+                mon.setWorkRemaining(iter);
 
                 // read data from the process
                 inBuilder.append(readInput(in, buf));

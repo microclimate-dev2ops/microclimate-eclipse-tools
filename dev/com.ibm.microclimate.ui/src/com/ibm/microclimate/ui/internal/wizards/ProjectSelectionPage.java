@@ -61,6 +61,8 @@ public class ProjectSelectionPage extends WizardPage {
         Text projectLabel = new Text(composite, SWT.READ_ONLY);
         projectLabel.setText("Choose the project to add:");
         projectLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+        projectLabel.setBackground(composite.getBackground());
+        projectLabel.setForeground(composite.getForeground());
         
 		// Filter text
 		Text filterText = new Text(composite, SWT.BORDER);
@@ -120,6 +122,7 @@ public class ProjectSelectionPage extends WizardPage {
 			}
         });
         
+        filterText.setFocus();
         setControl(composite);
 	}
 

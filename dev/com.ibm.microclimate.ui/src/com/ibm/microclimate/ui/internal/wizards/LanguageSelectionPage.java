@@ -56,6 +56,8 @@ public class LanguageSelectionPage extends WizardPage {
         Text languageLabel = new Text(composite, SWT.READ_ONLY);
         languageLabel.setText("Choose the project language:");
         languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+        languageLabel.setBackground(composite.getBackground());
+        languageLabel.setForeground(composite.getForeground());
         
         Table languageTable = new Table (composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
     	fillLanguageTable(languageTable);
@@ -64,6 +66,8 @@ public class LanguageSelectionPage extends WizardPage {
         Text typeLabel = new Text(composite, SWT.READ_ONLY);
         typeLabel.setText("Choose the project type:");
         typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+        typeLabel.setBackground(composite.getBackground());
+        typeLabel.setForeground(composite.getForeground());
         
     	Table typeTable = new Table(composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
     	fillTypeTable(typeTable);
@@ -144,6 +148,7 @@ public class LanguageSelectionPage extends WizardPage {
     		}
     	}
 
+    	languageTable.setFocus();
 		setControl(composite);
 	}
 	

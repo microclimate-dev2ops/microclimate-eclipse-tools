@@ -100,12 +100,7 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 							if (passed) {
 								MicroclimateApplication app = newConnection.getAppByName(name);
 								if (app != null) {
-									Display.getDefault().asyncExec(new Runnable() {
-										@Override
-										public void run() {
-											ViewHelper.expandConnection(newConnection);
-										}
-									});
+									ViewHelper.expandConnection(newConnection);
 									ImportProjectAction.importProject(app);
 								}
 							}

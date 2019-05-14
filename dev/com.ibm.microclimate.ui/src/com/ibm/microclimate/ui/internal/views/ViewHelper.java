@@ -40,12 +40,7 @@ public class ViewHelper {
 	
 	public static void refreshMicroclimateExplorerView(Object element) {
 		final Object obj = element == null ? ResourcesPlugin.getWorkspace().getRoot() : element;
-		Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-            	refreshNavigatorView(MicroclimateExplorerView.VIEW_ID, obj);
-            }
-        });
+        refreshNavigatorView(MicroclimateExplorerView.VIEW_ID, obj);
 	}
 	
 	public static void expandConnection(MicroclimateConnection connection) {
@@ -54,41 +49,57 @@ public class ViewHelper {
 		}
 		List<MicroclimateApplication> apps = connection.getApps();
 		if (!apps.isEmpty()) {
-			IViewPart view = getViewPart(MicroclimateExplorerView.VIEW_ID);
-			if (view instanceof CommonNavigator) {
-				CommonViewer viewer = ((CommonNavigator)view).getCommonViewer();
-				if (!viewer.getExpandedState(connection)) {
-					viewer.expandToLevel(2);
-				}
- 			}
+			Display.getDefault().asyncExec(new Runnable() {
+	            @Override
+	            public void run() {
+					IViewPart view = getViewPart(MicroclimateExplorerView.VIEW_ID);
+					if (view instanceof CommonNavigator) {
+						CommonViewer viewer = ((CommonNavigator)view).getCommonViewer();
+				
+						if (!viewer.getExpandedState(connection)) {
+							viewer.expandToLevel(2);
+						}
+		            }
+	 			}
+			});
 		}
 	}
 	
     public static void openNavigatorView(String viewId) {
-        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window != null) {
-            IWorkbenchPage page = window.getActivePage();
-            if (page != null) {
-                IWorkbenchPart part = page.findView(viewId);
-                if (part == null) {
-                    try {
-                        part = page.showView(viewId);
-                    } catch (PartInitException e) {
-                        MCLogger.logError("An error occurred when trying to open the navigator view: " + viewId, e);
-                    }
-                }
+    	Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+		        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		        if (window != null) {
+		            IWorkbenchPage page = window.getActivePage();
+		            if (page != null) {
+		                IWorkbenchPart part = page.findView(viewId);
+		                if (part == null) {
+		                    try {
+		                        part = page.showView(viewId);
+		                    } catch (PartInitException e) {
+		                        MCLogger.logError("An error occurred when trying to open the navigator view: " + viewId, e);
+		                    }
+		                }
+		            }
+		        }
             }
-        }
+    	});
     }
 
     public static void refreshNavigatorView(String viewId, Object element) {
-    	IViewPart part = getViewPart(viewId);
-        if (part != null) {
-            if (part instanceof CommonNavigator) {
-                CommonNavigator v = (CommonNavigator) part;
-                v.getCommonViewer().refresh(element);
+    	Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+		    	IViewPart part = getViewPart(viewId);
+		        if (part != null) {
+		            if (part instanceof CommonNavigator) {
+		                CommonNavigator v = (CommonNavigator) part;
+		                v.getCommonViewer().refresh(element);
+		            }
+		        }
             }
-        }
+    	});
     }
     
 	public static IViewPart getViewPart(String viewId) {

@@ -29,11 +29,13 @@ public class UpdateHandler implements IUpdateHandler {
 	@Override
 	public void updateConnection(MicroclimateConnection connection) {
 		ViewHelper.refreshMicroclimateExplorerView(connection);
+		ViewHelper.expandConnection(connection);
 	}
 
 	@Override
 	public void updateApplication(MicroclimateApplication application) {
 		ViewHelper.refreshMicroclimateExplorerView(application);
+		ViewHelper.expandConnection(application.mcConnection);
 	}
 
 }
