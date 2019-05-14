@@ -13,6 +13,10 @@ package com.ibm.microclimate.ui.internal.wizards;
 
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
@@ -21,7 +25,6 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.MCLogger;
-import com.ibm.microclimate.core.internal.MCUtil;
 import com.ibm.microclimate.core.internal.MicroclimateApplication;
 import com.ibm.microclimate.core.internal.connection.IOperationHandler;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
@@ -86,59 +89,65 @@ public class NewMicroclimateProjectWizard extends Wizard implements INewWizard {
 			return false;
 		}
 		
-		try {
-			final boolean importProject = newProjectPage.importProject();
-			newConnection.getMCSocket().registerProjectCreateHandler(name, new IOperationHandler() {
-				@Override
-				public void operationComplete(boolean passed, String msg) {
-					newConnection.getMCSocket().deregisterProjectCreateHandler(name);
-					if (passed) {
-						MicroclimateApplication app = newConnection.getAppByName(name);
-						if (app != null) {
-							Display.getDefault().asyncExec(new Runnable() {
-								@Override
-								public void run() {
-									ViewHelper.expandConnection(newConnection);
+		Job job = new Job("Creating Codewind project: " + name) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				try {
+					newConnection.getMCSocket().registerProjectCreateHandler(name, new IOperationHandler() {
+						@Override
+						public void operationComplete(boolean passed, String msg) {
+							newConnection.getMCSocket().deregisterProjectCreateHandler(name);
+							if (passed) {
+								MicroclimateApplication app = newConnection.getAppByName(name);
+								if (app != null) {
+									Display.getDefault().asyncExec(new Runnable() {
+										@Override
+										public void run() {
+											ViewHelper.expandConnection(newConnection);
+										}
+									});
+									ImportProjectAction.importProject(app);
 								}
-							});
-							if (importProject) {
-								ImportProjectAction.importProject(app);
 							}
-							return;
 						}
+					});
+					newConnection.requestProjectCreate(info, name);
+					String type = null;
+					if (ProjectType.LANGUAGE_JAVA.equals(info.getLanguage())) {
+						if (info.getExtension().toLowerCase().contains("spring")) {
+							type = "spring";
+						} else if (info.getExtension().toLowerCase().contains("microprofile")) {
+							type = "liberty";
+						} else {
+							type = "docker";
+						}
+					} else if (ProjectType.LANGUAGE_NODEJS.equals(info.getLanguage())) {
+						type = "nodejs";
+					} else if (ProjectType.LANGUAGE_SWIFT.equals(info.getLanguage())) {
+						type = "swift";
+					} else {
+						type = "docker";
 					}
+					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), type);
+					if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+						MicroclimateConnectionManager.add(newConnection);
+					}
+					Display.getDefault().asyncExec(new Runnable() {
+						@Override
+						public void run() {
+							ViewHelper.openMicroclimateExplorerView();
+							ViewHelper.refreshMicroclimateExplorerView(newConnection);
+							ViewHelper.expandConnection(newConnection);
+						}
+					});
+					return Status.OK_STATUS;
+				} catch (Exception e) {
+					MCLogger.logError("An error occured trying to create a project with type: " + info.getExtension() + ", and name: " + name, e);
+					return new Status(IStatus.ERROR, MicroclimateUIPlugin.PLUGIN_ID, NLS.bind(Messages.NewProjectPage_ProjectCreateErrorMsg, name), e);
 				}
-			});
-			newConnection.requestProjectCreate(info, name);
-			String type = null;
-			if (ProjectType.LANGUAGE_JAVA.equals(info.getLanguage())) {
-				if (info.getExtension().toLowerCase().contains("spring")) {
-					type = "spring";
-				} else if (info.getExtension().toLowerCase().contains("microprofile")) {
-					type = "liberty";
-				} else {
-					type = "docker";
-				}
-			} else if (ProjectType.LANGUAGE_NODEJS.equals(info.getLanguage())) {
-				type = "nodejs";
-			} else if (ProjectType.LANGUAGE_SWIFT.equals(info.getLanguage())) {
-				type = "swift";
-			} else {
-				type = "docker";
 			}
-			newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), type);
-			if (MicroclimateConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
-				MicroclimateConnectionManager.add(newConnection);
-			}
-			ViewHelper.openMicroclimateExplorerView();
-			ViewHelper.refreshMicroclimateExplorerView(newConnection);
-			ViewHelper.expandConnection(newConnection);
-			return true;
-		} catch (Exception e) {
-			MCLogger.logError("An error occured trying to create a project with type: " + info.getExtension() + ", and name: " + name, e);
-			MCUtil.openDialog(true, Messages.NewProjectPage_ProjectCreateErrorTitle,
-					NLS.bind(Messages.NewProjectPage_ProjectCreateErrorMsg, new String[] {name, e.getMessage()}));
-			return false;
-		}
+		};
+		job.schedule();
+		return true;
 	}
 }
