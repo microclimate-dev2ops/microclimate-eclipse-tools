@@ -25,7 +25,7 @@
 
 
 	  <target name="generateP2Metadata">
-	  	<property name="mdt-updatesite-label" value="Microclimate Developer Tools Update Site"/>
+	  	<property name="mdt-updatesite-label" value="Codewind Update Site"/>
 	  	<java classname="org.eclipse.equinox.launcher.Main" dir="../../"
 	  		  fork="true" jvm="${target.jvm}" spawn="false" failonerror="true">
 	  		<arg value="-clean"/>
