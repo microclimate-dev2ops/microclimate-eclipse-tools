@@ -84,10 +84,13 @@ public class LanguageSelectionPage extends WizardPage {
 						}
 					}
 				}
+			} else {
+				item = (TableItem)event.item;
+				item.setChecked(!item.getChecked());
 			}
     		if (item != null && item.getChecked()) {
-    			language = item.getText();
-    			if (ProjectType.LANGUAGE_JAVA.equals(item.getText())) {
+    			language = (String)item.getData();
+    			if (ProjectType.LANGUAGE_JAVA.equals(language)) {
 		        	typeLabel.setVisible(true);
 		        	typeTable.setVisible(true);
     			} else {
@@ -113,17 +116,12 @@ public class LanguageSelectionPage extends WizardPage {
 						}
 					}
 				}
-				if (item != null && item.getChecked()) {
-					type = item.getText();
-				} else {
-					type = null;
-				}
 			} else {
 				item = (TableItem)event.item;
 				item.setChecked(!item.getChecked());
 			}
     		if (item != null && item.getChecked()) {
-    			type = item.getText();
+    			type = (String)item.getData();
 	        } else {
 	        	type = null;
 	        }
@@ -140,11 +138,13 @@ public class LanguageSelectionPage extends WizardPage {
     		if (item != null) {
     			item.setChecked(true);
     		}
-    		item = getItem(typeTable, type);
-    		if (item != null) {
-    			item.setChecked(true);
-    			typeLabel.setVisible(true);
-    			typeTable.setVisible(true);
+    		if (ProjectType.LANGUAGE_JAVA.equals(language)) {
+    			item = getItem(typeTable, type);
+        		if (item != null) {
+        			item.setChecked(true);
+    				typeLabel.setVisible(true);
+        			typeTable.setVisible(true);
+        		}
     		}
     	}
 
@@ -152,15 +152,15 @@ public class LanguageSelectionPage extends WizardPage {
 		setControl(composite);
 	}
 	
-	private TableItem getItem(Table table, String text) {
+	private TableItem getItem(Table table, String data) {
 		for (TableItem item : table.getItems()) {
-			if (item.getText().equals(text)) {
+			if (data.equals(item.getData())) {
 				return item;
 			}
 		}
 		return null;
 	}
-
+	
 	public boolean canFinish() {
 		if (language == null || ProjectType.UNKNOWN.equals(language)) {
 			return false;
@@ -173,27 +173,37 @@ public class LanguageSelectionPage extends WizardPage {
 	
 	private void fillLanguageTable(Table languageTable) {
 		TableItem item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectType.LANGUAGE_GO);
+		item.setText("Go");
+		item.setData(ProjectType.LANGUAGE_GO);
 		item.setImage(MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.GO_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectType.LANGUAGE_JAVA);
+		item.setText("Java");
+		item.setData(ProjectType.LANGUAGE_JAVA);
 		item.setImage(MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.JAVA_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectType.LANGUAGE_NODEJS);
+		item.setText("Node.js");
+		item.setData(ProjectType.LANGUAGE_NODEJS);
 		item.setImage(MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.NODE_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectType.LANGUAGE_PYTHON);
+		item.setText("Python");
+		item.setData(ProjectType.LANGUAGE_PYTHON);
 		item.setImage(MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.PYTHON_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectType.LANGUAGE_SWIFT);
+		item.setText("Swift");
+		item.setData(ProjectType.LANGUAGE_SWIFT);
 		item.setImage(MicroclimateUIPlugin.getImage(MicroclimateUIPlugin.SWIFT_ICON));
 	}
 	
 	private void fillTypeTable(Table typeTable) {
 		TableItem item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_LIBERTY);
+		item.setText("Liberty");
+		item.setData(ProjectType.TYPE_LIBERTY);
 		item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_SPRING);
+		item.setText("Spring");
+		item.setData(ProjectType.TYPE_SPRING);
+		item = new TableItem(typeTable, SWT.NONE);
+		item.setText("Other");
+		item.setData(ProjectType.TYPE_DOCKER);
 	}
 	
 	public void setProject(IProject project) {

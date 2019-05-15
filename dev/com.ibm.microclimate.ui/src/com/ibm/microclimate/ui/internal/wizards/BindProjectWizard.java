@@ -23,9 +23,7 @@ import org.eclipse.ui.IWorkbench;
 
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
-import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.MicroclimateUIPlugin;
-import com.ibm.microclimate.ui.internal.views.ViewHelper;
 
 public class BindProjectWizard extends Wizard implements INewWizard {
 
