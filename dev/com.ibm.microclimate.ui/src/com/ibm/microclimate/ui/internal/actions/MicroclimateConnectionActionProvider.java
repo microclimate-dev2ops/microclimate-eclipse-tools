@@ -29,6 +29,8 @@ public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 	
 	private NewProjectAction newProjectAction;
 	private BindAction bindAction;
+	private ActivateAction activateAction;
+	private DeactivateAction deactivateAction;
 	
 	@Override
 	public void init(ICommonActionExtensionSite aSite) {
@@ -36,6 +38,8 @@ public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 		ISelectionProvider selProvider = aSite.getStructuredViewer();
 		newProjectAction = new NewProjectAction(selProvider);
 		bindAction = new BindAction(selProvider);
+		activateAction = new ActivateAction(selProvider);
+		deactivateAction = new DeactivateAction(selProvider);
 	}
 	
 	@Override
@@ -52,6 +56,12 @@ public class MicroclimateConnectionActionProvider extends CommonActionProvider {
 			if (obj instanceof MicroclimateConnection) {
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
+				MicroclimateConnection connection = (MicroclimateConnection)obj;
+				if (connection.isConnected()) {
+					menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, deactivateAction);
+				} else {
+					menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, activateAction);
+				}
 			}
 		}
 	}
