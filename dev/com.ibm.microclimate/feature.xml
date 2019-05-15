@@ -13,7 +13,7 @@
 <feature
       id="com.ibm.microclimate"
       label="%featureName"
-      version="19.04.0.qualifier"
+      version="19.05.0.qualifier"
       provider-name="%providerName"
       plugin="com.ibm.microclimate.core">
 
