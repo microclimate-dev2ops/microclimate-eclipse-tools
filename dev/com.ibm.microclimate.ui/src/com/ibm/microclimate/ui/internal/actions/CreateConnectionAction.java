@@ -115,11 +115,11 @@ public class CreateConnectionAction extends Action implements IViewActionDelegat
 		}
 		final MicroclimateConnection existingConnection = conn;
 		
-    	Job job = new Job("Creating Codewind connection") {
+    	Job job = new Job("Connecting to Codewind") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				SubMonitor mon = SubMonitor.convert(monitor, 100);
-				mon.beginTask("Detecting Codewind", 5);
+				mon.setTaskName("Detecting Codewind");
 				MicroclimateConnection connection = existingConnection;
 				if (connection == null) {
 					// Try to create a connection
@@ -155,7 +155,7 @@ public class CreateConnectionAction extends Action implements IViewActionDelegat
 					return Status.CANCEL_STATUS;
 				}
 				
-				mon.beginTask("Connecting to Codewind", 20);
+				mon.setTaskName("Connecting to Codewind");
 				// If there was a connection, check to see if it is connected to Codewind now
 				if (connection != null) {
 					for (int i = 0; i < 10; i++) {

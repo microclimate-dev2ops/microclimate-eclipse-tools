@@ -192,12 +192,14 @@
 				icon="%REFRESH_ICON_PATH"
 				label="%ACTION_REFRESH"
 				class="com.ibm.microclimate.ui.internal.actions.RefreshAction"/>
+			<!--
 			<action
 				id="com.ibm.microclimate.ui.removeConnection"
 				enablesFor="1"
 				menubarPath="group.additions"
 				label="%ACTION_CONNECTION_REMOVE_CONNECTION"
 				class="com.ibm.microclimate.ui.internal.actions.RemoveConnectionAction"/>
+			-->
 		</objectContribution>
 	</extension>
 
