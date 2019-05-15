@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Microclimate Developer Tools
+Bundle-Name: Codewind
 Bundle-SymbolicName: com.ibm.microclimate.core;singleton:=true
 Bundle-Version: 1.1.3.qualifier
 Bundle-Activator: com.ibm.microclimate.core.MicroclimateCorePlugin

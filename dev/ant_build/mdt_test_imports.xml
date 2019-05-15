@@ -45,7 +45,7 @@
 			</filterchain>
 		</loadresource>
 		<var name="fileNameVersion" unset="true" />
-		<property name="fileName" value="microclimate-eclipse-tools-test" />
+		<property name="fileName" value="codewind-test" />
     <property name="fileNameVersion" value="${newVersion}" />
     <property name="qualifier" value="${buildLabel}"/>
 	  	<property name="updatesite-test-name" value="${fileName}-${fileNameVersion}.v${qualifier}" />
@@ -95,8 +95,8 @@
 
 		<!-- Add Main feature here -->
 			<category name="was4d"
-				label="Microclimate Developer Tools V${version} Unit Tests"
-				description="Microclimate Developer Tools V${version} Unit Tests">
+				label="Codewind V${version} Unit Tests"
+				description="Codewind V${version} Unit Tests">
 				<feature id="com.ibm.microclimate.test" />
 		  	</category>
 		</generateUpdateSite>

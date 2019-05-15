@@ -51,7 +51,7 @@
          </loadresource>
 
          <var name="fileNameVersion" unset="true" />
-         <property name="fileName" value="microclimate-eclipse-tools" />
+         <property name="fileName" value="codewind" />
          <property name="fileNameVersion" value="${newVersion}" />
          <property name="qualifier" value="${buildLabel}"/>
          <property name="updatesite-name" value="${fileName}-${fileNameVersion}.v${qualifier}" />
@@ -82,8 +82,8 @@
 
             <!-- Add Main feature here -->
             <category name="was4d"
-                label="Microclimate Developer Tools"
-                description="Tools for working with Microclimate applications in Eclipse">
+                label="Codewind"
+                description="Tools for working with Codewind applications in Eclipse">
 
                 <!-- Features list file -->
                 <featuresFile id="Open MDT product updatesite toplevel features"
