@@ -39,7 +39,6 @@ public class ActivateAction extends SelectionProviderAction {
 	
 	public ActivateAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, "Activate");
-		setImageDescriptor(MicroclimateUIPlugin.getDefaultIcon());
 		selectionChanged(getStructuredSelection());
 	}
 

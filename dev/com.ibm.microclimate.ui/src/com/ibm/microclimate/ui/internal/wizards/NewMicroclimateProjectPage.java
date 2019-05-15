@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -264,6 +266,11 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		}
 		if (connection.getAppByName(projectName) != null) {
 			setErrorMessage(NLS.bind(Messages.NewProjectPage_ProjectExistsError, projectName));
+			return false;
+		}
+		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+		if (project != null && project.exists()) {
+			setErrorMessage(NLS.bind(Messages.NewProjectPage_EclipseProjectExistsError, projectName));
 			return false;
 		}
 		setErrorMessage(null);

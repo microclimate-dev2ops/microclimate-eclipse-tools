@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -32,6 +34,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import com.ibm.microclimate.core.internal.InstallUtil;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MCUtil;
+import com.ibm.microclimate.core.internal.PlatformUtil;
 import com.ibm.microclimate.core.internal.ProcessHelper;
 import com.ibm.microclimate.core.internal.ProcessHelper.ProcessResult;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
@@ -46,11 +49,28 @@ public class BindProjectAction implements IObjectActionDelegate {
 
 	@Override
 	public void run(IAction action) {
+		if (project == null) {
+			// Should not happen
+			MCLogger.logError("BindProjectAction ran but no project was selected");
+			return;
+		}
+		
 		MicroclimateConnection connection = setupConnection();
 		if (connection == null || !connection.isConnected()) {
 			MCUtil.openDialog(true, "Add Project Error", "Adding the project failed because a connection to Codewind could not be established. Check workspace logs for details.");
 			return;
 		}
+		
+		String projectError = getProjectError(connection, project);
+		if (projectError != null) {
+			MCUtil.openDialog(true, "Add Project Error", projectError);
+			// If connection is new (not already registered), then close it
+			if (MicroclimateConnectionManager.getActiveConnection(connection.baseUrl.toString()) == null) {
+				connection.close();
+			}
+			return;
+		}
+		
 		BindProjectWizard wizard = new BindProjectWizard(connection, project);
 		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 		if (dialog.open() == Window.CANCEL) {
@@ -67,6 +87,22 @@ public class BindProjectAction implements IObjectActionDelegate {
 			ViewHelper.refreshMicroclimateExplorerView(null);
 			ViewHelper.expandConnection(connection);
 		}
+	}
+	
+	private String getProjectError(MicroclimateConnection connection, IProject project) {
+		if (connection.getAppByName(project.getName()) != null) {
+			return "A Codewind project with the name " + project.getName() + " already exists.";
+		}
+		IPath workspacePath = connection.getWorkspacePath();
+		IPath projectPath = project.getLocation();
+		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.WINDOWS) {
+			workspacePath = new Path(workspacePath.toPortableString().toLowerCase());
+			projectPath = new Path(projectPath.toPortableString().toLowerCase());
+		}
+		if (!workspacePath.isPrefixOf(projectPath)) {
+			return "The " + project.getName() + " project is not located in the Codewind workspace: " + connection.getWorkspacePath().toOSString();
+		}
+		return null;
 	}
 
 	@Override
