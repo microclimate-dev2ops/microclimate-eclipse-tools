@@ -40,14 +40,14 @@ public class InstallUtil {
 	
 	private static final String INSTALLER_DIR = "installerWorkDir";
 	private static final String START_CMD = "start";
-	private static final String STOP_CMD = "stop";
+	private static final String STOP_ALL_CMD = "stop-all";
 	
 	public static Process startCodewind() throws IOException {
 		return runInstaller(START_CMD);
 	}
 	
 	public static Process stopCodewind() throws IOException {
-		return runInstaller(STOP_CMD);
+		return runInstaller(STOP_ALL_CMD);
 	}
 	
 	public static Process runInstaller(String cmd) throws IOException {

@@ -40,7 +40,6 @@ public class DeactivateAction extends SelectionProviderAction {
 	
 	public DeactivateAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, "Deactivate");
-		setImageDescriptor(MicroclimateUIPlugin.getDefaultIcon());
 		selectionChanged(getStructuredSelection());
 	}
 

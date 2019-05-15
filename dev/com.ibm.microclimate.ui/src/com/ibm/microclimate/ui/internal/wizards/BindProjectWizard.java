@@ -116,5 +116,4 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			languagePage.setProject(project);
 		}
 	}
-
 }

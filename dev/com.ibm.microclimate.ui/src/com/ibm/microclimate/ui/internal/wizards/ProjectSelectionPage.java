@@ -13,6 +13,8 @@ package com.ibm.microclimate.ui.internal.wizards;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
@@ -30,6 +32,7 @@ import org.eclipse.ui.dialogs.SearchPattern;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
+import com.ibm.microclimate.core.internal.PlatformUtil;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 
 public class ProjectSelectionPage extends WizardPage {
@@ -87,7 +90,16 @@ public class ProjectSelectionPage extends WizardPage {
 				if (!pattern.matches(project.getName())) {
 					return false;
 				}
-				if (connection != null && connection.getAppByName(project.getName()) != null) {
+				if (connection.getAppByName(project.getName()) != null) {
+					return false;
+				}
+				IPath workspacePath = connection.getWorkspacePath();
+				IPath projectPath = project.getLocation();
+				if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.WINDOWS) {
+					workspacePath = new Path(workspacePath.toPortableString().toLowerCase());
+					projectPath = new Path(projectPath.toPortableString().toLowerCase());
+				}
+				if (!workspacePath.isPrefixOf(projectPath)) {
 					return false;
 				}
 				return true;
