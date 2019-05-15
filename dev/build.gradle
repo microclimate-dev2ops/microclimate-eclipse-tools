@@ -271,7 +271,7 @@ task deployDHE {
 
         // Put all files to be published into a directory
         def toPublish = ant.path {
-             fileset(dir: 'ant_build/artifacts/', includes: "codewind-eclipse-*.zip")
+             fileset(dir: 'ant_build/artifacts/', includes: "codewind-*.zip")
         }
 
         toPublish.list().each { file ->
