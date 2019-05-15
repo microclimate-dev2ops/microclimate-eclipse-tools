@@ -10,7 +10,7 @@
 -->
 
 <project name="mdt_build" default="generateOpenMDTUpdateSite">
-    <property name="level_tag" value="19.04"/>
+    <property name="level_tag" value="19.05"/>
     <property name="delegate.build.dir" location="${basedir}/../" />
     <property name="disable.run.executeMetatypeValidation" value="true"/>
     <property name="disable.run.unzipIfixReleaseZip" value="true"/>
