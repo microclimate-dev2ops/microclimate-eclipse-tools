@@ -11,9 +11,14 @@
 
 package com.ibm.microclimate.ui.internal.wizards;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeoutException;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -31,8 +36,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import com.ibm.microclimate.core.internal.InstallUtil;
 import com.ibm.microclimate.core.internal.MCLogger;
 import com.ibm.microclimate.core.internal.MicroclimateObjectFactory;
+import com.ibm.microclimate.core.internal.ProcessHelper;
+import com.ibm.microclimate.core.internal.ProcessHelper.ProcessResult;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnection;
 import com.ibm.microclimate.core.internal.connection.MicroclimateConnectionManager;
 import com.ibm.microclimate.ui.internal.messages.Messages;
@@ -178,27 +186,15 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 			return;
 		}
 
-		try {
-			MCLogger.log("Validating connection: " + uri); //$NON-NLS-1$
+		MCLogger.log("Validating connection: " + uri); //$NON-NLS-1$
 
-			// Will throw an Exception if fails
-			mcConnection = MicroclimateObjectFactory.createMicroclimateConnection(uri);
+		mcConnection = createConnection(uri);
 
-			if(mcConnection != null) {
-				setErrorMessage(null);
-				setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, mcConnection.baseUrl));
-			}
-		}
-		catch(Exception e) {
-			String msg = e.getMessage();
-			if (msg == null) {
-				// The exceptions we expect to get here should have good messages for the user.
-				// Show a generic message if none is provided.
-				MCLogger.logError("Unexpected exception", e); //$NON-NLS-1$
-
-				msg = NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnectToMC, uri);
-			}
-			setErrorMessage(msg);
+		if(mcConnection != null) {
+			setErrorMessage(null);
+			setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, mcConnection.baseUrl));
+		} else {
+			setErrorMessage(NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnectToMC, uri));
 		}
 
 		getWizard().getContainer().updateButtons();
@@ -215,5 +211,64 @@ public class NewMicroclimateConnectionPage extends WizardPage {
 		if (mcConnection != null) {
 			MicroclimateConnectionManager.add(mcConnection);
 		}
+	}
+	
+	private MicroclimateConnection createConnection(URI uri) {
+		try {
+			return MicroclimateObjectFactory.createMicroclimateConnection(uri);
+		} catch (Exception e) {
+			// Ignore
+		}
+		
+		IRunnableWithProgress runnable = new IRunnableWithProgress() {
+			@Override
+			public void run(IProgressMonitor monitor) throws InvocationTargetException {
+				Process startProcess = null;
+				try {
+					startProcess = InstallUtil.startCodewind();
+					ProcessResult result = ProcessHelper.waitForProcess(startProcess, 500, 60, monitor, "Starting Codewind");
+					if (result.getExitValue() != 0) {
+						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + result.getError());
+					}
+				} catch (IOException e) {
+					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage());
+				} catch (TimeoutException e) {
+					throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage());
+				} finally {
+					if (startProcess != null && startProcess.isAlive()) {
+						startProcess.destroy();
+					}
+				}
+				
+			}
+		};
+		try {
+			getWizard().getContainer().run(true, true, runnable);
+		} catch (InvocationTargetException e) {
+			MCLogger.logError("An error occurred trying to start Codewind", e);
+			return null;
+		} catch (InterruptedException e) {
+			MCLogger.logError("Codewind start was interrupted", e);
+			return null;
+		}
+
+		// Try again to create a connection
+		MicroclimateConnection connection = null;
+		for (int i = 0; i < 10; i++) {
+			try {
+				connection = MicroclimateObjectFactory.createMicroclimateConnection(uri);
+				break;
+			} catch (Exception e) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					// Ignore
+				}
+			}
+		}
+		if (connection == null) {
+			MCLogger.logError("Failed to connect to Codewind at: " + uri.toString());
+		}
+		return connection;
 	}
 }
