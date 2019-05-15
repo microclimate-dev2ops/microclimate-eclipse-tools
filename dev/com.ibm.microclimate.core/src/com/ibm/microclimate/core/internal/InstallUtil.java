@@ -40,10 +40,19 @@ public class InstallUtil {
 	
 	private static final String INSTALLER_DIR = "installerWorkDir";
 	private static final String START_CMD = "start";
+	private static final String STOP_CMD = "stop";
 	
 	public static Process startCodewind() throws IOException {
+		return runInstaller(START_CMD);
+	}
+	
+	public static Process stopCodewind() throws IOException {
+		return runInstaller(STOP_CMD);
+	}
+	
+	public static Process runInstaller(String cmd) throws IOException {
 		String installerPath = getInstallerExecutable();
-		String[] command = {installerPath, START_CMD};
+		String[] command = {installerPath, cmd};
 		ProcessBuilder builder = new ProcessBuilder(command);
 		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.MAC) {
 			String pathVar = System.getenv("PATH");
