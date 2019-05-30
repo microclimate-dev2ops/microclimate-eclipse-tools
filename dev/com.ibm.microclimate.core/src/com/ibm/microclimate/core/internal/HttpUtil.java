@@ -88,7 +88,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("GET");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(30000);
 
 			return new HttpResult(connection);
 		} finally {
@@ -106,7 +106,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("POST");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(30000);
 			
 			if (payload != null) {
 				connection.setRequestProperty("Content-Type", "application/json");
@@ -131,7 +131,7 @@ public class HttpUtil {
 		try {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 			connection.setRequestMethod("POST");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(30000);
 			return new HttpResult(connection);
 		} finally {
 			if (connection != null) {
@@ -148,7 +148,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("PUT");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(30000);
 
 			return new HttpResult(connection);
 		} finally {
@@ -166,7 +166,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("HEAD");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(30000);
 
 			return new HttpResult(connection);
 		} finally {
@@ -184,7 +184,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("DELETE");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(30000);
 
 			return new HttpResult(connection);
 		} finally {

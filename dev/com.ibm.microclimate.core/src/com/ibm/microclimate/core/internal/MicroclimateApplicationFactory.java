@@ -214,10 +214,14 @@ public class MicroclimateApplicationFactory {
 			String contextRoot = null;
 			if (appJso.has(MCConstants.KEY_CONTEXTROOT)) {
 				contextRoot = appJso.getString(MCConstants.KEY_CONTEXTROOT);
+			} else if (appJso.has(MCConstants.KEY_CONTEXT_ROOT)) {
+				contextRoot = appJso.getString(MCConstants.KEY_CONTEXT_ROOT);
 			} else if (appJso.has(MCConstants.KEY_CUSTOM)) {
 				JSONObject custom = appJso.getJSONObject(MCConstants.KEY_CUSTOM);
 				if (custom.has(MCConstants.KEY_CONTEXTROOT)) {
 					contextRoot = custom.getString(MCConstants.KEY_CONTEXTROOT);
+				} else if (custom.has(MCConstants.KEY_CONTEXT_ROOT)) {
+					contextRoot = custom.getString(MCConstants.KEY_CONTEXT_ROOT);
 				}
 			}
 			mcApp.setContextRoot(contextRoot);
