@@ -13,6 +13,8 @@ package com.ibm.microclimate.ui.internal.wizards;
 
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
@@ -74,9 +76,17 @@ public class NewMicroclimateProjectWizard extends Wizard {
 								}
 							});
 							if (importProject) {
-								ImportProjectAction.importProject(app);
+								IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+								if (project == null || !project.exists()) {
+									ImportProjectAction.importProject(app);
+								} else {
+									// This should not happen since the wizard checks for this
+									MCLogger.logError("The project cannot be imported because a project already exists with the name: " + app.name);
+								}
 							}
 							return;
+						} else {
+							MCLogger.logError("An import operation was requested but the application could not be found for: " + name);
 						}
 					}
 				}

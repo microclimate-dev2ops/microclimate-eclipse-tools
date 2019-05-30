@@ -306,20 +306,18 @@ public class MicroclimateSocket {
 			MCLogger.logError("No application found matching the project id for the project creation event: " + projectID); //$NON-NLS-1$
 		}
 		MCUtil.updateConnection(mcConnection);
-		String projectName = event.has(MCConstants.KEY_NAME) ? event.getString(MCConstants.KEY_NAME) : null;
-		if (projectName != null) {
-			IOperationHandler handler = projectCreateHandlers.get(projectName);
-			if (handler != null) {
-				handler.operationComplete(true, null);
-			}
-		}
+		invokeProjectCreateHandler(app);
 	}
 
 	private void onProjectChanged(JSONObject event) throws JSONException {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		MicroclimateApplication app = mcConnection.getAppByID(projectID);
 		if (app == null) {
-			MCLogger.logError("No application found matching the project id for the project changed event: " + projectID); //$NON-NLS-1$
+			// Likely a new project is being created
+			mcConnection.refreshApps(projectID);
+			MCUtil.updateConnection(mcConnection);
+			app = mcConnection.getAppByID(projectID);
+			invokeProjectCreateHandler(app);
 			return;
 		}
 		
@@ -362,7 +360,11 @@ public class MicroclimateSocket {
 		String projectID = event.getString(MCConstants.KEY_PROJECT_ID);
 		MicroclimateApplication app = mcConnection.getAppByID(projectID);
 		if (app == null) {
-			MCLogger.logError("No application found matching the project id for the project settings changed event: " + projectID); //$NON-NLS-1$
+			// Likely a new project is being created
+			mcConnection.refreshApps(projectID);
+			MCUtil.updateConnection(mcConnection);
+			app = mcConnection.getAppByID(projectID);
+			invokeProjectCreateHandler(app);
 			return;
 		}
 		
@@ -383,6 +385,8 @@ public class MicroclimateSocket {
 			// Likely a new project is being created
 			mcConnection.refreshApps(projectID);
 			MCUtil.updateConnection(mcConnection);
+			app = mcConnection.getAppByID(projectID);
+			invokeProjectCreateHandler(app);
 			return;
 		}
 		
@@ -550,6 +554,8 @@ public class MicroclimateSocket {
 			// Likely a new project is being created
 			mcConnection.refreshApps(projectID);
 			MCUtil.updateConnection(mcConnection);
+			app = mcConnection.getAppByID(projectID);
+			invokeProjectCreateHandler(app);
 			return;
 		}
 		
@@ -650,5 +656,15 @@ public class MicroclimateSocket {
 		}
 		MCLogger.log("MicroclimateSocket initialized in time ? " + hasConnected); //$NON-NLS-1$
 		return hasConnected;
+	}
+	
+	private void invokeProjectCreateHandler(MicroclimateApplication app) {
+		if (app == null) {
+			return;
+		}
+		IOperationHandler handler = projectCreateHandlers.get(app.name);
+		if (handler != null) {
+			handler.operationComplete(true, null);
+		}
 	}
 }

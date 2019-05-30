@@ -146,6 +146,7 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ImportLabel;
 	public static String NewProjectPage_ProjectNameLabel;
 	public static String NewProjectPage_ProjectExistsError;
+	public static String NewProjectPage_EclipseProjectExistsError;
 	public static String NewProjectPage_InvalidProjectName;
 	public static String NewProjectPage_ProjectCreateErrorTitle;
 	public static String NewProjectPage_ProjectCreateErrorMsg;
