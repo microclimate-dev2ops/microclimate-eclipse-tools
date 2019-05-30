@@ -15,6 +15,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.wizard.WizardPage;
@@ -234,9 +236,17 @@ public class NewMicroclimateProjectPage extends WizardPage {
 		if (!projectNamePattern.matcher(projectName).matches()) {
 			setErrorMessage(Messages.NewProjectPage_InvalidProjectName);
 			return false;
-		} else if (connection.getAppByName(projectName) != null) {
+		}
+		if (connection.getAppByName(projectName) != null) {
 			setErrorMessage(NLS.bind(Messages.NewProjectPage_ProjectExistsError, projectName));
 			return false;
+		}
+		if (importButton.getSelection()) {
+			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+			if (project != null && project.exists()) {
+				setErrorMessage(NLS.bind(Messages.NewProjectPage_EclipseProjectExistsError, projectName));
+				return false;
+			}
 		}
 		setErrorMessage(null);
 		return selectionTable.getSelectionCount() == 1 && projectName != null && !projectName.isEmpty();
