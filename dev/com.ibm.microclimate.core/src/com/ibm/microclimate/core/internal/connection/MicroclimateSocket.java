@@ -373,6 +373,8 @@ public class MicroclimateSocket {
 		// Update context root
 		if (event.has(MCConstants.KEY_CONTEXT_ROOT)) {
 			app.setContextRoot(event.getString(MCConstants.KEY_CONTEXT_ROOT));
+		} else if (event.has(MCConstants.KEY_CONTEXTROOT)) {
+			app.setContextRoot(event.getString(MCConstants.KEY_CONTEXTROOT));
 		}
 		
 		// TODO: need to update ports?
