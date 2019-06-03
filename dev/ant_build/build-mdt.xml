@@ -23,6 +23,7 @@
     <import file="${mdt_build.basedir}/resources/build_imports/liberty-all.xml" />
     <import file="${mdt_build.basedir}/mdt_imports.xml"/>
     <import file="${mdt_build.basedir}/mdt_test_imports.xml"/>
+    <import file="${mdt_build.basedir}/prereqs/prereqs.xml" />
 
      <target name="getMDTBuildLabel" depends="createBuildLabelFile">
           <loadproperties srcFile="${mdt_build.basedir}/buildLabel.properties"/>
@@ -44,7 +45,7 @@
         </propertyfile>
     </target>
 
-    <target name="compile" depends="getMDTBuildLabel" unless="${env.skip_compile_mdt}">
+    <target name="compile" depends="getMDTBuildLabel, preparePrereqsIvy" unless="${env.skip_compile_mdt}">
         <echo message="Build label is ${buildLabel}"/>
         <antcall target="liberty-all.compile" />
         <echo message="mdt_imports.generateMDTSuppliersUpdateSite call"/>

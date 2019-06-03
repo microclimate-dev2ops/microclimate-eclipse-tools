@@ -39,10 +39,9 @@ dependencies {
     corelibs "com.squareup.okio:okio:1.13.0"
     corelibs "io.socket:socket.io-client:1.0.0"
 
-    // corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
 }
 
-defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite'
+defaultTasks 'clean', 'getCoreDependencies', 'compile', 'generateOpenMDTUpdateSite', 'deployDHE'
 
 task importAnt {
     ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader
@@ -55,10 +54,12 @@ task importAnt {
     ant.taskdef(resource:'net/sf/antcontrib/antlib.xml',classpath:configurations.antcp.asPath)
     ant.taskdef(uri:'antlib:org.apache.ivy.ant', resource:'org/apache/ivy/ant/antlib.xml',classpath: configurations.antcp.asPath)
 
+    // prereqs uses ivy to resolve and download our runtime dependencies and some open source libs
+    // and move them into /lib/ folders of dependant plugins
+    ant.importBuild('ant_build/prereqs/prereqs.xml')
     // build-mdt provides the generateOpenMDTUpdateSite target, which is the entry point
     // for the compilation and assembling of updatesites
     ant.importBuild('ant_build/build-mdt.xml')
-    println "Imported ant code"
 }
 
 def projDir = projectDir.getAbsolutePath()
@@ -84,9 +85,7 @@ task getCoreDependencies(type: Copy) {
     if (!corelibFolder.exists()) {
         corelibFolder.mkdir()
     }
-    println("Copying core dependencies into ${corelibFolder}")
 
-    eachFile { println "Copying ${it.file.name}" }
 
     from configurations.corelibs
     into corelibFolder
@@ -113,7 +112,7 @@ task downloadEclipseTargetPlatform {
             }
             else {
                 println 'Untar existing ' + eclipseTargetPlatformArchive.getAbsolutePath() + ' into ' + eclipseTargetPlatformIESFolder
-                println 'Run \'gradle cleanEclipse build\' to download Eclipse target platform files again'
+                println 'Run \'gradle clean build\' to build by downloading target platform files again.'
             }
 
             copy {
@@ -155,7 +154,7 @@ task downloadEclipseSDK {
              }
              else {
                   println 'Untar existing ' + eclipseSdkArchive.getAbsolutePath() + ' into ' + eclipseSdkFolder
-                  println 'Run \'gradle cleanEclipse build\' to download Eclipse SDK files again'
+                  println 'Run \'gradle clean build\' to build by downloading Eclipse SDK files again'
              }
 
             copy {
@@ -178,6 +177,10 @@ task build {
     }
 }
 
+task gradleCompile {
+    doLast {
+    }
+}
 task gradleGenerateMDTUpdateSite {
     doLast {
     }
@@ -188,8 +191,11 @@ gradleGenerateMDTUpdateSite.dependsOn generateOpenMDTUpdateSite
 build.dependsOn compile
 build.dependsOn generateOpenMDTUpdateSite
 
+preparePrereqsIvy.dependsOn importAnt
+compile.dependsOn preparePrereqsIvy
 compile.dependsOn downloadEclipseSDK
 compile.dependsOn downloadEclipseTargetPlatform
+gradleCompile.dependsOn compile
 
 //// build version from the artifacts to avoid version mismatch
 import static groovy.io.FileType.FILES
@@ -392,18 +398,18 @@ task deployDHE {
     }
 }
 
-task cleanEclipse(type: Delete) {
+// Delete all prereq files and extracted SDK and target platform files.
+task cleanPrereqs(type: Delete) {
     doLast {
         println 'Delete ' + eclipseSdkFolder
         file(eclipseSdkFolder).deleteDir()
         println 'Delete ' + eclipseTargetPlatformFolder
         file(eclipseTargetPlatformFolder).deleteDir()
-    }
-}
 
-// Delete all prereq files and extracted SDK and target platform files.
-task cleanPrereqs(type: Delete) {
-    doLast {
+        def prereqslibFolder  = file(projDir + project.properties['ant.prereqslib.folder'])
+        println 'Delete ' + prereqslibFolder
+        file(prereqslibFolder).deleteDir()
+
         // for each plugin, delete lib/ folder so that ivy will re-retrieve prereqs
         fileTree(dir: projDir, include: 'com.ibm.*/lib/').visit {  FileVisitDetails details ->
             if(details.file.isDirectory() && 'lib'.equals(details.file.name)) {
@@ -425,9 +431,6 @@ task cleanBuilds(type: Delete) {
         println 'Delete ' + artifactsDir
         file(artifactsDir).deleteDir()
 
-        def buildLabelFile = project.properties['build.label.file']
-        println 'Delete ' + buildLabelFile
-        file(buildLabelFile).delete()
 
         println 'Delete ' + toolsImageFolder
         file(toolsImageFolder).deleteDir()
@@ -441,6 +444,10 @@ task cleanBuilds(type: Delete) {
 // Delete all prereq files, downloaded artifacts and build output
 task clean(type: Delete) {
     doLast {
+        println 'Delete ' + eclipseSdkArchive
+        file(eclipseSdkArchive).delete()
+        println 'Delete ' + eclipseTargetPlatformArchive
+        file(eclipseTargetPlatformArchive).delete()
     }
 
     onlyIf {
